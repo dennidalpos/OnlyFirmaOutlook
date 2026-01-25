@@ -43,6 +43,7 @@ public partial class MainWindow : Window
     private DispatcherTimer? _wordCheckTimer;
     private DateTime _lastFileModifiedTime;
     private bool _isWordOpen;
+    private GuideWindow? _guideWindow;
 
     public MainWindow()
     {
@@ -1222,17 +1223,49 @@ public partial class MainWindow : Window
 
     private void GuideToggleButton_Checked(object sender, RoutedEventArgs e)
     {
-        GuidePanel.Visibility = Visibility.Visible;
+        if (_guideWindow == null)
+        {
+            _guideWindow = new GuideWindow
+            {
+                Owner = this
+            };
+            _guideWindow.Closed += GuideWindow_Closed;
+        }
+
+        _guideWindow.Show();
+        _guideWindow.Activate();
     }
 
     private void GuideToggleButton_Unchecked(object sender, RoutedEventArgs e)
     {
-        GuidePanel.Visibility = Visibility.Collapsed;
+        if (_guideWindow != null)
+        {
+            _guideWindow.Closed -= GuideWindow_Closed;
+            _guideWindow.Close();
+            _guideWindow = null;
+        }
+    }
+
+    private void GuideWindow_Closed(object? sender, EventArgs e)
+    {
+        if (_guideWindow != null)
+        {
+            _guideWindow.Closed -= GuideWindow_Closed;
+            _guideWindow = null;
+        }
+
+        GuideToggleButton.IsChecked = false;
     }
 
     protected override void OnClosed(EventArgs e)
     {
-        
+        if (_guideWindow != null)
+        {
+            _guideWindow.Closed -= GuideWindow_Closed;
+            _guideWindow.Close();
+            _guideWindow = null;
+        }
+
         StopFileWatcher();
         StopWordCheckTimer();
 

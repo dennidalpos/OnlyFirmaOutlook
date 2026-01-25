@@ -50,14 +50,8 @@
 
         
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="280"/>
-                </Grid.ColumnDefinitions>
+            <StackPanel>
 
-                <StackPanel Grid.Column="0">
-                
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -317,49 +311,7 @@
 
                 </StackPanel>
 
-                <Border x:Name="GuidePanel" Grid.Column="1" Margin="16,0,0,0"
-                        Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
-                        CornerRadius="4" Padding="12" Visibility="Collapsed">
-                    <StackPanel>
-                        <TextBlock Text="Guida dettagliata" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"/>
-                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                            <Run Text="1) Seleziona la firma:" FontWeight="SemiBold"/>
-                            <LineBreak/>
-                            <Run Text="Scegli un preset dalla lista oppure carica un file Word (.docx/.doc)."/>
-                        </TextBlock>
-                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                            <Run Text="2) Imposta il nome firma:" FontWeight="SemiBold"/>
-                            <LineBreak/>
-                            <Run Text="Inserisci il nome e, se disponibile, scegli l'account Outlook. Il nome finale viene mostrato subito."/>
-                        </TextBlock>
-                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                            <Run Text="3) Conferma la cartella:" FontWeight="SemiBold"/>
-                            <LineBreak/>
-                            <Run Text="Verifica la cartella di destinazione o selezionane una diversa se necessario."/>
-                        </TextBlock>
-                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                            <Run Text="4) Modifica in Word:" FontWeight="SemiBold"/>
-                            <LineBreak/>
-                            <Run Text="Apri il documento, applica le modifiche, salva (Ctrl+S) e chiudi Word."/>
-                        </TextBlock>
-                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                            <Run Text="5) Seleziona il formato HTML:" FontWeight="SemiBold"/>
-                            <LineBreak/>
-                            <Run Text="Consigliato HTML filtrato per maggiore compatibilità."/>
-                        </TextBlock>
-                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8">
-                            <Run Text="6) Converti e salva:" FontWeight="SemiBold"/>
-                            <LineBreak/>
-                            <Run Text="Premi 'Converti e salva firma' e attendi la conferma."/>
-                        </TextBlock>
-                        <TextBlock TextWrapping="Wrap">
-                            <Run Text="7) Verifica in Outlook (classic):" FontWeight="SemiBold"/>
-                            <LineBreak/>
-                            <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e controlla la nuova firma."/>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-            </Grid>
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </Window>
