@@ -1,8 +1,8 @@
 namespace OnlyFirmaOutlook.Models;
 
-/// <summary>
-/// Rappresenta le informazioni di una firma esistente.
-/// </summary>
+
+
+
 public class SignatureInfo
 {
     public string Name { get; set; } = string.Empty;

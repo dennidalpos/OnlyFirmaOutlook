@@ -1,33 +1,4 @@
-<#
-.SYNOPSIS
-    Build e publish di OnlyFirmaOutlook.
 
-.DESCRIPTION
-    Questo script esegue:
-    - Restore delle dipendenze NuGet
-    - Build del progetto
-    - Publish self-contained per win-x86 e win-x64
-    - Publish del bootstrapper/launcher
-    - Copia dei file nella cartella dist
-
-.PARAMETER Configuration
-    Configurazione di build (Debug o Release). Default: Release
-
-.PARAMETER SkipRestore
-    Salta il restore delle dipendenze
-
-.PARAMETER SkipClean
-    Salta la pulizia della cartella dist
-
-.EXAMPLE
-    .\build.ps1
-
-.EXAMPLE
-    .\build.ps1 -Configuration Debug
-
-.EXAMPLE
-    .\build.ps1 -SkipRestore
-#>
 
 param(
     [ValidateSet("Debug", "Release")]
@@ -40,7 +11,6 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Percorsi
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Split-Path -Parent $scriptDir
 $srcDir = Join-Path $rootDir "src"
@@ -57,7 +27,6 @@ Write-Host "Root Directory: $rootDir"
 Write-Host "Configuration:  $Configuration"
 Write-Host ""
 
-# Funzione per eseguire comandi e verificare errori
 function Invoke-BuildCommand {
     param(
         [string]$Description,
@@ -76,7 +45,6 @@ function Invoke-BuildCommand {
     Write-Host ""
 }
 
-# Pulizia cartella dist
 if (-not $SkipClean) {
     Write-Host "Pulizia cartella dist..." -ForegroundColor Yellow
     if (Test-Path $distDir) {
@@ -87,19 +55,16 @@ if (-not $SkipClean) {
     Write-Host ""
 }
 
-# Restore dipendenze
 if (-not $SkipRestore) {
     Invoke-BuildCommand "Restore dipendenze" {
         dotnet restore "$rootDir\OnlyFirmaOutlook.sln"
     }
 }
 
-# Build soluzione
 Invoke-BuildCommand "Build soluzione ($Configuration)" {
     dotnet build "$rootDir\OnlyFirmaOutlook.sln" -c $Configuration --no-restore
 }
 
-# Publish win-x86
 Write-Host "Publish win-x86..." -ForegroundColor Yellow
 $publishX86Dir = Join-Path $distDir "win-x86"
 dotnet publish "$mainProjectDir\OnlyFirmaOutlook.csproj" `
@@ -116,7 +81,6 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "   OK - Output: $publishX86Dir" -ForegroundColor Green
 Write-Host ""
 
-# Publish win-x64
 Write-Host "Publish win-x64..." -ForegroundColor Yellow
 $publishX64Dir = Join-Path $distDir "win-x64"
 dotnet publish "$mainProjectDir\OnlyFirmaOutlook.csproj" `
@@ -133,7 +97,6 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "   OK - Output: $publishX64Dir" -ForegroundColor Green
 Write-Host ""
 
-# Publish bootstrapper
 Write-Host "Publish Bootstrapper..." -ForegroundColor Yellow
 $bootstrapperOutput = Join-Path $distDir "OnlyFirmaOutlook.Launcher.exe"
 dotnet publish "$bootstrapperDir\Bootstrapper.csproj" `
@@ -150,7 +113,6 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "   OK - Output: $distDir" -ForegroundColor Green
 Write-Host ""
 
-# Crea cartella media in entrambe le build se non esiste
 $mediaX86 = Join-Path $publishX86Dir "media"
 $mediaX64 = Join-Path $publishX64Dir "media"
 
@@ -164,7 +126,6 @@ if (-not (Test-Path $mediaX64)) {
     Write-Host "Creata cartella media in win-x64" -ForegroundColor Gray
 }
 
-# Copia eventuali file preset dalla cartella media sorgente
 if (Test-Path $mediaSourceDir) {
     $presetFiles = Get-ChildItem -Path $mediaSourceDir -Filter "*.doc*" -File
     if ($presetFiles.Count -gt 0) {
@@ -179,7 +140,6 @@ if (Test-Path $mediaSourceDir) {
     }
 }
 
-# Riepilogo
 Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host " Build completata con successo!" -ForegroundColor Green
 Write-Host "=======================================" -ForegroundColor Cyan

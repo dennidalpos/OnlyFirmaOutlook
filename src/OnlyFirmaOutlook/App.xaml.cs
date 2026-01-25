@@ -4,9 +4,9 @@ using Application = System.Windows.Application;
 
 namespace OnlyFirmaOutlook;
 
-/// <summary>
-/// Application entry point with STA thread configuration.
-/// </summary>
+
+
+
 public partial class App : Application
 {
     private readonly TempFileManager _tempFileManager;
@@ -31,7 +31,7 @@ public partial class App : Application
     {
         _loggingService.Log("Chiusura applicazione in corso...");
 
-        // Cleanup best-effort della cartella temporanea
+        
         _tempFileManager.CleanupSessionFolder();
 
         _loggingService.Log("Applicazione chiusa");

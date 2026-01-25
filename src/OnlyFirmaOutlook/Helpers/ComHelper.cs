@@ -3,17 +3,17 @@ using OnlyFirmaOutlook.Services;
 
 namespace OnlyFirmaOutlook.Helpers;
 
-/// <summary>
-/// Utility per la gestione e pulizia di oggetti COM.
-/// Garantisce il rilascio corretto delle istanze COM per evitare processi zombie.
-/// </summary>
+
+
+
+
 public static class ComHelper
 {
     private static readonly LoggingService _logger = LoggingService.Instance;
 
-    /// <summary>
-    /// Rilascia un oggetto COM in modo sicuro.
-    /// </summary>
+    
+    
+    
     public static void ReleaseComObject(object? comObject)
     {
         if (comObject == null) return;
@@ -28,9 +28,9 @@ public static class ComHelper
         }
     }
 
-    /// <summary>
-    /// Rilascia multipli oggetti COM.
-    /// </summary>
+    
+    
+    
     public static void ReleaseComObjects(params object?[] comObjects)
     {
         foreach (var obj in comObjects)
@@ -39,10 +39,10 @@ public static class ComHelper
         }
     }
 
-    /// <summary>
-    /// Forza la garbage collection per rilasciare definitivamente i COM objects.
-    /// Da usare dopo aver chiamato ReleaseComObject.
-    /// </summary>
+    
+    
+    
+    
     public static void ForceGarbageCollection()
     {
         GC.Collect();
@@ -51,9 +51,9 @@ public static class ComHelper
         GC.WaitForPendingFinalizers();
     }
 
-    /// <summary>
-    /// Chiude e rilascia un documento Word.
-    /// </summary>
+    
+    
+    
     public static void CloseWordDocument(dynamic? document, bool saveChanges = false)
     {
         if (document == null) return;
@@ -73,9 +73,9 @@ public static class ComHelper
         }
     }
 
-    /// <summary>
-    /// Chiude e rilascia un'applicazione Word.
-    /// </summary>
+    
+    
+    
     public static void QuitWordApplication(dynamic? wordApp, bool saveChanges = false)
     {
         if (wordApp == null) return;
@@ -95,9 +95,9 @@ public static class ComHelper
         }
     }
 
-    /// <summary>
-    /// Esegue cleanup completo: chiude documento, chiude Word, forza GC.
-    /// </summary>
+    
+    
+    
     public static void FullWordCleanup(dynamic? document, dynamic? wordApp, bool saveChanges = false)
     {
         CloseWordDocument(document, saveChanges);

@@ -8,14 +8,14 @@
     <Border Background="#F5F5F5" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" Padding="8,6">
         <WrapPanel Orientation="Horizontal">
 
-            <!-- Font -->
+            
             <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
                 <Label Content="Font:" VerticalAlignment="Center" Padding="0,0,4,0"/>
                 <ComboBox x:Name="FontComboBox" Width="140" Height="28" VerticalContentAlignment="Center"
                           SelectionChanged="FontComboBox_SelectionChanged"/>
             </StackPanel>
 
-            <!-- Font Size -->
+            
             <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
                 <Label Content="Dimensione:" VerticalAlignment="Center" Padding="0,0,4,0"/>
                 <ComboBox x:Name="FontSizeComboBox" Width="60" Height="28" VerticalContentAlignment="Center"
@@ -40,7 +40,7 @@
 
             <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
 
-            <!-- Formattazione -->
+            
             <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
                 <ToggleButton x:Name="BoldButton" Width="32" Height="28" FontWeight="Bold" Content="G"
                               ToolTip="Grassetto" Click="BoldButton_Click" Margin="2,0"/>
@@ -69,7 +69,7 @@
 
             <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
 
-            <!-- Allineamento -->
+            
             <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
                 <ToggleButton x:Name="AlignLeftButton" Width="32" Height="28" Content="≡"
                               ToolTip="Allinea a sinistra" Click="AlignLeftButton_Click" Margin="2,0"/>
@@ -89,7 +89,7 @@
 
             <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
 
-            <!-- Inserisci -->
+            
             <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
                 <Button x:Name="InsertLinkButton" Width="60" Height="28" Content="Link"
                         ToolTip="Inserisci collegamento" Click="InsertLinkButton_Click" Margin="2,0"/>
@@ -99,7 +99,7 @@
 
             <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
 
-            <!-- Modifica -->
+            
             <StackPanel Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
                 <Button x:Name="UndoButton" Width="60" Height="28" Content="↶ Annulla"
                         ToolTip="Annulla" Click="UndoButton_Click" Margin="2,0"/>
@@ -109,7 +109,7 @@
 
             <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
 
-            <!-- Zoom -->
+            
             <StackPanel Orientation="Horizontal" Margin="0,0,4,0" VerticalAlignment="Center">
                 <Button x:Name="ZoomOutButton" Width="32" Height="28" Content="-"
                         ToolTip="Riduci zoom" Click="ZoomOutButton_Click" Margin="2,0"/>

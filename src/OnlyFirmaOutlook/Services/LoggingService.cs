@@ -3,10 +3,10 @@ using System.Text;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Servizio di logging centralizzato che scrive sia in memoria (per UI) che su file.
-/// Thread-safe, singleton.
-/// </summary>
+
+
+
+
 public sealed class LoggingService : IDisposable
 {
     private static readonly Lazy<LoggingService> _instance = new(() => new LoggingService());
@@ -41,7 +41,7 @@ public sealed class LoggingService : IDisposable
         }
         catch
         {
-            // Se non riusciamo a scrivere su file, continuiamo solo in memoria
+            
             _fileWriter = null;
         }
     }
@@ -63,7 +63,7 @@ public sealed class LoggingService : IDisposable
             }
             catch
             {
-                // Ignora errori di scrittura su file
+                
             }
         }
 

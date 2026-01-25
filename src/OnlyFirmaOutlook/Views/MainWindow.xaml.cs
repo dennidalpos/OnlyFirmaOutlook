@@ -12,10 +12,10 @@ using Clipboard = System.Windows.Clipboard;
 
 namespace OnlyFirmaOutlook.Views;
 
-/// <summary>
-/// MainWindow - Finestra principale dell'applicazione.
-/// Gestisce l'interfaccia utente per la conversione di documenti Word in firme Outlook.
-/// </summary>
+
+
+
+
 public partial class MainWindow : Window
 {
     private readonly LoggingService _logger;
@@ -35,7 +35,7 @@ public partial class MainWindow : Window
     private bool _isOutlookAvailable;
     private bool _isFolderWritable;
 
-    // Word editing state
+    
     private FileSystemWatcher? _fileWatcher;
     private DispatcherTimer? _wordCheckTimer;
     private DateTime _lastFileModifiedTime;
@@ -45,7 +45,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Inizializza servizi
+        
         _logger = LoggingService.Instance;
         _tempFileManager = TempFileManager.Instance;
         _presetService = new PresetService();
@@ -54,14 +54,14 @@ public partial class MainWindow : Window
         _wordConversionService = new WordConversionService();
         _wordEditorService = new WordEditorService();
 
-        // Sottoscrivi agli eventi di log
+        
         _logger.LogAdded += OnLogAdded;
 
-        // Carica il log esistente
+        
         LogTextBox.Text = _logger.GetFullLog();
         ScrollLogToEnd();
 
-        // Inizializza l'applicazione
+        
         Loaded += MainWindow_Loaded;
     }
 
@@ -69,14 +69,14 @@ public partial class MainWindow : Window
     {
         _logger.Log("Inizializzazione interfaccia...");
 
-        // Pulisci cartelle temporanee orfane
+        
         _tempFileManager.CleanupOrphanedFolders();
         _wordEditorService.CleanupOrphanedEditorFolders();
 
-        // Carica preset
+        
         LoadPresets();
 
-        // Inizializza in modo asincrono
+        
         await InitializeAsync();
 
         _logger.Log("Interfaccia pronta");
@@ -88,7 +88,7 @@ public partial class MainWindow : Window
 
         try
         {
-            // Verifica Word
+            
             if (!OfficeBitnessDetector.IsWordInstalled())
             {
                 MessageBox.Show(
@@ -99,19 +99,19 @@ public partial class MainWindow : Window
                     MessageBoxImage.Error);
             }
 
-            // Carica account Outlook
+            
             var accountResult = await Task.Run(() => _outlookAccountService.LoadAccounts());
 
             _isOutlookAvailable = accountResult.OutlookAvailable;
             _accounts = accountResult.Accounts;
 
-            // Configura UI in base a disponibilità Outlook
+            
             ConfigureOutlookUI();
 
-            // Imposta cartella destinazione predefinita
+            
             SetDefaultDestinationFolder();
 
-            // Carica firme esistenti
+            
             RefreshExistingSignatures();
         }
         finally
@@ -142,7 +142,7 @@ public partial class MainWindow : Window
     {
         if (_isOutlookAvailable && _accounts.Count > 0)
         {
-            // Outlook disponibile con account
+            
             OutlookWarningBorder.Visibility = Visibility.Collapsed;
             AccountLabel.Visibility = Visibility.Visible;
             AccountComboBox.Visibility = Visibility.Visible;
@@ -153,7 +153,7 @@ public partial class MainWindow : Window
             IdentifierTextBox.Visibility = Visibility.Collapsed;
             IdentifierHint.Visibility = Visibility.Collapsed;
 
-            // Seleziona il primo account
+            
             if (_accounts.Count > 0)
             {
                 AccountComboBox.SelectedIndex = 0;
@@ -161,7 +161,7 @@ public partial class MainWindow : Window
         }
         else if (_isOutlookAvailable && _accounts.Count == 0)
         {
-            // Outlook disponibile ma senza account configurati
+            
             OutlookWarningBorder.Visibility = Visibility.Visible;
             OutlookWarningText.Text = "Outlook è installato ma non sono configurati account. " +
                 "Puoi comunque creare la firma e copiarla manualmente.";
@@ -175,7 +175,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            // Outlook non disponibile
+            
             OutlookWarningBorder.Visibility = Visibility.Visible;
             OutlookWarningText.Text = "Outlook non è installato. La firma verrà salvata in una cartella locale. " +
                 "Potrai poi copiarla manualmente in %APPDATA%\\Microsoft\\Signatures.";
@@ -259,24 +259,24 @@ public partial class MainWindow : Window
         var hasDestination = !string.IsNullOrWhiteSpace(DestinationFolderTextBox.Text);
         var isDocumentReady = _currentEditorState?.IsReadyForConversion ?? false;
 
-        // Il pulsante Converti è abilitato SOLO se il documento è stato modificato e salvato
+        
         ConvertButton.IsEnabled = hasFile && hasSignatureName && hasDestination && _isFolderWritable && isDocumentReady;
 
-        // Aggiorna stato modifica firma
+        
         UpdateEditStatusDisplay();
 
         UpdateFinalSignatureName();
 
-        // Aggiorna evidenziazione step
+        
         UpdateStepHighlighting();
 
-        // Verifica sovrascrittura firme esistenti
+        
         CheckOverwriteWarning();
     }
 
-    /// <summary>
-    /// Aggiorna l'evidenziazione degli step in base allo stato corrente.
-    /// </summary>
+    
+    
+    
     private void UpdateStepHighlighting()
     {
         var hasSignatureSelected = _currentEditorState != null;
@@ -284,7 +284,7 @@ public partial class MainWindow : Window
         var hasDestination = _isFolderWritable;
         var isDocumentReady = _currentEditorState?.IsReadyForConversion ?? false;
 
-        // Step 1: Selezione firma
+        
         if (!hasSignatureSelected)
         {
             SetStepStyle(Step1Group, StepState.Current);
@@ -298,7 +298,7 @@ public partial class MainWindow : Window
 
         SetStepStyle(Step1Group, StepState.Completed);
 
-        // Step 2: Nome e account
+        
         if (!hasSignatureName)
         {
             SetStepStyle(Step2Group, StepState.Current);
@@ -311,7 +311,7 @@ public partial class MainWindow : Window
 
         SetStepStyle(Step2Group, StepState.Completed);
 
-        // Step 3: Cartella destinazione
+        
         if (!hasDestination)
         {
             SetStepStyle(Step3Group, StepState.Current);
@@ -323,7 +323,7 @@ public partial class MainWindow : Window
 
         SetStepStyle(Step3Group, StepState.Completed);
 
-        // Step 4: Modifica firma
+        
         if (!isDocumentReady)
         {
             SetStepStyle(Step4Group, StepState.Current);
@@ -334,7 +334,7 @@ public partial class MainWindow : Window
 
         SetStepStyle(Step4Group, StepState.Completed);
 
-        // Step 5 e 6: Completati (opzionali)
+        
         SetStepStyle(Step5Group, StepState.Completed);
         SetStepStyle(Step6Group, StepState.Completed);
     }
@@ -356,9 +356,9 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Verifica se la firma corrente sovrascriverà una esistente.
-    /// </summary>
+    
+    
+    
     private void CheckOverwriteWarning()
     {
         var baseName = SignatureNameTextBox.Text?.Trim() ?? string.Empty;
@@ -443,27 +443,26 @@ public partial class MainWindow : Window
         FinalNameBorder.Visibility = Visibility.Visible;
     }
 
-    #region Word Editor Methods
 
-    /// <summary>
-    /// Prepara un file per l'editing e apre Word direttamente.
-    /// </summary>
+    
+    
+    
     private void PrepareAndOpenInWord(string sourceFilePath, string proposedSignatureName)
     {
         try
         {
             _logger.Log($"Preparazione file per Word: {proposedSignatureName}");
 
-            // Prepara il file per l'editing (copia in cartella EditorTemp dedicata)
+            
             _currentEditorState = _wordEditorService.PrepareFileForEditing(sourceFilePath, proposedSignatureName);
 
-            // Aggiorna il percorso del file selezionato con la copia nell'EditorTemp
+            
             _selectedFilePath = _currentEditorState.LocalFilePath;
 
-            // Salva il timestamp iniziale del file
+            
             _lastFileModifiedTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
 
-            // Apri Word direttamente
+            
             OpenWordDocument(_currentEditorState.LocalFilePath);
 
             UpdateConvertButtonState();
@@ -479,16 +478,16 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Apre un documento in Word e avvia il monitoraggio.
-    /// </summary>
+    
+    
+    
     private void OpenWordDocument(string filePath)
     {
         try
         {
             _logger.Log($"Apertura documento in Word: {filePath}");
 
-            // Avvia Word con il documento
+            
             var startInfo = new ProcessStartInfo
             {
                 FileName = filePath,
@@ -496,16 +495,16 @@ public partial class MainWindow : Window
             };
             Process.Start(startInfo);
 
-            // Marca come aperto
+            
             if (_currentEditorState != null)
             {
                 _currentEditorState.IsDocumentOpened = true;
             }
 
-            // Avvia monitoraggio file
+            
             StartFileWatcher(filePath);
 
-            // Avvia timer per verificare se Word è ancora aperto
+            
             StartWordCheckTimer();
 
             _isWordOpen = true;
@@ -524,9 +523,9 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Avvia il FileSystemWatcher per monitorare le modifiche al file.
-    /// </summary>
+    
+    
+    
     private void StartFileWatcher(string filePath)
     {
         StopFileWatcher();
@@ -540,11 +539,13 @@ public partial class MainWindow : Window
 
             _fileWatcher = new FileSystemWatcher(directory, fileName)
             {
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
                 EnableRaisingEvents = true
             };
 
             _fileWatcher.Changed += OnFileChanged;
+            _fileWatcher.Created += OnFileChanged;
+            _fileWatcher.Renamed += OnFileChanged;
 
             _logger.Log($"FileWatcher avviato per: {fileName}");
         }
@@ -560,6 +561,8 @@ public partial class MainWindow : Window
         {
             _fileWatcher.EnableRaisingEvents = false;
             _fileWatcher.Changed -= OnFileChanged;
+            _fileWatcher.Created -= OnFileChanged;
+            _fileWatcher.Renamed -= OnFileChanged;
             _fileWatcher.Dispose();
             _fileWatcher = null;
         }
@@ -567,14 +570,20 @@ public partial class MainWindow : Window
 
     private void OnFileChanged(object sender, FileSystemEventArgs e)
     {
-        // Esegui sul thread UI
+        
         Dispatcher.InvokeAsync(() =>
         {
             try
             {
                 if (_currentEditorState == null) return;
 
-                // Verifica se il file è stato effettivamente modificato
+                
+                if (!File.Exists(_currentEditorState.LocalFilePath))
+                {
+                    _logger.LogWarning("File temporaneo non trovato durante il controllo modifica.");
+                    return;
+                }
+
                 var currentModTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
                 if (currentModTime > _lastFileModifiedTime)
                 {
@@ -593,9 +602,9 @@ public partial class MainWindow : Window
         });
     }
 
-    /// <summary>
-    /// Avvia il timer per verificare periodicamente se Word è ancora aperto.
-    /// </summary>
+    
+    
+    
     private void StartWordCheckTimer()
     {
         StopWordCheckTimer();
@@ -622,19 +631,19 @@ public partial class MainWindow : Window
     {
         if (_currentEditorState == null) return;
 
-        // Verifica se ci sono processi Word che hanno il file aperto
+        
         var isWordStillOpen = IsFileLockedByWord(_currentEditorState.LocalFilePath);
 
         if (_isWordOpen && !isWordStillOpen)
         {
-            // Word è stato chiuso
+            
             _isWordOpen = false;
             _logger.Log("Word chiuso - documento non più in editing");
 
             StopWordCheckTimer();
             StopFileWatcher();
 
-            // Verifica finale se il file è stato modificato
+            
             CheckFinalFileState();
 
             UpdateWordOpenIndicator();
@@ -642,20 +651,25 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Verifica se il file è bloccato da Word.
-    /// </summary>
+    
+    
+    
     private bool IsFileLockedByWord(string filePath)
     {
         try
         {
-            // Prova ad aprire il file in modo esclusivo
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
+            
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            return false; // File non è bloccato
+            return false; 
         }
         catch (IOException)
         {
-            return true; // File è bloccato (probabilmente da Word)
+            return true; 
         }
         catch
         {
@@ -663,15 +677,21 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>
-    /// Verifica finale dello stato del file dopo la chiusura di Word.
-    /// </summary>
+    
+    
+    
     private void CheckFinalFileState()
     {
         if (_currentEditorState == null) return;
 
         try
         {
+            if (!File.Exists(_currentEditorState.LocalFilePath))
+            {
+                _logger.LogWarning("File temporaneo non trovato durante verifica finale.");
+                return;
+            }
+
             var currentModTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
             if (currentModTime > _lastFileModifiedTime)
             {
@@ -692,9 +712,9 @@ public partial class MainWindow : Window
         WordOpenIndicator.Visibility = _isWordOpen ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    /// <summary>
-    /// Apre/riapre Word per il file corrente.
-    /// </summary>
+    
+    
+    
     private void EditSignatureButton_Click(object sender, RoutedEventArgs e)
     {
         if (_currentEditorState == null || string.IsNullOrEmpty(_selectedFilePath))
@@ -707,7 +727,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Verifica che il file locale esista ancora
+        
         if (!_wordEditorService.ValidateEditorState(_currentEditorState))
         {
             MessageBox.Show(
@@ -721,13 +741,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Apri Word direttamente
+        
         OpenWordDocument(_currentEditorState.LocalFilePath);
     }
 
-    #endregion
 
-    #region Event Handlers
 
     private void PresetListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -735,15 +753,15 @@ public partial class MainWindow : Window
 
         try
         {
-            // Copia il file dalla share (se necessario) alla cartella temporanea locale
+            
             var tempFilePath = _tempFileManager.CopyToLocalTemp(preset.FullPath);
 
-            // Prepara il file per l'editing (crea EditorState) ma NON apre Word
+            
             _currentEditorState = _wordEditorService.PrepareFileForEditing(tempFilePath, preset.DisplayName);
             _selectedFilePath = _currentEditorState.LocalFilePath;
             _lastFileModifiedTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
 
-            // Aggiorna UI
+            
             SelectedFileText.Text = preset.FileName;
             SignatureNameTextBox.Text = preset.DisplayName;
 
@@ -775,10 +793,10 @@ public partial class MainWindow : Window
         {
             try
             {
-                // Deseleziona eventuale preset
+                
                 PresetListBox.SelectedItem = null;
 
-                // Se il file è su una share di rete, copialo localmente
+                
                 string sourceFile;
                 if (TempFileManager.IsUncPath(dialog.FileName))
                 {
@@ -792,12 +810,12 @@ public partial class MainWindow : Window
                 var fileName = Path.GetFileName(dialog.FileName);
                 var proposedName = Path.GetFileNameWithoutExtension(fileName);
 
-                // Prepara il file per l'editing (crea EditorState) ma NON apre Word
+                
                 _currentEditorState = _wordEditorService.PrepareFileForEditing(sourceFile, proposedName);
                 _selectedFilePath = _currentEditorState.LocalFilePath;
                 _lastFileModifiedTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
 
-                // Aggiorna UI
+                
                 SelectedFileText.Text = fileName;
                 SignatureNameTextBox.Text = proposedName;
 
@@ -857,7 +875,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Verifica che il documento sia stato modificato e salvato
+        
         if (_currentEditorState == null || !_currentEditorState.IsReadyForConversion)
         {
             MessageBox.Show(
@@ -876,7 +894,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Determina l'identificativo
+        
         string? identifier = null;
         if (_isOutlookAvailable && AccountComboBox.SelectedItem is OutlookAccount account)
         {
@@ -890,7 +908,7 @@ public partial class MainWindow : Window
         var finalSignatureName = WordConversionService.GenerateSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
-        // Verifica se esiste già una firma con questo nome
+        
         if (_signatureRepository.SignatureExists(destinationFolder, finalSignatureName))
         {
             var result = MessageBox.Show(
@@ -904,7 +922,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            // Elimina i file esistenti
+            
             _signatureRepository.DeleteExistingSignatureFiles(destinationFolder, finalSignatureName);
         }
 
@@ -914,7 +932,7 @@ public partial class MainWindow : Window
         {
             var useFilteredHtml = FilteredHtmlRadio.IsChecked == true;
 
-            // Esegui la conversione su un thread in background (ma con STA)
+            
             var conversionResult = await Task.Run(() =>
             {
                 return _wordConversionService.ConvertDocument(
@@ -928,21 +946,21 @@ public partial class MainWindow : Window
             {
                 _logger.Log("Conversione completata con successo!");
 
-                // Cleanup cartella EditorTemp dopo conversione riuscita
+                
                 if (_currentEditorState != null)
                 {
                     _wordEditorService.CleanupEditorTempFolder(_currentEditorState.EditorSessionId);
                     _currentEditorState = null;
                 }
 
-                // Reset stato
+                
                 _selectedFilePath = null;
                 UpdateConvertButtonState();
 
-                // Aggiorna lista firme
+                
                 RefreshExistingSignatures();
 
-                // Apri Esplora File nella cartella di destinazione
+                
                 OpenDestinationFolder(destinationFolder, conversionResult.HtmFilePath);
 
                 MessageBox.Show(
@@ -988,12 +1006,12 @@ public partial class MainWindow : Window
         {
             if (!string.IsNullOrEmpty(htmFilePath) && File.Exists(htmFilePath))
             {
-                // Apri Esplora File e seleziona il file HTM
+                
                 Process.Start("explorer.exe", $"/select,\"{htmFilePath}\"");
             }
             else if (Directory.Exists(folderPath))
             {
-                // Apri solo la cartella
+                
                 Process.Start("explorer.exe", folderPath);
             }
         }
@@ -1095,9 +1113,7 @@ public partial class MainWindow : Window
         }
     }
 
-    #endregion
 
-    #region UI Helpers
 
     private void SetBusy(bool isBusy, string? message = null)
     {
@@ -1108,7 +1124,7 @@ public partial class MainWindow : Window
             BusyMessage.Text = message;
         }
 
-        // Disabilita/abilita i controlli
+        
         PresetListBox.IsEnabled = !isBusy;
         LoadCustomButton.IsEnabled = !isBusy;
         SignatureNameTextBox.IsEnabled = !isBusy;
@@ -1136,11 +1152,10 @@ public partial class MainWindow : Window
         LogTextBox.ScrollToEnd();
     }
 
-    #endregion
 
     protected override void OnClosed(EventArgs e)
     {
-        // Cleanup watcher e timer
+        
         StopFileWatcher();
         StopWordCheckTimer();
 

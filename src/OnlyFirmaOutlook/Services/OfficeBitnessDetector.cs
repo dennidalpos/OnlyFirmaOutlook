@@ -3,10 +3,10 @@ using Microsoft.Win32;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Rileva la bitness (32-bit o 64-bit) di Microsoft Office installato.
-/// Supporta Office 2013, 2016, 2019, 2021, 365.
-/// </summary>
+
+
+
+
 public static class OfficeBitnessDetector
 {
     private static readonly LoggingService _logger = LoggingService.Instance;
@@ -18,14 +18,14 @@ public static class OfficeBitnessDetector
         x64
     }
 
-    /// <summary>
-    /// Rileva la bitness di Office installato.
-    /// </summary>
+    
+    
+    
     public static OfficeBitness DetectOfficeBitness()
     {
         _logger.Log("Rilevamento bitness Office in corso...");
 
-        // Metodo 1: Chiave Outlook (più affidabile)
+        
         var outlookBitness = DetectFromOutlookKey();
         if (outlookBitness != OfficeBitness.Unknown)
         {
@@ -33,7 +33,7 @@ public static class OfficeBitnessDetector
             return outlookBitness;
         }
 
-        // Metodo 2: Chiave ClickToRun
+        
         var clickToRunBitness = DetectFromClickToRun();
         if (clickToRunBitness != OfficeBitness.Unknown)
         {
@@ -41,7 +41,7 @@ public static class OfficeBitnessDetector
             return clickToRunBitness;
         }
 
-        // Metodo 3: Chiave MSI Installation
+        
         var msiBitness = DetectFromMsiInstallation();
         if (msiBitness != OfficeBitness.Unknown)
         {
@@ -49,7 +49,7 @@ public static class OfficeBitnessDetector
             return msiBitness;
         }
 
-        // Metodo 4: Verifica esistenza file Word
+        
         var wordExeBitness = DetectFromWordExecutable();
         if (wordExeBitness != OfficeBitness.Unknown)
         {
@@ -63,14 +63,14 @@ public static class OfficeBitnessDetector
 
     private static OfficeBitness DetectFromOutlookKey()
     {
-        // Outlook bitness è indicato nella chiave Bitness
+        
         string[] outlookVersions = { "16.0", "15.0", "14.0" };
 
         foreach (var version in outlookVersions)
         {
             try
             {
-                // Prima prova HKLM
+                
                 using var key = Registry.LocalMachine.OpenSubKey(
                     $@"SOFTWARE\Microsoft\Office\{version}\Outlook", false);
                 if (key != null)
@@ -84,7 +84,7 @@ public static class OfficeBitnessDetector
                     }
                 }
 
-                // Poi prova WOW6432Node (32-bit su 64-bit OS)
+                
                 using var key32 = Registry.LocalMachine.OpenSubKey(
                     $@"SOFTWARE\WOW6432Node\Microsoft\Office\{version}\Outlook", false);
                 if (key32 != null)
@@ -96,7 +96,7 @@ public static class OfficeBitnessDetector
                             ? OfficeBitness.x64
                             : OfficeBitness.x86;
                     }
-                    // Se la chiave esiste in WOW6432Node senza Bitness, è probabilmente 32-bit
+                    
                     return OfficeBitness.x86;
                 }
             }
@@ -113,7 +113,7 @@ public static class OfficeBitnessDetector
     {
         try
         {
-            // ClickToRun configuration
+            
             using var key = Registry.LocalMachine.OpenSubKey(
                 @"SOFTWARE\Microsoft\Office\ClickToRun\Configuration", false);
             if (key != null)
@@ -127,7 +127,7 @@ public static class OfficeBitnessDetector
                 }
             }
 
-            // WOW6432Node per 32-bit Office su 64-bit OS
+            
             using var key32 = Registry.LocalMachine.OpenSubKey(
                 @"SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration", false);
             if (key32 != null)
@@ -158,7 +158,7 @@ public static class OfficeBitnessDetector
         {
             try
             {
-                // Cerca in HKLM per installazione MSI
+                
                 using var key = Registry.LocalMachine.OpenSubKey(
                     $@"SOFTWARE\Microsoft\Office\{version}\Word\InstallRoot", false);
                 if (key != null)
@@ -166,7 +166,7 @@ public static class OfficeBitnessDetector
                     var path = key.GetValue("Path") as string;
                     if (!string.IsNullOrEmpty(path))
                     {
-                        // Se il path contiene "Program Files (x86)", è 32-bit
+                        
                         if (path.Contains("Program Files (x86)", StringComparison.OrdinalIgnoreCase))
                         {
                             return OfficeBitness.x86;
@@ -178,7 +178,7 @@ public static class OfficeBitnessDetector
                     }
                 }
 
-                // WOW6432Node
+                
                 using var key32 = Registry.LocalMachine.OpenSubKey(
                     $@"SOFTWARE\WOW6432Node\Microsoft\Office\{version}\Word\InstallRoot", false);
                 if (key32 != null)
@@ -197,20 +197,20 @@ public static class OfficeBitnessDetector
 
     private static OfficeBitness DetectFromWordExecutable()
     {
-        // Percorsi comuni per Word
+        
         string[] possiblePaths =
         {
-            // Office 365 / 2021 / 2019 (64-bit)
+            
             @"C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE",
-            // Office 365 / 2021 / 2019 (32-bit)
+            
             @"C:\Program Files (x86)\Microsoft Office\root\Office16\WINWORD.EXE",
-            // Office 2016 (64-bit)
+            
             @"C:\Program Files\Microsoft Office\Office16\WINWORD.EXE",
-            // Office 2016 (32-bit)
+            
             @"C:\Program Files (x86)\Microsoft Office\Office16\WINWORD.EXE",
-            // Office 2013 (64-bit)
+            
             @"C:\Program Files\Microsoft Office\Office15\WINWORD.EXE",
-            // Office 2013 (32-bit)
+            
             @"C:\Program Files (x86)\Microsoft Office\Office15\WINWORD.EXE",
         };
 
@@ -228,16 +228,16 @@ public static class OfficeBitnessDetector
         return OfficeBitness.Unknown;
     }
 
-    /// <summary>
-    /// Verifica se Word è installato.
-    /// </summary>
+    
+    
+    
     public static bool IsWordInstalled()
     {
         _logger.Log("Verifica installazione Word...");
 
         try
         {
-            // Controlla se la classe COM di Word è registrata
+            
             var wordType = Type.GetTypeFromProgID("Word.Application");
             var installed = wordType != null;
             _logger.Log($"Word installato: {installed}");
@@ -250,9 +250,9 @@ public static class OfficeBitnessDetector
         }
     }
 
-    /// <summary>
-    /// Verifica se Outlook è installato.
-    /// </summary>
+    
+    
+    
     public static bool IsOutlookInstalled()
     {
         _logger.Log("Verifica installazione Outlook...");

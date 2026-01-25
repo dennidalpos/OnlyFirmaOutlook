@@ -10,17 +10,17 @@ using WpfLabel = System.Windows.Controls.Label;
 
 namespace OnlyFirmaOutlook.Controls;
 
-/// <summary>
-/// Toolbar personalizzata per controllare Word via COM.
-/// Non usa Ribbon Office, solo comandi COM diretti.
-/// </summary>
+
+
+
+
 public partial class WordToolbar : WpfUserControl
 {
     private readonly LoggingService _logger;
     private dynamic? _wordDocument;
     private dynamic? _wordApplication;
 
-    // Costanti Word per formattazione
+    
     private const int WdAlignParagraphLeft = 0;
     private const int WdAlignParagraphCenter = 1;
     private const int WdAlignParagraphRight = 2;
@@ -32,7 +32,7 @@ public partial class WordToolbar : WpfUserControl
         InitializeComponent();
         _logger = LoggingService.Instance;
 
-        // Carica font di sistema
+        
         LoadSystemFonts();
     }
 
@@ -48,7 +48,7 @@ public partial class WordToolbar : WpfUserControl
 
             FontComboBox.ItemsSource = fontNames;
 
-            // Seleziona Calibri o Arial come default
+            
             var defaultFont = fontNames.FirstOrDefault(f => f == "Calibri")
                            ?? fontNames.FirstOrDefault(f => f == "Arial")
                            ?? fontNames.FirstOrDefault();
@@ -97,7 +97,6 @@ public partial class WordToolbar : WpfUserControl
         DocumentModified?.Invoke(this, EventArgs.Empty);
     }
 
-    #region Font Handlers
 
     private void FontComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -143,9 +142,7 @@ public partial class WordToolbar : WpfUserControl
         }
     }
 
-    #endregion
 
-    #region Formattazione Handlers
 
     private void BoldButton_Click(object sender, RoutedEventArgs e)
     {
@@ -186,7 +183,7 @@ public partial class WordToolbar : WpfUserControl
         try
         {
             var selection = _wordDocument.Application.Selection;
-            // 1 = wdUnderlineSingle, 0 = wdUnderlineNone
+            
             selection.Font.Underline = UnderlineButton.IsChecked == true ? 1 : 0;
             NotifyDocumentModified();
         }
@@ -207,7 +204,7 @@ public partial class WordToolbar : WpfUserControl
             if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 var color = colorDialog.Color;
-                // Word usa RGB in formato inverso: BGR
+                
                 var rgbValue = (color.B << 16) | (color.G << 8) | color.R;
 
                 var selection = _wordDocument.Application.Selection;
@@ -221,9 +218,7 @@ public partial class WordToolbar : WpfUserControl
         }
     }
 
-    #endregion
 
-    #region Allineamento Handlers
 
     private void AlignLeftButton_Click(object sender, RoutedEventArgs e)
     {
@@ -250,7 +245,7 @@ public partial class WordToolbar : WpfUserControl
             selection.ParagraphFormat.Alignment = alignment;
             NotifyDocumentModified();
 
-            // Aggiorna stato pulsanti
+            
             AlignLeftButton.IsChecked = alignment == WdAlignParagraphLeft;
             AlignCenterButton.IsChecked = alignment == WdAlignParagraphCenter;
             AlignRightButton.IsChecked = alignment == WdAlignParagraphRight;
@@ -261,9 +256,7 @@ public partial class WordToolbar : WpfUserControl
         }
     }
 
-    #endregion
 
-    #region Inserimenti Handlers
 
     private void InsertLinkButton_Click(object sender, RoutedEventArgs e)
     {
@@ -322,9 +315,7 @@ public partial class WordToolbar : WpfUserControl
         }
     }
 
-    #endregion
 
-    #region Modifica Handlers
 
     private void UndoButton_Click(object sender, RoutedEventArgs e)
     {
@@ -356,9 +347,7 @@ public partial class WordToolbar : WpfUserControl
         }
     }
 
-    #endregion
 
-    #region Zoom Handlers
 
     private void ZoomInButton_Click(object sender, RoutedEventArgs e)
     {
@@ -387,12 +376,11 @@ public partial class WordToolbar : WpfUserControl
         }
     }
 
-    #endregion
 }
 
-/// <summary>
-/// Dialog semplice per inserimento link.
-/// </summary>
+
+
+
 internal class InsertLinkDialog : Window
 {
     private readonly WpfTextBox _urlTextBox;

@@ -26,14 +26,14 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Status Bar -->
+            
             <RowDefinition Height="*"/>
-            <!-- Word Editor Info -->
+            
             <RowDefinition Height="Auto"/>
-            <!-- Bottom Buttons -->
+            
         </Grid.RowDefinitions>
 
-        <!-- Status Bar -->
+        
         <Border Grid.Row="0" Background="#E8E8E8" BorderBrush="#CCCCCC" BorderThickness="0,1" Padding="10,6">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -57,7 +57,7 @@
             </Grid>
         </Border>
 
-        <!-- Word Editor Info -->
+        
         <Border Grid.Row="1" BorderBrush="#CCCCCC" BorderThickness="1" Margin="10" Background="#F8F8F8" CornerRadius="8">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="📝" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,20"/>
@@ -71,7 +71,7 @@
             </StackPanel>
         </Border>
 
-        <!-- Bottom Buttons -->
+        
         <Border Grid.Row="2" Background="#F5F5F5" BorderBrush="#CCCCCC" BorderThickness="0,1,0,0" Padding="12">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -79,7 +79,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Left Side Info -->
+                
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="⚠" FontSize="16" Foreground="DarkOrange" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="#666666">
@@ -87,7 +87,7 @@
                     </TextBlock>
                 </StackPanel>
 
-                <!-- Right Side Buttons -->
+                
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="SaveButton"
                             Content="💾 Salva"
@@ -110,7 +110,7 @@
             </Grid>
         </Border>
 
-        <!-- Busy Overlay -->
+        
         <Grid x:Name="BusyOverlay" Grid.RowSpan="3" Background="#AA000000" Visibility="Collapsed">
             <Border Background="White"
                     CornerRadius="8"

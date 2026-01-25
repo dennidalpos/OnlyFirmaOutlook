@@ -11,7 +11,7 @@
         Background="#F3F3F3">
 
     <Window.Resources>
-        <!-- Stile base per GroupBox -->
+        
         <Style x:Key="StepGroupBoxStyle" TargetType="GroupBox">
             <Setter Property="BorderBrush" Value="#CCCCCC"/>
             <Setter Property="BorderThickness" Value="2"/>
@@ -19,25 +19,25 @@
             <Setter Property="Padding" Value="12"/>
         </Style>
 
-        <!-- Stile per step completato -->
+        
         <Style x:Key="CompletedStepStyle" TargetType="GroupBox" BasedOn="{StaticResource StepGroupBoxStyle}">
             <Setter Property="BorderBrush" Value="#4CAF50"/>
         </Style>
 
-        <!-- Stile per step corrente (next action) -->
+        
         <Style x:Key="CurrentStepStyle" TargetType="GroupBox" BasedOn="{StaticResource StepGroupBoxStyle}">
             <Setter Property="BorderBrush" Value="#1976D2"/>
             <Setter Property="BorderThickness" Value="3"/>
         </Style>
 
-        <!-- Stile per step non ancora raggiunto -->
+        
         <Style x:Key="PendingStepStyle" TargetType="GroupBox" BasedOn="{StaticResource StepGroupBoxStyle}">
             <Setter Property="BorderBrush" Value="#E0E0E0"/>
         </Style>
     </Window.Resources>
 
     <Grid>
-        <!-- Overlay per stato busy -->
+        
         <Grid x:Name="BusyOverlay" Visibility="Collapsed" Panel.ZIndex="100">
             <Rectangle Fill="#80000000"/>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -48,16 +48,16 @@
             </StackPanel>
         </Grid>
 
-        <!-- Contenuto principale -->
+        
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
             <StackPanel>
-                <!-- Titolo -->
+                
                 <TextBlock Text="OnlyFirmaOutlook" FontSize="24" FontWeight="Bold"
                            Foreground="#0078D4" Margin="0,0,0,4"/>
                 <TextBlock Text="Converti documenti Word in firme per Outlook"
                            FontSize="12" Foreground="#605E5C" Margin="0,0,0,16"/>
 
-                <!-- Warning Outlook -->
+                
                 <Border x:Name="OutlookWarningBorder" Visibility="Collapsed"
                         Background="#FFF4CE" BorderBrush="#C19600" BorderThickness="1"
                         CornerRadius="2" Padding="12" Margin="0,0,0,16">
@@ -67,7 +67,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- STEP 1: Selezione documento sorgente -->
+                
                 <GroupBox x:Name="Step1Group" Header="1. Seleziona firma da modificare *" Style="{StaticResource CurrentStepStyle}">
                     <StackPanel>
                         <TextBlock Text="Preset disponibili:" Margin="0,0,0,4"/>
@@ -86,7 +86,7 @@
                     </StackPanel>
                 </GroupBox>
 
-                <!-- STEP 2: Configurazione firma -->
+                
                 <GroupBox x:Name="Step2Group" Header="2. Configura nome e account" Style="{StaticResource PendingStepStyle}">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -101,13 +101,13 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Nome firma -->
+                        
                         <Label Content="Nome firma *:" Grid.Row="0" Grid.Column="0"
                                VerticalAlignment="Center"/>
                         <TextBox x:Name="SignatureNameTextBox" Grid.Row="0" Grid.Column="1"
                                  TextChanged="SignatureNameTextBox_TextChanged"/>
 
-                        <!-- Account Outlook (visibile solo se Outlook disponibile) -->
+                        
                         <Label x:Name="AccountLabel" Content="Account Outlook:"
                                Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
                                Margin="0,8,0,0"/>
@@ -115,7 +115,7 @@
                                   Margin="0,8,0,0"
                                   SelectionChanged="AccountComboBox_SelectionChanged"/>
 
-                        <!-- Identificativo (visibile solo se Outlook NON disponibile) -->
+                        
                         <Label x:Name="IdentifierLabel" Content="Identificativo:"
                                Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
                                Margin="0,8,0,0" Visibility="Collapsed"/>
@@ -125,7 +125,7 @@
                                    Text="(Opzionale, es. email o nome utente)"
                                    Foreground="#A19F9D" FontSize="11" Visibility="Collapsed"/>
 
-                        <!-- Nome firma finale -->
+                        
                         <Border Grid.Row="4" Grid.ColumnSpan="2" Background="#E8F5E9"
                                 CornerRadius="4" Padding="10" Margin="0,12,0,0"
                                 x:Name="FinalNameBorder" Visibility="Collapsed">
@@ -137,7 +137,7 @@
                     </Grid>
                 </GroupBox>
 
-                <!-- STEP 3: Cartella destinazione -->
+                
                 <GroupBox x:Name="Step3Group" Header="3. Cartella destinazione" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
                         <Grid>
@@ -156,7 +156,7 @@
                     </StackPanel>
                 </GroupBox>
 
-                <!-- STEP 4: Modifica firma (obbligatorio) -->
+                
                 <GroupBox x:Name="Step4Group" Header="4. Modifica firma in Word *" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
                         <Border Background="#FFF4CE" BorderBrush="#C19600" BorderThickness="1"
@@ -188,7 +188,7 @@
                                     IsEnabled="False" MinWidth="130"/>
                         </Grid>
 
-                        <!-- Indicatore Word aperto -->
+                        
                         <Border x:Name="WordOpenIndicator" Visibility="Collapsed"
                                 Background="#E3F2FD" BorderBrush="#1976D2" BorderThickness="1"
                                 CornerRadius="2" Padding="12">
@@ -201,7 +201,7 @@
                     </StackPanel>
                 </GroupBox>
 
-                <!-- STEP 5: Opzioni HTML -->
+                
                 <GroupBox x:Name="Step5Group" Header="5. Formato HTML" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
                         <RadioButton x:Name="FilteredHtmlRadio" Content="HTML Filtrato (consigliato)"
@@ -216,10 +216,10 @@
                     </StackPanel>
                 </GroupBox>
 
-                <!-- STEP 6: Firme esistenti -->
+                
                 <GroupBox x:Name="Step6Group" Header="6. Firme esistenti (verifica sovrascrittura)" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
-                        <!-- Warning sovrascrittura -->
+                        
                         <Border x:Name="OverwriteWarningBorder" Visibility="Collapsed"
                                 Background="#FFEBEE" BorderBrush="#C62828" BorderThickness="1"
                                 CornerRadius="2" Padding="10" Margin="0,0,0,8">
@@ -246,7 +246,7 @@
                     </StackPanel>
                 </GroupBox>
 
-                <!-- Pulsante conversione -->
+                
                 <Button x:Name="ConvertButton" Content="✓ Converti e salva firma"
                         Style="{StaticResource PrimaryButtonStyle}"
                         HorizontalAlignment="Stretch" Height="48"
@@ -254,7 +254,7 @@
                         FontSize="15" FontWeight="Bold"
                         Margin="0,4,0,16"/>
 
-                <!-- Log -->
+                
                 <GroupBox Header="Log">
                     <Grid>
                         <Grid.RowDefinitions>
