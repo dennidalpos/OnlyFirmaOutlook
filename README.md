@@ -24,7 +24,7 @@ OnlyFirmaOutlook è un'applicazione desktop Windows (WPF) che trasforma document
 
 1. Avvia `OnlyFirmaOutlook.Launcher.exe` dalla cartella di distribuzione.
 2. Seleziona un preset o carica un documento Word.
-3. Modifica il documento in Word, salva e chiudi.
+3. Modifica il documento in Word, salva (Maiusc+F12) e chiudi.
 4. Imposta il nome della firma (e l'account se disponibile).
 5. Scegli il formato HTML e conferma la conversione.
 6. Se necessario, ripristina un backup o elimina quelli obsoleti.
