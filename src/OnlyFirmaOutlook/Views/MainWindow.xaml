@@ -234,12 +234,12 @@
                 <GroupBox x:Name="Step5Group" Header="5. Formato HTML" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
                         <RadioButton x:Name="FilteredHtmlRadio" Content="HTML Filtrato (consigliato)"
-                                     IsChecked="True" GroupName="HtmlType"/>
+                                     GroupName="HtmlType"/>
                         <TextBlock Text="Rimuove stili e formattazioni non necessarie. Più leggero e compatibile."
                                    Foreground="#605E5C" FontSize="11" Margin="20,0,0,8"/>
 
                         <RadioButton x:Name="CompleteHtmlRadio" Content="HTML Completo"
-                                     GroupName="HtmlType"/>
+                                     IsChecked="True" GroupName="HtmlType"/>
                         <TextBlock Text="Mantiene tutti gli stili Word. File più grande, possibili problemi di visualizzazione."
                                    Foreground="#605E5C" FontSize="11" Margin="20,0,0,0"/>
                     </StackPanel>

@@ -220,6 +220,8 @@ public class WordConversionService
                 result.AssetsFolderPath = assetsFolder;
                 result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
                 result.TxtFilePath = Path.Combine(destinationFolder, signatureName + ".txt");
+
+                CleanupWordAssetFolders(destinationFolder, signatureName);
             }
             catch (Exception ex)
             {
@@ -228,6 +230,25 @@ public class WordConversionService
         }
 
         return result;
+    }
+
+    private void CleanupWordAssetFolders(string destinationFolder, string signatureName)
+    {
+        var basePath = Path.Combine(destinationFolder, signatureName);
+        var filesFolderPath = basePath + "_files";
+        var fileFolderPath = basePath + "_file";
+
+        if (Directory.Exists(filesFolderPath) && Directory.Exists(fileFolderPath))
+        {
+            try
+            {
+                Directory.Delete(fileFolderPath, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Impossibile eliminare cartella assets duplicata: {ex.Message}");
+            }
+        }
     }
 
     private static string? ReadAllTextWithRetry(string path)
