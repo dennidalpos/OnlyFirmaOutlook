@@ -1,0 +1,7 @@
+# Questa cartella contiene i preset (documenti Word) per le firme.
+# Posizionare qui i file .doc o .docx che verranno mostrati come preset nell'applicazione.
+#
+# Esempio:
+# - FirmaAziendale.docx
+# - FirmaMinimale.docx
+# - FirmaConLogo.docx
