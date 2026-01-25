@@ -30,8 +30,18 @@ public static class WordHtmlCidPostProcessor
         var normalizedBaseDirectory = Path.GetFullPath(baseDirectory);
         var imagesByPath = new Dictionary<string, InlineImage>(StringComparer.OrdinalIgnoreCase);
 
-        string rewrittenHtml = ReplaceLocalSourcesWithCid(html, normalizedBaseDirectory, imagesByPath, ImageSrcRegex);
-        rewrittenHtml = ReplaceLocalSourcesWithCid(rewrittenHtml, normalizedBaseDirectory, imagesByPath, CssUrlRegex);
+        string rewrittenHtml = ReplaceLocalSourcesWithCid(
+            html,
+            normalizedBaseDirectory,
+            imagesByPath,
+            ImageSrcRegex,
+            isCssUrl: false);
+        rewrittenHtml = ReplaceLocalSourcesWithCid(
+            rewrittenHtml,
+            normalizedBaseDirectory,
+            imagesByPath,
+            CssUrlRegex,
+            isCssUrl: true);
 
         return (rewrittenHtml, imagesByPath.Values.ToList());
     }
@@ -40,11 +50,16 @@ public static class WordHtmlCidPostProcessor
         string html,
         string baseDirectory,
         Dictionary<string, InlineImage> imagesByPath,
-        Regex regex)
+        Regex regex,
+        bool isCssUrl)
     {
         return regex.Replace(html, match =>
         {
             var srcValue = match.Groups["inner"].Value;
+            if (isCssUrl)
+            {
+                srcValue = NormalizeCssUrl(srcValue);
+            }
             if (ShouldIgnoreSource(srcValue))
             {
                 return match.Value;
@@ -74,6 +89,11 @@ public static class WordHtmlCidPostProcessor
                 cidValue,
                 match.Value.AsSpan(relativeStart + relativeLength));
         });
+    }
+
+    private static string NormalizeCssUrl(string value)
+    {
+        return Regex.Replace(value, @"\\(.)", "$1");
     }
 
     private static bool ShouldIgnoreSource(string src)
