@@ -1021,6 +1021,8 @@ public partial class MainWindow : Window
                     "Conversione completata",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
+
+                ResetUiForNewSignature();
             }
             else
             {
@@ -1196,6 +1198,26 @@ public partial class MainWindow : Window
     private void ScrollLogToEnd()
     {
         LogTextBox.ScrollToEnd();
+    }
+
+    private void ResetUiForNewSignature()
+    {
+        _selectedFilePath = null;
+        _currentEditorState = null;
+        _isWordOpen = false;
+
+        PresetListBox.SelectedItem = null;
+        SelectedFileText.Text = "Nessun file selezionato";
+        SignatureNameTextBox.Text = string.Empty;
+        IdentifierTextBox.Text = string.Empty;
+        AccountComboBox.SelectedIndex = _accounts.Count > 0 ? 0 : -1;
+        FilteredHtmlRadio.IsChecked = true;
+        CompleteHtmlRadio.IsChecked = false;
+        ExistingSignaturesListBox.SelectedItem = null;
+
+        UpdateWordOpenIndicator();
+        RefreshExistingSignatures();
+        UpdateConvertButtonState();
     }
 
     private void GuideToggleButton_Checked(object sender, RoutedEventArgs e)
