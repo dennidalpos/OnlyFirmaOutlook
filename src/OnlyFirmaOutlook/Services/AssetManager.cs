@@ -22,6 +22,7 @@ public class AssetManager
         doc.LoadHtml(html);
 
         var imgNodes = doc.DocumentNode.SelectNodes("//img[@src]");
+        var vmlNodes = doc.DocumentNode.SelectNodes("//*[@o:href or @v:href or @xlink:href]");
         var baseDir = Path.GetDirectoryName(sourceHtmlPath) ?? string.Empty;
         var pathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -29,43 +30,17 @@ public class AssetManager
         {
             foreach (var img in imgNodes)
             {
-                var srcValue = img.GetAttributeValue("src", string.Empty);
-                if (string.IsNullOrWhiteSpace(srcValue))
-                {
-                    continue;
-                }
+                ProcessAttribute(img, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+            }
+        }
 
-                if (srcValue.StartsWith("cid:", StringComparison.OrdinalIgnoreCase) ||
-                    srcValue.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
-                    srcValue.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                    srcValue.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var resolvedPath = ResolveImagePath(srcValue, baseDir);
-                if (resolvedPath == null || !File.Exists(resolvedPath))
-                {
-                    _logger.LogWarning($"Immagine non trovata: {srcValue}");
-                    continue;
-                }
-
-                if (!pathMap.TryGetValue(resolvedPath!, out var fileName))
-                {
-                    fileName = CreateStableFileName(resolvedPath);
-                    var destinationPath = Path.Combine(assetsFolderPath, fileName);
-                    if (!File.Exists(destinationPath))
-                    {
-                        File.Copy(resolvedPath, destinationPath, overwrite: false);
-                    }
-                    pathMap[resolvedPath] = fileName;
-                }
-
-                var rewritten = useAbsolutePaths
-                    ? Path.Combine(assetsFolderPath, fileName)
-                    : $"{assetsFolderName}/{fileName}";
-
-                img.SetAttributeValue("src", rewritten);
+        if (vmlNodes != null)
+        {
+            foreach (var node in vmlNodes)
+            {
+                ProcessAttribute(node, "o:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+                ProcessAttribute(node, "v:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+                ProcessAttribute(node, "xlink:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
             }
         }
 
@@ -90,6 +65,54 @@ public class AssetManager
 
         var combined = Path.Combine(baseDir, srcValue);
         return combined;
+    }
+
+    private void ProcessAttribute(
+        HtmlNode node,
+        string attributeName,
+        string baseDir,
+        string assetsFolderPath,
+        string assetsFolderName,
+        bool useAbsolutePaths,
+        Dictionary<string, string> pathMap)
+    {
+        var srcValue = node.GetAttributeValue(attributeName, string.Empty);
+        if (string.IsNullOrWhiteSpace(srcValue))
+        {
+            return;
+        }
+
+        if (srcValue.StartsWith("cid:", StringComparison.OrdinalIgnoreCase) ||
+            srcValue.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
+            srcValue.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            srcValue.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var resolvedPath = ResolveImagePath(srcValue, baseDir);
+        if (resolvedPath == null || !File.Exists(resolvedPath))
+        {
+            _logger.LogWarning($"Immagine non trovata: {srcValue}");
+            return;
+        }
+
+        if (!pathMap.TryGetValue(resolvedPath!, out var fileName))
+        {
+            fileName = CreateStableFileName(resolvedPath);
+            var destinationPath = Path.Combine(assetsFolderPath, fileName);
+            if (!File.Exists(destinationPath))
+            {
+                File.Copy(resolvedPath, destinationPath, overwrite: false);
+            }
+            pathMap[resolvedPath] = fileName;
+        }
+
+        var rewritten = useAbsolutePaths
+            ? Path.Combine(assetsFolderPath, fileName)
+            : $"{assetsFolderName}/{fileName}";
+
+        node.SetAttributeValue(attributeName, rewritten);
     }
 
     private static string CreateStableFileName(string sourcePath)
