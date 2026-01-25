@@ -11,7 +11,7 @@ public class CssInliner
         try
         {
             var wrapped = WrapHtml(html);
-            var result = PreMailer.MoveCssInline(wrapped, removeStyleElements: true);
+            var result = PreMailer.Net.PreMailer.MoveCssInline(wrapped, removeStyleElements: true);
             return ExtractBodyHtml(result.Html);
         }
         catch

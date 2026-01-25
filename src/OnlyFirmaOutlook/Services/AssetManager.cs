@@ -1,3 +1,4 @@
+using System.IO;
 using System.Security.Cryptography;
 using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
@@ -49,7 +50,7 @@ public class AssetManager
                     continue;
                 }
 
-                if (!pathMap.TryGetValue(resolvedPath, out var fileName))
+                if (!pathMap.TryGetValue(resolvedPath!, out var fileName))
                 {
                     fileName = CreateStableFileName(resolvedPath);
                     var destinationPath = Path.Combine(assetsFolderPath, fileName);
