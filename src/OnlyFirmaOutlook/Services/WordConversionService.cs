@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace OnlyFirmaOutlook.Services;
 
@@ -167,6 +168,8 @@ public class WordConversionService
                 _logger.Log("Nessuna cartella assets generata (il documento potrebbe non contenere immagini)");
             }
 
+            NormalizeHtmlImageReferences(htmPath, result.AssetsFolderPath);
+
             result.Success = true;
             _logger.Log("Conversione completata con successo");
         }
@@ -196,6 +199,96 @@ public class WordConversionService
         return result;
     }
 
+    private void NormalizeHtmlImageReferences(string htmPath, string? assetsFolderPath)
+    {
+        if (string.IsNullOrWhiteSpace(assetsFolderPath) || !File.Exists(htmPath))
+        {
+            return;
+        }
+
+        var assetsFolderName = Path.GetFileName(assetsFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (string.IsNullOrWhiteSpace(assetsFolderName) || !Directory.Exists(assetsFolderPath))
+        {
+            return;
+        }
+
+        var html = File.ReadAllText(htmPath);
+        var regex = new Regex("(?<attr>src|href)\\s*=\\s*(?<quote>[\"'])(?<value>[^\"']+)(\\k<quote>)", RegexOptions.IgnoreCase);
+        var updated = false;
+
+        var updatedHtml = regex.Replace(html, match =>
+        {
+            var value = match.Groups["value"].Value;
+            var normalized = NormalizeAssetReference(value, assetsFolderPath, assetsFolderName);
+
+            if (normalized == null || normalized == value)
+            {
+                return match.Value;
+            }
+
+            updated = true;
+            return $"{match.Groups["attr"].Value}={match.Groups["quote"].Value}{normalized}{match.Groups["quote"].Value}";
+        });
+
+        if (updated)
+        {
+            File.WriteAllText(htmPath, updatedHtml);
+            _logger.Log("Riferimenti immagini HTML normalizzati per embed Outlook");
+        }
+    }
+
+    private static string? NormalizeAssetReference(string value, string assetsFolderPath, string assetsFolderName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (value.StartsWith("cid:", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+        {
+            return value;
+        }
+
+        var localPath = value;
+        if (value.StartsWith("file:", StringComparison.OrdinalIgnoreCase) && Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.IsFile)
+        {
+            localPath = uri.LocalPath;
+        }
+
+        var fileName = Path.GetFileName(localPath);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return value;
+        }
+
+        if (value.Contains(assetsFolderName, StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{assetsFolderName}/{fileName}";
+        }
+
+        if (Path.IsPathRooted(localPath))
+        {
+            var assetsFilePath = Path.Combine(assetsFolderPath, fileName);
+            if (File.Exists(assetsFilePath))
+            {
+                return $"{assetsFolderName}/{fileName}";
+            }
+        }
+        else
+        {
+            var assetsFilePath = Path.Combine(assetsFolderPath, fileName);
+            if (File.Exists(assetsFilePath))
+            {
+                return $"{assetsFolderName}/{fileName}";
+            }
+        }
+
+        return value;
+    }
     
     
     
