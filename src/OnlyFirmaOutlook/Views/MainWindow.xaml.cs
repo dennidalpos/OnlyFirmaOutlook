@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -57,12 +60,51 @@ public partial class MainWindow : Window
         
         _logger.LogAdded += OnLogAdded;
 
+        UpdateHeaderInfo();
+
         
         LogTextBox.Text = _logger.GetFullLog();
         ScrollLogToEnd();
 
         
         Loaded += MainWindow_Loaded;
+    }
+
+    private void UpdateHeaderInfo()
+    {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        var displayVersion = version == null
+            ? "N/D"
+            : $"{version.Major}.{version.Minor}.{version.Build}";
+
+        AppVersionText.Text = $"Versione {displayVersion}";
+
+        var hostName = Environment.MachineName;
+        var userName = Environment.UserName;
+        var ipAddress = GetLocalIpAddress();
+
+        UserHostInfoText.Text = $"Hostname: {hostName} | IP: {ipAddress} | Utente: {userName}";
+    }
+
+    private static string GetLocalIpAddress()
+    {
+        try
+        {
+            var addresses = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (var address in addresses)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(address))
+                {
+                    return address.ToString();
+                }
+            }
+        }
+        catch
+        {
+            return "N/D";
+        }
+
+        return "N/D";
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
