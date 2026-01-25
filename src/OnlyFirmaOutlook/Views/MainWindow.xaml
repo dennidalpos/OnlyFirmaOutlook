@@ -318,7 +318,7 @@
                         Margin="0,4,0,16"/>
 
                 
-                <GroupBox Header="Log">
+                <GroupBox Header="Log" Style="{StaticResource StepGroupBoxStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="120"/>
