@@ -214,8 +214,19 @@ public class SignatureRepository
             return false;
         }
 
+        var backupPrefix = "backup_firme_onlyfirmaoutlook_";
+        var signatureFiles = Directory.EnumerateFiles(signaturesFolder, "*", SearchOption.AllDirectories)
+            .Where(file => !Path.GetFileName(file).StartsWith(backupPrefix, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (signatureFiles.Count == 0)
+        {
+            _logger.Log("Nessuna firma da salvare: backup non creato.");
+            return false;
+        }
+
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm");
-        var backupFileName = $"backup_firme_onlyfirmaoutlook_{timestamp}.zip";
+        var backupFileName = $"{backupPrefix}{timestamp}.zip";
         var backupPath = Path.Combine(signaturesFolder, backupFileName);
 
         try
@@ -226,7 +237,7 @@ public class SignatureRepository
             }
 
             using var archive = ZipFile.Open(backupPath, ZipArchiveMode.Create);
-            foreach (var file in Directory.EnumerateFiles(signaturesFolder, "*", SearchOption.AllDirectories))
+            foreach (var file in signatureFiles)
             {
                 var relativePath = Path.GetRelativePath(signaturesFolder, file);
                 if (string.Equals(relativePath, backupFileName, StringComparison.OrdinalIgnoreCase))

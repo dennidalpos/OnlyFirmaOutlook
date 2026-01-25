@@ -196,7 +196,7 @@
                                     <Run Text="⚠ " FontWeight="Bold"/>
                                     <Run Text="Tutte le firme devono essere modificate in Word prima della conversione."/>
                                 </TextBlock>
-                                <TextBlock Text="Modifica il documento in Word, salvalo (Ctrl+S) e chiudilo. Lo stato si aggiornerà automaticamente."
+                                <TextBlock Text="Modifica il documento in Word, salvalo (Maiusc+F12) e chiudilo. Lo stato si aggiornerà automaticamente."
                                            Foreground="#6B5B00" FontSize="11" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
@@ -224,7 +224,7 @@
                                 CornerRadius="2" Padding="12">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📖 " FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text="Word è aperto - modifica e salva il documento, poi chiudi Word"
+                                <TextBlock Text="Word è aperto - modifica e salva il documento (Maiusc+F12), poi chiudi Word"
                                            Foreground="#1565C0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>

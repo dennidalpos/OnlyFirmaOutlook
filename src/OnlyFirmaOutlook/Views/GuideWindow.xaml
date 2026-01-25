@@ -29,7 +29,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="4) Modifica il documento in Word:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Apri il file con 'Apri in Word', applica le modifiche, salva (Ctrl+S) e chiudi Word. Lo stato si aggiorna automaticamente quando il file viene salvato e Word è chiuso."/>
+                    <Run Text="Apri il file con 'Apri in Word', applica le modifiche, salva (Maiusc+F12) e chiudi Word. Lo stato si aggiorna automaticamente quando il file viene salvato e Word è chiuso."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="5) Scegli il formato HTML:" FontWeight="SemiBold"/>
