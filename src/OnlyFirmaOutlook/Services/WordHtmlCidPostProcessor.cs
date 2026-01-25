@@ -84,6 +84,29 @@ public static class WordHtmlCidPostProcessor
             return null;
         }
 
+        if (trimmed.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+        {
+            var withoutScheme = trimmed[5..];
+            if (withoutScheme.StartsWith("///", StringComparison.Ordinal))
+            {
+                withoutScheme = withoutScheme[3..];
+            }
+            else if (withoutScheme.StartsWith("//", StringComparison.Ordinal))
+            {
+                withoutScheme = withoutScheme[2..];
+            }
+
+            withoutScheme = withoutScheme.TrimStart('/');
+            var filePath = Uri.UnescapeDataString(withoutScheme)
+                .Replace('/', Path.DirectorySeparatorChar)
+                .Replace('\\', Path.DirectorySeparatorChar);
+
+            if (Path.IsPathRooted(filePath))
+            {
+                return Path.GetFullPath(filePath);
+            }
+        }
+
         if (Uri.TryCreate(trimmed, UriKind.Absolute, out var absoluteUri))
         {
             if (absoluteUri.IsFile)
