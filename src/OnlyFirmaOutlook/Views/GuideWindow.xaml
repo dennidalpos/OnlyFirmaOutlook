@@ -12,39 +12,49 @@
             <StackPanel>
                 <TextBlock Text="Guida dettagliata" FontWeight="Bold" FontSize="16" Margin="0,0,0,12"/>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                    <Run Text="1) Seleziona la firma:" FontWeight="SemiBold"/>
+                    <Run Text="1) Seleziona la firma di partenza:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Scegli un preset dalla lista oppure carica un file Word (.docx/.doc)."/>
+                    <Run Text="Scegli un preset dalla lista oppure carica un file Word (.docx/.doc). Se lavori da rete, il file viene copiato in locale per evitare blocchi."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                    <Run Text="2) Imposta il nome firma:" FontWeight="SemiBold"/>
+                    <Run Text="2) Configura nome e account:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Inserisci il nome e, se disponibile, scegli l'account Outlook. Il nome finale viene mostrato subito."/>
+                    <Run Text="Inserisci il nome della firma. Se Outlook è configurato, seleziona l'account; altrimenti indica un identificativo (es. email) per distinguere le firme."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                    <Run Text="3) Conferma la cartella:" FontWeight="SemiBold"/>
+                    <Run Text="3) Verifica la cartella di destinazione:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Verifica la cartella di destinazione o selezionane una diversa se necessario."/>
+                    <Run Text="La cartella proposta è quella standard di Outlook. Puoi cambiarla se desideri salvare altrove (es. in assenza di Outlook)."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                    <Run Text="4) Modifica in Word:" FontWeight="SemiBold"/>
+                    <Run Text="4) Modifica il documento in Word:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Apri il documento, applica le modifiche, salva (Ctrl+S) e chiudi Word."/>
+                    <Run Text="Apri il file con 'Apri in Word', applica le modifiche, salva (Ctrl+S) e chiudi Word. Lo stato si aggiorna automaticamente quando il file viene salvato e Word è chiuso."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                    <Run Text="5) Seleziona il formato HTML:" FontWeight="SemiBold"/>
+                    <Run Text="5) Scegli il formato HTML:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Consigliato HTML filtrato per maggiore compatibilità."/>
+                    <Run Text="HTML filtrato è consigliato per compatibilità e dimensioni ridotte; HTML completo preserva gli stili di Word ma può risultare più pesante."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                    <Run Text="6) Converti e salva:" FontWeight="SemiBold"/>
+                    <Run Text="6) Gestisci firme esistenti:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Premi 'Converti e salva firma' e attendi la conferma."/>
+                    <Run Text="Controlla se esistono firme con lo stesso nome. Puoi eliminarle manualmente oppure sovrascriverle durante la conversione."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="7) Backup firme (opzionale):" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="La lista mostra i backup zip presenti nella cartella firme. Puoi ripristinarli (sovrascrive i file correnti) o eliminarli se non più necessari."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="8) Converti e salva la firma:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Premi 'Converti e salva firma'. L'app crea un backup, genera i file HTML/RTF/TXT e apre la cartella di destinazione."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap">
-                    <Run Text="7) Verifica in Outlook (classic):" FontWeight="SemiBold"/>
+                    <Run Text="9) Verifica in Outlook (classic):" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e controlla la nuova firma."/>
+                    <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e seleziona la nuova firma come predefinita."/>
                 </TextBlock>
             </StackPanel>
         </Border>

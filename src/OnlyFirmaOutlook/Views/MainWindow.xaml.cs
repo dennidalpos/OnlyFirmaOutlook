@@ -32,6 +32,7 @@ public partial class MainWindow : Window
     private List<PresetFile> _presets = new();
     private List<OutlookAccount> _accounts = new();
     private List<SignatureInfo> _existingSignatures = new();
+    private List<BackupInfo> _existingBackups = new();
 
     private string? _selectedFilePath;
     private EditorState? _currentEditorState;
@@ -156,6 +157,9 @@ public partial class MainWindow : Window
 
             
             RefreshExistingSignatures();
+
+            
+            RefreshBackups();
         }
         finally
         {
@@ -295,6 +299,35 @@ public partial class MainWindow : Window
         DeleteSignatureButton.IsEnabled = false;
     }
 
+    private void RefreshBackups()
+    {
+        var backupsFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+        BackupFolderText.Text = $"Cartella backup: {backupsFolder}";
+
+        _existingBackups = _signatureRepository.GetBackups(backupsFolder);
+
+        if (_existingBackups.Count > 0)
+        {
+            BackupsListBox.ItemsSource = _existingBackups;
+            BackupsListBox.DisplayMemberPath = "DisplayInfo";
+            NoBackupsText.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            BackupsListBox.ItemsSource = null;
+            NoBackupsText.Visibility = Visibility.Visible;
+        }
+
+        UpdateBackupButtons();
+    }
+
+    private void UpdateBackupButtons()
+    {
+        var hasSelection = BackupsListBox.SelectedItem != null;
+        RestoreBackupButton.IsEnabled = hasSelection;
+        DeleteBackupButton.IsEnabled = hasSelection;
+    }
+
     private void UpdateConvertButtonState()
     {
         var hasFile = !string.IsNullOrEmpty(_selectedFilePath) && File.Exists(_selectedFilePath);
@@ -336,6 +369,7 @@ public partial class MainWindow : Window
             SetStepStyle(Step4Group, StepState.Pending);
             SetStepStyle(Step5Group, StepState.Pending);
             SetStepStyle(Step6Group, StepState.Pending);
+            SetStepStyle(Step7Group, StepState.Pending);
             return;
         }
 
@@ -349,6 +383,7 @@ public partial class MainWindow : Window
             SetStepStyle(Step4Group, StepState.Pending);
             SetStepStyle(Step5Group, StepState.Pending);
             SetStepStyle(Step6Group, StepState.Pending);
+            SetStepStyle(Step7Group, StepState.Pending);
             return;
         }
 
@@ -361,6 +396,7 @@ public partial class MainWindow : Window
             SetStepStyle(Step4Group, StepState.Pending);
             SetStepStyle(Step5Group, StepState.Pending);
             SetStepStyle(Step6Group, StepState.Pending);
+            SetStepStyle(Step7Group, StepState.Pending);
             return;
         }
 
@@ -372,6 +408,7 @@ public partial class MainWindow : Window
             SetStepStyle(Step4Group, StepState.Current);
             SetStepStyle(Step5Group, StepState.Pending);
             SetStepStyle(Step6Group, StepState.Pending);
+            SetStepStyle(Step7Group, StepState.Pending);
             return;
         }
 
@@ -380,6 +417,7 @@ public partial class MainWindow : Window
         
         SetStepStyle(Step5Group, StepState.Completed);
         SetStepStyle(Step6Group, StepState.Completed);
+        SetStepStyle(Step7Group, StepState.Current);
     }
 
     private enum StepState { Pending, Current, Completed }
@@ -970,10 +1008,8 @@ public partial class MainWindow : Window
         var finalSignatureName = WordConversionService.GenerateSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
-        if (ShouldCreateBackup(destinationFolder))
-        {
-            _signatureRepository.CreateBackupInSignaturesFolder();
-        }
+        _signatureRepository.CreateBackupInSignaturesFolder();
+        RefreshBackups();
 
         
         if (_signatureRepository.SignatureExists(destinationFolder, finalSignatureName))
@@ -1109,6 +1145,97 @@ public partial class MainWindow : Window
         DeleteSignatureButton.IsEnabled = ExistingSignaturesListBox.SelectedItem != null;
     }
 
+    private void BackupsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateBackupButtons();
+    }
+
+    private void RestoreBackupButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (BackupsListBox.SelectedItem is not BackupInfo backup)
+        {
+            return;
+        }
+
+        var result = MessageBox.Show(
+            $"Ripristinare il backup '{backup.FileName}'?\n\n" +
+            "I file nella cartella firme verranno sovrascritti.",
+            "Conferma ripristino",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        SetBusy(true, "Ripristino backup in corso...");
+
+        try
+        {
+            var destinationFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+            var restored = _signatureRepository.RestoreBackup(backup, destinationFolder);
+
+            if (restored)
+            {
+                _logger.Log($"Backup ripristinato: {backup.FileName}");
+                MessageBox.Show("Backup ripristinato con successo.", "Ripristino completato", MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                RefreshExistingSignatures();
+            }
+            else
+            {
+                MessageBox.Show("Impossibile ripristinare il backup selezionato.", "Errore ripristino",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private void DeleteBackupButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (BackupsListBox.SelectedItem is not BackupInfo backup)
+        {
+            return;
+        }
+
+        var result = MessageBox.Show(
+            $"Eliminare il backup '{backup.FileName}'?",
+            "Conferma eliminazione",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_signatureRepository.DeleteBackup(backup))
+            {
+                _logger.Log($"Backup eliminato: {backup.FileName}");
+            }
+            else
+            {
+                MessageBox.Show("Impossibile eliminare il backup selezionato.", "Errore eliminazione",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        finally
+        {
+            RefreshBackups();
+        }
+    }
+
+    private void RefreshBackupsButton_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshBackups();
+    }
+
     private void DeleteSignatureButton_Click(object sender, RoutedEventArgs e)
     {
         if (ExistingSignaturesListBox.SelectedItem is not SignatureInfo signature)
@@ -1219,6 +1346,9 @@ public partial class MainWindow : Window
         ConvertButton.IsEnabled = !isBusy && _isFolderWritable;
         DeleteSignatureButton.IsEnabled = !isBusy && ExistingSignaturesListBox.SelectedItem != null;
         RefreshSignaturesButton.IsEnabled = !isBusy;
+        RestoreBackupButton.IsEnabled = !isBusy && BackupsListBox.SelectedItem != null;
+        DeleteBackupButton.IsEnabled = !isBusy && BackupsListBox.SelectedItem != null;
+        RefreshBackupsButton.IsEnabled = !isBusy;
     }
 
     private void OnLogAdded(object? sender, string message)
@@ -1249,9 +1379,11 @@ public partial class MainWindow : Window
         FilteredHtmlRadio.IsChecked = true;
         CompleteHtmlRadio.IsChecked = false;
         ExistingSignaturesListBox.SelectedItem = null;
+        BackupsListBox.SelectedItem = null;
 
         UpdateWordOpenIndicator();
         RefreshExistingSignatures();
+        RefreshBackups();
         UpdateConvertButtonState();
     }
 
