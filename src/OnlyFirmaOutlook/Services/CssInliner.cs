@@ -1,4 +1,5 @@
 using HtmlAgilityPack;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using PreMailer.Net;
 
 namespace OnlyFirmaOutlook.Services;

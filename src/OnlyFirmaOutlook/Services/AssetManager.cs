@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using HtmlAgilityPack;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace OnlyFirmaOutlook.Services;
 
