@@ -310,8 +310,6 @@
                 </GroupBox>
 
                 </StackPanel>
-
-            </StackPanel>
         </ScrollViewer>
     </Grid>
 </Window>
