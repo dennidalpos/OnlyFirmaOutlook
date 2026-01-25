@@ -14,7 +14,7 @@
         
         <Style x:Key="StepGroupBoxStyle" TargetType="GroupBox">
             <Setter Property="BorderBrush" Value="#CCCCCC"/>
-            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderThickness" Value="3"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
             <Setter Property="Padding" Value="12"/>
         </Style>
@@ -26,8 +26,7 @@
 
         
         <Style x:Key="CurrentStepStyle" TargetType="GroupBox" BasedOn="{StaticResource StepGroupBoxStyle}">
-            <Setter Property="BorderBrush" Value="#1976D2"/>
-            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="BorderBrush" Value="#D13438"/>
         </Style>
 
         
@@ -260,6 +259,9 @@
                             </StackPanel>
                         </Border>
 
+                        <TextBlock Text="In caso di sovrascrittura verrà creato automaticamente un backup della firma precedente."
+                                   Foreground="#605E5C" FontSize="11" Margin="0,0,0,6"/>
+
                         <ListBox x:Name="ExistingSignaturesListBox" Height="80"
                                  SelectionChanged="ExistingSignaturesListBox_SelectionChanged"/>
                         <TextBlock x:Name="NoSignaturesText" Text="Nessuna firma esistente"
@@ -272,6 +274,8 @@
                                     Click="DeleteSignatureButton_Click" IsEnabled="False"/>
                             <Button x:Name="RefreshSignaturesButton" Content="Aggiorna lista"
                                     Click="RefreshSignaturesButton_Click"/>
+                            <Button x:Name="BrowseSignaturesButton" Content="Sfoglia firme"
+                                    Click="BrowseSignaturesButton_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
@@ -279,6 +283,8 @@
                 
                 <GroupBox x:Name="Step7Group" Header="7. Backup firme (ripristino/eliminazione)" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
+                        <TextBlock Text="Il backup delle firme esistenti viene creato automaticamente. I backup compaiono nella lista dopo aver generato almeno una firma con il programma. Il ripristino è opzionale."
+                                   Foreground="#605E5C" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
                         <TextBlock x:Name="BackupFolderText"
                                    Text="Cartella backup: "
                                    Foreground="#605E5C" FontSize="11" Margin="0,0,0,6"/>
@@ -297,6 +303,8 @@
                                     Click="DeleteBackupButton_Click" IsEnabled="False"/>
                             <Button x:Name="RefreshBackupsButton" Content="Aggiorna lista"
                                     Click="RefreshBackupsButton_Click"/>
+                            <Button x:Name="BrowseBackupsButton" Content="Sfoglia backup"
+                                    Click="BrowseBackupsButton_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>

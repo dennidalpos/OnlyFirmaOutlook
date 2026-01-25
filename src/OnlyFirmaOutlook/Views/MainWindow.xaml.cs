@@ -1277,6 +1277,16 @@ public partial class MainWindow : Window
         RefreshExistingSignatures();
     }
 
+    private void BrowseSignaturesButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenDefaultSignaturesFolder();
+    }
+
+    private void BrowseBackupsButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenDefaultSignaturesFolder();
+    }
+
     private void CopyLogButton_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -1323,6 +1333,27 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OpenDefaultSignaturesFolder()
+    {
+        try
+        {
+            var defaultFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+            if (Directory.Exists(defaultFolder))
+            {
+                Process.Start("explorer.exe", defaultFolder);
+            }
+            else
+            {
+                MessageBox.Show("La cartella firme predefinita non è disponibile.", "Cartella non trovata",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Impossibile aprire la cartella firme: {ex.Message}");
+        }
+    }
+
 
 
     private void SetBusy(bool isBusy, string? message = null)
@@ -1346,9 +1377,11 @@ public partial class MainWindow : Window
         ConvertButton.IsEnabled = !isBusy && _isFolderWritable;
         DeleteSignatureButton.IsEnabled = !isBusy && ExistingSignaturesListBox.SelectedItem != null;
         RefreshSignaturesButton.IsEnabled = !isBusy;
+        BrowseSignaturesButton.IsEnabled = !isBusy;
         RestoreBackupButton.IsEnabled = !isBusy && BackupsListBox.SelectedItem != null;
         DeleteBackupButton.IsEnabled = !isBusy && BackupsListBox.SelectedItem != null;
         RefreshBackupsButton.IsEnabled = !isBusy;
+        BrowseBackupsButton.IsEnabled = !isBusy;
     }
 
     private void OnLogAdded(object? sender, string message)

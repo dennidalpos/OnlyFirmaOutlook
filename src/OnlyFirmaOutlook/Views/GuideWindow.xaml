@@ -42,9 +42,9 @@
                     <Run Text="Controlla se esistono firme con lo stesso nome. Puoi eliminarle manualmente oppure sovrascriverle durante la conversione."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                    <Run Text="7) Backup firme (opzionale):" FontWeight="SemiBold"/>
+                    <Run Text="7) Backup firme (ripristino opzionale):" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="La lista mostra i backup zip presenti nella cartella firme. Puoi ripristinarli (sovrascrive i file correnti) o eliminarli se non più necessari."/>
+                    <Run Text="Il programma crea automaticamente un backup delle firme esistenti prima di sovrascriverle. I backup compaiono nella lista solo dopo aver creato almeno una firma con l'app. Puoi ripristinarli (sovrascrive i file correnti) o eliminarli se non più necessari."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="8) Converti e salva la firma:" FontWeight="SemiBold"/>
