@@ -423,6 +423,8 @@ public partial class MainWindow : Window
         var finalName = WordConversionService.GenerateSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
+
+
         if (!string.IsNullOrEmpty(destinationFolder) && _signatureRepository.SignatureExists(destinationFolder, finalName))
         {
             OverwriteWarningText.Text = $"La firma '{finalName}' esiste già e verrà sovrascritta!";
@@ -949,6 +951,8 @@ public partial class MainWindow : Window
 
         var finalSignatureName = WordConversionService.GenerateSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
+
+        _signatureRepository.CreateBackupInSignaturesFolder();
 
         
         if (_signatureRepository.SignatureExists(destinationFolder, finalSignatureName))
