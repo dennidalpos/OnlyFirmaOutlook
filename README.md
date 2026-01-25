@@ -48,6 +48,49 @@ I preset sono documenti Word disponibili nella cartella `media` dell'app:
 
 Per includerli nella distribuzione, copia i file in `src/OnlyFirmaOutlook/media` e usa lo script di build.
 
+## Immagini inline (CID) nelle firme HTML
+
+Se vuoi inviare firme con immagini realmente embedded (Content-ID) quando componi email via Outlook Interop, puoi usare il post-processing HTML incluso nel progetto. Esempio minimo end-to-end:
+
+```csharp
+using System.Text;
+using Microsoft.Office.Interop.Outlook;
+using OnlyFirmaOutlook.Services;
+
+// htmlPath è il file HTML esportato da Word.
+var htmlPath = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+    "Microsoft",
+    "Signatures",
+    "NomeFirma.htm");
+
+var html = File.ReadAllText(htmlPath, Encoding.GetEncoding(1252));
+var baseDir = Path.GetDirectoryName(htmlPath)!;
+var (htmlRewritten, images) = WordHtmlCidPostProcessor.RewriteLocalImageRefsToCid(html, baseDir);
+
+var outlook = new Application();
+var mail = (MailItem)outlook.CreateItem(OlItemType.olMailItem);
+mail.BodyFormat = OlBodyFormat.olFormatHTML;
+mail.HTMLBody = htmlRewritten;
+
+OutlookCidAttacher.AddInlineCidAttachments(mail, images);
+mail.Send();
+```
+
+Se vuoi un automatismo pronto all'uso, puoi delegare tutto a:
+
+```csharp
+var outlook = new Application();
+var mail = (MailItem)outlook.CreateItem(OlItemType.olMailItem);
+OutlookSignatureEmbedder.ApplySignatureWithInlineImages(mail, htmlPath);
+mail.Send();
+```
+
+### Note operative
+
+- Per verificare che le immagini siano realmente inline, controlla il sorgente della mail ricevuta: deve contenere `multipart/related`, header `Content-ID` sugli allegati e riferimenti `src="cid:..."` nell'HTML. La semplice visualizzazione corretta in Outlook non è sufficiente a garantire che l'email inviata abbia gli allegati inline corretti.
+- In alternativa, se cambi approccio, puoi inserire le immagini direttamente nel WordEditor di Outlook come `InlineShapes.AddPicture(...)` invece di usare HTML con percorsi locali; in quel caso Outlook gestisce nativamente gli allegati inline, ma richiede un template/placeholder nel documento.
+
 ## Struttura del progetto
 
 ```
