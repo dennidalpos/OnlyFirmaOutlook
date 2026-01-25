@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -40,6 +43,7 @@ public partial class MainWindow : Window
     private DispatcherTimer? _wordCheckTimer;
     private DateTime _lastFileModifiedTime;
     private bool _isWordOpen;
+    private GuideWindow? _guideWindow;
 
     public MainWindow()
     {
@@ -57,12 +61,51 @@ public partial class MainWindow : Window
         
         _logger.LogAdded += OnLogAdded;
 
+        UpdateHeaderInfo();
+
         
         LogTextBox.Text = _logger.GetFullLog();
         ScrollLogToEnd();
 
         
         Loaded += MainWindow_Loaded;
+    }
+
+    private void UpdateHeaderInfo()
+    {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        var displayVersion = version == null
+            ? "N/D"
+            : $"{version.Major}.{version.Minor}.{version.Build}";
+
+        AppVersionText.Text = $"Versione {displayVersion}";
+
+        var hostName = Environment.MachineName;
+        var userName = Environment.UserName;
+        var ipAddress = GetLocalIpAddress();
+
+        UserHostInfoText.Text = $"Hostname: {hostName} | IP: {ipAddress} | Utente: {userName}";
+    }
+
+    private static string GetLocalIpAddress()
+    {
+        try
+        {
+            var addresses = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (var address in addresses)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(address))
+                {
+                    return address.ToString();
+                }
+            }
+        }
+        catch
+        {
+            return "N/D";
+        }
+
+        return "N/D";
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -380,6 +423,8 @@ public partial class MainWindow : Window
 
         var finalName = WordConversionService.GenerateSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
+
+
 
         if (!string.IsNullOrEmpty(destinationFolder) && _signatureRepository.SignatureExists(destinationFolder, finalName))
         {
@@ -908,6 +953,8 @@ public partial class MainWindow : Window
         var finalSignatureName = WordConversionService.GenerateSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
+        _signatureRepository.CreateBackupInSignaturesFolder();
+
         
         if (_signatureRepository.SignatureExists(destinationFolder, finalSignatureName))
         {
@@ -975,6 +1022,8 @@ public partial class MainWindow : Window
                     "Conversione completata",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
+
+                ResetUiForNewSignature();
             }
             else
             {
@@ -1152,10 +1201,71 @@ public partial class MainWindow : Window
         LogTextBox.ScrollToEnd();
     }
 
+    private void ResetUiForNewSignature()
+    {
+        _selectedFilePath = null;
+        _currentEditorState = null;
+        _isWordOpen = false;
+
+        PresetListBox.SelectedItem = null;
+        SelectedFileText.Text = "Nessun file selezionato";
+        SignatureNameTextBox.Text = string.Empty;
+        IdentifierTextBox.Text = string.Empty;
+        AccountComboBox.SelectedIndex = _accounts.Count > 0 ? 0 : -1;
+        FilteredHtmlRadio.IsChecked = true;
+        CompleteHtmlRadio.IsChecked = false;
+        ExistingSignaturesListBox.SelectedItem = null;
+
+        UpdateWordOpenIndicator();
+        RefreshExistingSignatures();
+        UpdateConvertButtonState();
+    }
+
+    private void GuideToggleButton_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_guideWindow == null)
+        {
+            _guideWindow = new GuideWindow
+            {
+                Owner = this
+            };
+            _guideWindow.Closed += GuideWindow_Closed;
+        }
+
+        _guideWindow.Show();
+        _guideWindow.Activate();
+    }
+
+    private void GuideToggleButton_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (_guideWindow != null)
+        {
+            _guideWindow.Closed -= GuideWindow_Closed;
+            _guideWindow.Close();
+            _guideWindow = null;
+        }
+    }
+
+    private void GuideWindow_Closed(object? sender, EventArgs e)
+    {
+        if (_guideWindow != null)
+        {
+            _guideWindow.Closed -= GuideWindow_Closed;
+            _guideWindow = null;
+        }
+
+        GuideToggleButton.IsChecked = false;
+    }
 
     protected override void OnClosed(EventArgs e)
     {
-        
+        if (_guideWindow != null)
+        {
+            _guideWindow.Closed -= GuideWindow_Closed;
+            _guideWindow.Close();
+            _guideWindow = null;
+        }
+
         StopFileWatcher();
         StopWordCheckTimer();
 

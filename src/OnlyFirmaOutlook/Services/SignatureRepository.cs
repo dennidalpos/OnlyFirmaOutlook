@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.IO.Compression;
 using OnlyFirmaOutlook.Models;
 
 namespace OnlyFirmaOutlook.Services;
@@ -182,6 +184,48 @@ public class SignatureRepository
         catch (Exception ex)
         {
             _logger.LogWarning($"Test scrittura fallito: {ex.Message}");
+            return false;
+        }
+    }
+
+    public bool CreateBackupInSignaturesFolder()
+    {
+        var signaturesFolder = GetDefaultOutlookSignaturesFolder();
+        if (!Directory.Exists(signaturesFolder))
+        {
+            _logger.LogWarning($"Cartella firme non trovata per backup: {signaturesFolder}");
+            return false;
+        }
+
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm");
+        var backupFileName = $"backup_firme_onlyfirmaoutlook_{timestamp}.zip";
+        var backupPath = Path.Combine(signaturesFolder, backupFileName);
+
+        try
+        {
+            if (File.Exists(backupPath))
+            {
+                File.Delete(backupPath);
+            }
+
+            using var archive = ZipFile.Open(backupPath, ZipArchiveMode.Create);
+            foreach (var file in Directory.EnumerateFiles(signaturesFolder, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = Path.GetRelativePath(signaturesFolder, file);
+                if (string.Equals(relativePath, backupFileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                archive.CreateEntryFromFile(file, relativePath);
+            }
+
+            _logger.Log($"Backup firme creato: {backupPath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Backup firme fallito: {ex.Message}");
             return false;
         }
     }
