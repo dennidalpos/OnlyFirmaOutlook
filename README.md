@@ -53,6 +53,7 @@ Per includerli nella distribuzione, copia i file in `src/OnlyFirmaOutlook/media`
 Se vuoi inviare firme con immagini realmente embedded (Content-ID) quando componi email via Outlook Interop, puoi usare il post-processing HTML incluso nel progetto. Esempio minimo end-to-end:
 
 ```csharp
+using System.Text;
 using Microsoft.Office.Interop.Outlook;
 using OnlyFirmaOutlook.Services;
 
@@ -63,7 +64,7 @@ var htmlPath = Path.Combine(
     "Signatures",
     "NomeFirma.htm");
 
-var html = File.ReadAllText(htmlPath);
+var html = File.ReadAllText(htmlPath, Encoding.GetEncoding(1252));
 var baseDir = Path.GetDirectoryName(htmlPath)!;
 var (htmlRewritten, images) = WordHtmlCidPostProcessor.RewriteLocalImageRefsToCid(html, baseDir);
 

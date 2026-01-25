@@ -9,6 +9,9 @@ public static class WordHtmlCidPostProcessor
     private static readonly Regex ImageSrcRegex = new(
         @"<\s*(?<tag>img|v:imagedata)\b[^>]*?\bsrc\s*=\s*(?<value>('(?<inner>[^']*)'|""(?<inner>[^""]*)""|(?<inner>[^\s>]+)))",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex CssUrlRegex = new(
+        @"url\(\s*(?<value>('(?<inner>[^']*)'|""(?<inner>[^""]*)""|(?<inner>[^)\s]+)))\s*\)",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
 
     public static (string Html, IReadOnlyList<InlineImage> Images) RewriteLocalImageRefsToCid(
         string html,
@@ -27,7 +30,19 @@ public static class WordHtmlCidPostProcessor
         var normalizedBaseDirectory = Path.GetFullPath(baseDirectory);
         var imagesByPath = new Dictionary<string, InlineImage>(StringComparer.OrdinalIgnoreCase);
 
-        string rewrittenHtml = ImageSrcRegex.Replace(html, match =>
+        string rewrittenHtml = ReplaceLocalSourcesWithCid(html, normalizedBaseDirectory, imagesByPath, ImageSrcRegex);
+        rewrittenHtml = ReplaceLocalSourcesWithCid(rewrittenHtml, normalizedBaseDirectory, imagesByPath, CssUrlRegex);
+
+        return (rewrittenHtml, imagesByPath.Values.ToList());
+    }
+
+    private static string ReplaceLocalSourcesWithCid(
+        string html,
+        string baseDirectory,
+        Dictionary<string, InlineImage> imagesByPath,
+        Regex regex)
+    {
+        return regex.Replace(html, match =>
         {
             var srcValue = match.Groups["inner"].Value;
             if (ShouldIgnoreSource(srcValue))
@@ -35,7 +50,7 @@ public static class WordHtmlCidPostProcessor
                 return match.Value;
             }
 
-            var resolvedPath = ResolveLocalPath(srcValue, normalizedBaseDirectory);
+            var resolvedPath = ResolveLocalPath(srcValue, baseDirectory);
             if (resolvedPath is null || !File.Exists(resolvedPath))
             {
                 return match.Value;
@@ -59,8 +74,6 @@ public static class WordHtmlCidPostProcessor
                 cidValue,
                 match.Value.AsSpan(relativeStart + relativeLength));
         });
-
-        return (rewrittenHtml, imagesByPath.Values.ToList());
     }
 
     private static bool ShouldIgnoreSource(string src)
