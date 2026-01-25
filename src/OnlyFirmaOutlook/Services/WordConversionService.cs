@@ -11,7 +11,6 @@ namespace OnlyFirmaOutlook.Services;
 public class WordConversionService
 {
     private readonly LoggingService _logger;
-    private readonly SignatureRepository _signatureRepository;
 
     
     private const int WdFormatFilteredHTML = 10;
@@ -22,7 +21,6 @@ public class WordConversionService
     public WordConversionService()
     {
         _logger = LoggingService.Instance;
-        _signatureRepository = new SignatureRepository();
     }
 
     

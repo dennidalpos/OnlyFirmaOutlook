@@ -58,16 +58,33 @@ public class SignatureRepository
 
         try
         {
+            var signatureNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var htmFiles = Directory.GetFiles(folderPath, "*.htm", SearchOption.TopDirectoryOnly);
+            var rtfFiles = Directory.GetFiles(folderPath, "*.rtf", SearchOption.TopDirectoryOnly);
+            var txtFiles = Directory.GetFiles(folderPath, "*.txt", SearchOption.TopDirectoryOnly);
 
-            foreach (var htmFile in htmFiles)
+            foreach (var file in htmFiles)
             {
-                var baseName = Path.GetFileNameWithoutExtension(htmFile);
+                signatureNames.Add(Path.GetFileNameWithoutExtension(file));
+            }
+
+            foreach (var file in rtfFiles)
+            {
+                signatureNames.Add(Path.GetFileNameWithoutExtension(file));
+            }
+
+            foreach (var file in txtFiles)
+            {
+                signatureNames.Add(Path.GetFileNameWithoutExtension(file));
+            }
+
+            foreach (var baseName in signatureNames)
+            {
                 var signature = new SignatureInfo
                 {
                     Name = baseName,
                     FolderPath = folderPath,
-                    HasHtm = true,
+                    HasHtm = File.Exists(Path.Combine(folderPath, baseName + ".htm")),
                     HasRtf = File.Exists(Path.Combine(folderPath, baseName + ".rtf")),
                     HasTxt = File.Exists(Path.Combine(folderPath, baseName + ".txt")),
                     HasFilesFolder = Directory.Exists(Path.Combine(folderPath, baseName + "_files")),

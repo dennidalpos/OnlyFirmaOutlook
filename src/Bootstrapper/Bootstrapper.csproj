@@ -16,4 +16,8 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\OfficeBitnessDetector.cs" Link="OfficeBitnessDetector.cs" />
+  </ItemGroup>
+
 </Project>

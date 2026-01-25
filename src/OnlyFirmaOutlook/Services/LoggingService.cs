@@ -12,17 +12,21 @@ public sealed class LoggingService : IDisposable
     private static readonly Lazy<LoggingService> _instance = new(() => new LoggingService());
     public static LoggingService Instance => _instance.Value;
 
-    private readonly StringBuilder _logBuffer;
     private readonly string _logFilePath;
     private readonly object _lockObject = new();
+    private readonly Queue<string> _logLines;
     private StreamWriter? _fileWriter;
     private bool _disposed;
+    private bool _fileWriterFailureLogged;
+
+    private const int MaxBufferedLines = 2000;
+    private const long MaxLogFileSizeBytes = 5 * 1024 * 1024;
 
     public event EventHandler<string>? LogAdded;
 
     private LoggingService()
     {
-        _logBuffer = new StringBuilder();
+        _logLines = new Queue<string>();
 
         var logFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -34,15 +38,12 @@ public sealed class LoggingService : IDisposable
 
         try
         {
-            _fileWriter = new StreamWriter(_logFilePath, append: true, Encoding.UTF8)
-            {
-                AutoFlush = true
-            };
+            _fileWriter = CreateWriter();
         }
-        catch
+        catch (Exception ex)
         {
-            
             _fileWriter = null;
+            AddInternalWarning($"Logging su file non disponibile: {ex.Message}");
         }
     }
 
@@ -51,20 +52,12 @@ public sealed class LoggingService : IDisposable
         if (_disposed) return;
 
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-        var formattedMessage = $"[{timestamp}] {message}";
+        var formattedMessage = $"[{timestamp}] INFO: {message}";
 
         lock (_lockObject)
         {
-            _logBuffer.AppendLine(formattedMessage);
-
-            try
-            {
-                _fileWriter?.WriteLine(formattedMessage);
-            }
-            catch
-            {
-                
-            }
+            EnqueueLine(formattedMessage);
+            WriteToFile(formattedMessage);
         }
 
         LogAdded?.Invoke(this, formattedMessage);
@@ -73,10 +66,10 @@ public sealed class LoggingService : IDisposable
     public void LogError(string message, Exception? ex = null)
     {
         var errorMessage = ex != null
-            ? $"ERRORE: {message} - {ex.GetType().Name}: {ex.Message}"
-            : $"ERRORE: {message}";
+            ? $"{message} - {ex.GetType().Name}: {ex.Message}"
+            : message;
 
-        Log(errorMessage);
+        LogWithLevel("ERROR", errorMessage);
 
         if (ex?.StackTrace != null)
         {
@@ -86,14 +79,30 @@ public sealed class LoggingService : IDisposable
 
     public void LogWarning(string message)
     {
-        Log($"AVVISO: {message}");
+        LogWithLevel("WARN", message);
+    }
+
+    private void LogWithLevel(string level, string message)
+    {
+        if (_disposed) return;
+
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        var formattedMessage = $"[{timestamp}] {level}: {message}";
+
+        lock (_lockObject)
+        {
+            EnqueueLine(formattedMessage);
+            WriteToFile(formattedMessage);
+        }
+
+        LogAdded?.Invoke(this, formattedMessage);
     }
 
     public string GetFullLog()
     {
         lock (_lockObject)
         {
-            return _logBuffer.ToString();
+            return string.Join(Environment.NewLine, _logLines);
         }
     }
 
@@ -101,7 +110,7 @@ public sealed class LoggingService : IDisposable
     {
         lock (_lockObject)
         {
-            _logBuffer.Clear();
+            _logLines.Clear();
         }
     }
 
@@ -115,5 +124,89 @@ public sealed class LoggingService : IDisposable
             _fileWriter?.Dispose();
             _fileWriter = null;
         }
+    }
+
+    private void EnqueueLine(string line)
+    {
+        _logLines.Enqueue(line);
+        while (_logLines.Count > MaxBufferedLines)
+        {
+            _logLines.Dequeue();
+        }
+    }
+
+    private StreamWriter CreateWriter()
+    {
+        return new StreamWriter(_logFilePath, append: true, Encoding.UTF8)
+        {
+            AutoFlush = true
+        };
+    }
+
+    private void WriteToFile(string message)
+    {
+        if (_fileWriter == null)
+        {
+            return;
+        }
+
+        try
+        {
+            _fileWriter.WriteLine(message);
+            RotateIfNeeded();
+        }
+        catch (Exception ex)
+        {
+            _fileWriter?.Dispose();
+            _fileWriter = null;
+            AddInternalWarning($"Errore scrittura log su file: {ex.Message}");
+        }
+    }
+
+    private void RotateIfNeeded()
+    {
+        try
+        {
+            var fileInfo = new FileInfo(_logFilePath);
+            if (!fileInfo.Exists || fileInfo.Length < MaxLogFileSizeBytes)
+            {
+                return;
+            }
+
+            _fileWriter?.Dispose();
+            _fileWriter = null;
+
+            var rotatedPath = _logFilePath + ".1";
+            if (File.Exists(rotatedPath))
+            {
+                File.Delete(rotatedPath);
+            }
+
+            File.Move(_logFilePath, rotatedPath);
+            _fileWriter = CreateWriter();
+        }
+        catch (Exception ex)
+        {
+            AddInternalWarning($"Rotazione log fallita: {ex.Message}");
+        }
+    }
+
+    private void AddInternalWarning(string message)
+    {
+        if (_fileWriterFailureLogged)
+        {
+            return;
+        }
+
+        _fileWriterFailureLogged = true;
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        var formattedMessage = $"[{timestamp}] WARN: {message}";
+
+        lock (_lockObject)
+        {
+            EnqueueLine(formattedMessage);
+        }
+
+        LogAdded?.Invoke(this, formattedMessage);
     }
 }
