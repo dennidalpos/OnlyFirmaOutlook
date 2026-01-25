@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace OnlyFirmaOutlook.Services;
 
@@ -168,8 +169,6 @@ public class WordConversionService
                 _logger.Log("Nessuna cartella assets generata (il documento potrebbe non contenere immagini)");
             }
 
-            NormalizeHtmlImageReferences(htmPath, result.AssetsFolderPath);
-
             result.Success = true;
             _logger.Log("Conversione completata con successo");
         }
@@ -196,12 +195,17 @@ public class WordConversionService
             CleanupComObjects(doc, wordApp);
         }
 
+        if (result.Success)
+        {
+            NormalizeHtmlImageReferences(result.HtmFilePath, result.AssetsFolderPath);
+        }
+
         return result;
     }
 
-    private void NormalizeHtmlImageReferences(string htmPath, string? assetsFolderPath)
+    private void NormalizeHtmlImageReferences(string? htmPath, string? assetsFolderPath)
     {
-        if (string.IsNullOrWhiteSpace(assetsFolderPath) || !File.Exists(htmPath))
+        if (string.IsNullOrWhiteSpace(assetsFolderPath) || string.IsNullOrWhiteSpace(htmPath) || !File.Exists(htmPath))
         {
             return;
         }
@@ -212,7 +216,12 @@ public class WordConversionService
             return;
         }
 
-        var html = File.ReadAllText(htmPath);
+        var html = ReadAllTextWithRetry(htmPath);
+        if (html == null)
+        {
+            _logger.LogWarning("Impossibile leggere HTML firma per normalizzazione immagini");
+            return;
+        }
         var regex = new Regex("(?<attr>src|href)\\s*=\\s*(?<quote>[\"'])(?<value>[^\"']+)(\\k<quote>)", RegexOptions.IgnoreCase);
         var updated = false;
 
@@ -232,8 +241,14 @@ public class WordConversionService
 
         if (updated)
         {
-            File.WriteAllText(htmPath, updatedHtml);
-            _logger.Log("Riferimenti immagini HTML normalizzati per embed Outlook");
+            if (WriteAllTextWithRetry(htmPath, updatedHtml))
+            {
+                _logger.Log("Riferimenti immagini HTML normalizzati per embed Outlook");
+            }
+            else
+            {
+                _logger.LogWarning("Impossibile salvare HTML firma dopo normalizzazione immagini");
+            }
         }
     }
 
@@ -288,6 +303,51 @@ public class WordConversionService
         }
 
         return value;
+    }
+
+    private static string? ReadAllTextWithRetry(string path)
+    {
+        const int maxAttempts = 5;
+        const int delayMs = 150;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(stream);
+                return reader.ReadToEnd();
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(delayMs);
+            }
+        }
+
+        return null;
+    }
+
+    private static bool WriteAllTextWithRetry(string path, string content)
+    {
+        const int maxAttempts = 5;
+        const int delayMs = 150;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                using var writer = new StreamWriter(stream);
+                writer.Write(content);
+                return true;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(delayMs);
+            }
+        }
+
+        return false;
     }
     
     
