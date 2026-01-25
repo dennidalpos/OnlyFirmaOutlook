@@ -124,7 +124,7 @@ public class WordConversionService
 
             
             _logger.Log($"Salvataggio HTML ({(useFilteredHtml ? "filtrato" : "completo")})...");
-            var htmlFormat = useFilteredHtml ? WdFormatFilteredHTML : WdFormatHTML;
+            var htmlFormat = WdFormatHTML;
             doc.SaveAs2(
                 FileName: htmPath,
                 FileFormat: htmlFormat,
