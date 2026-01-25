@@ -6,7 +6,11 @@ param(
 
     [switch]$SkipRestore,
 
-    [switch]$SkipClean
+    [switch]$SkipClean,
+
+    [string[]]$Runtimes = @("win-x86", "win-x64"),
+
+    [switch]$SkipPublish
 )
 
 $ErrorActionPreference = "Stop"
@@ -65,78 +69,67 @@ Invoke-BuildCommand "Build soluzione ($Configuration)" {
     dotnet build "$rootDir\OnlyFirmaOutlook.sln" -c $Configuration --no-restore
 }
 
-Write-Host "Publish win-x86..." -ForegroundColor Yellow
-$publishX86Dir = Join-Path $distDir "win-x86"
-dotnet publish "$mainProjectDir\OnlyFirmaOutlook.csproj" `
-    -c $Configuration `
-    -r win-x86 `
-    --self-contained true `
-    -p:PublishSingleFile=false `
-    -o $publishX86Dir
+if (-not $SkipPublish) {
+    $normalizedRuntimes = $Runtimes | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique
+    $publishDirs = @{}
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERRORE: Publish win-x86 fallito" -ForegroundColor Red
-    exit $LASTEXITCODE
-}
-Write-Host "   OK - Output: $publishX86Dir" -ForegroundColor Green
-Write-Host ""
+    foreach ($runtime in $normalizedRuntimes) {
+        Write-Host "Publish $runtime..." -ForegroundColor Yellow
+        $publishDir = Join-Path $distDir $runtime
+        $publishDirs[$runtime] = $publishDir
 
-Write-Host "Publish win-x64..." -ForegroundColor Yellow
-$publishX64Dir = Join-Path $distDir "win-x64"
-dotnet publish "$mainProjectDir\OnlyFirmaOutlook.csproj" `
-    -c $Configuration `
-    -r win-x64 `
-    --self-contained true `
-    -p:PublishSingleFile=false `
-    -o $publishX64Dir
+        dotnet publish "$mainProjectDir\OnlyFirmaOutlook.csproj" `
+            -c $Configuration `
+            -r $runtime `
+            --self-contained true `
+            -p:PublishSingleFile=false `
+            -o $publishDir
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERRORE: Publish win-x64 fallito" -ForegroundColor Red
-    exit $LASTEXITCODE
-}
-Write-Host "   OK - Output: $publishX64Dir" -ForegroundColor Green
-Write-Host ""
-
-Write-Host "Publish Bootstrapper..." -ForegroundColor Yellow
-$bootstrapperOutput = Join-Path $distDir "OnlyFirmaOutlook.Launcher.exe"
-dotnet publish "$bootstrapperDir\Bootstrapper.csproj" `
-    -c $Configuration `
-    -r win-x64 `
-    --self-contained true `
-    -p:PublishSingleFile=true `
-    -o $distDir
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERRORE: Publish Bootstrapper fallito" -ForegroundColor Red
-    exit $LASTEXITCODE
-}
-Write-Host "   OK - Output: $distDir" -ForegroundColor Green
-Write-Host ""
-
-$mediaX86 = Join-Path $publishX86Dir "media"
-$mediaX64 = Join-Path $publishX64Dir "media"
-
-if (-not (Test-Path $mediaX86)) {
-    New-Item -ItemType Directory -Path $mediaX86 -Force | Out-Null
-    Write-Host "Creata cartella media in win-x86" -ForegroundColor Gray
-}
-
-if (-not (Test-Path $mediaX64)) {
-    New-Item -ItemType Directory -Path $mediaX64 -Force | Out-Null
-    Write-Host "Creata cartella media in win-x64" -ForegroundColor Gray
-}
-
-if (Test-Path $mediaSourceDir) {
-    $presetFiles = Get-ChildItem -Path $mediaSourceDir -Filter "*.doc*" -File
-    if ($presetFiles.Count -gt 0) {
-        Write-Host "Copia file preset..." -ForegroundColor Yellow
-        foreach ($file in $presetFiles) {
-            Copy-Item -Path $file.FullName -Destination $mediaX86 -Force
-            Copy-Item -Path $file.FullName -Destination $mediaX64 -Force
-            Write-Host "   Copiato: $($file.Name)" -ForegroundColor Gray
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "ERRORE: Publish $runtime fallito" -ForegroundColor Red
+            exit $LASTEXITCODE
         }
-        Write-Host "   OK" -ForegroundColor Green
+        Write-Host "   OK - Output: $publishDir" -ForegroundColor Green
         Write-Host ""
+    }
+
+    Write-Host "Publish Bootstrapper..." -ForegroundColor Yellow
+    $bootstrapperOutput = Join-Path $distDir "OnlyFirmaOutlook.Launcher.exe"
+    dotnet publish "$bootstrapperDir\Bootstrapper.csproj" `
+        -c $Configuration `
+        -r win-x64 `
+        --self-contained true `
+        -p:PublishSingleFile=true `
+        -o $distDir
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERRORE: Publish Bootstrapper fallito" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+    Write-Host "   OK - Output: $distDir" -ForegroundColor Green
+    Write-Host ""
+
+    foreach ($runtime in $publishDirs.Keys) {
+        $mediaTarget = Join-Path $publishDirs[$runtime] "media"
+        if (-not (Test-Path $mediaTarget)) {
+            New-Item -ItemType Directory -Path $mediaTarget -Force | Out-Null
+            Write-Host "Creata cartella media in $runtime" -ForegroundColor Gray
+        }
+    }
+
+    if (Test-Path $mediaSourceDir) {
+        $presetFiles = Get-ChildItem -Path $mediaSourceDir -Filter "*.doc*" -File
+        if ($presetFiles.Count -gt 0) {
+            Write-Host "Copia file preset..." -ForegroundColor Yellow
+            foreach ($file in $presetFiles) {
+                foreach ($runtime in $publishDirs.Keys) {
+                    Copy-Item -Path $file.FullName -Destination (Join-Path $publishDirs[$runtime] "media") -Force
+                }
+                Write-Host "   Copiato: $($file.Name)" -ForegroundColor Gray
+            }
+            Write-Host "   OK" -ForegroundColor Green
+            Write-Host ""
+        }
     }
 }
 
@@ -157,9 +150,8 @@ Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Per aggiungere preset (documenti Word predefiniti):" -ForegroundColor White
 Write-Host ""
-Write-Host "  1. Copia i file .doc/.docx in ENTRAMBE le cartelle:" -ForegroundColor Gray
-Write-Host "     - $mediaX86" -ForegroundColor Gray
-Write-Host "     - $mediaX64" -ForegroundColor Gray
+Write-Host "  1. Copia i file .doc/.docx nelle cartelle 'media' delle build pubblicate" -ForegroundColor Gray
+Write-Host "     (es. dist\\win-x86\\media e dist\\win-x64\\media)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Oppure:" -ForegroundColor White
 Write-Host ""
