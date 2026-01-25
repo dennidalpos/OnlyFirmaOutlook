@@ -1198,6 +1198,15 @@ public partial class MainWindow : Window
         LogTextBox.ScrollToEnd();
     }
 
+    private void GuideToggleButton_Checked(object sender, RoutedEventArgs e)
+    {
+        GuidePanel.Visibility = Visibility.Visible;
+    }
+
+    private void GuideToggleButton_Unchecked(object sender, RoutedEventArgs e)
+    {
+        GuidePanel.Visibility = Visibility.Collapsed;
+    }
 
     protected override void OnClosed(EventArgs e)
     {
