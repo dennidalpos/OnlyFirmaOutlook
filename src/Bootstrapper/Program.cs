@@ -4,10 +4,10 @@ using Microsoft.Win32;
 
 namespace OnlyFirmaOutlook.Launcher;
 
-/// <summary>
-/// Bootstrapper/Launcher che rileva la bitness di Office installato
-/// e avvia l'eseguibile corretto (x86 o x64).
-/// </summary>
+
+
+
+
 internal class Program
 {
     private const string AppName = "OnlyFirmaOutlook";
@@ -32,7 +32,7 @@ internal class Program
             }
             else
             {
-                // Default a x64 se non rilevabile o se Office è 64-bit
+                
                 targetDir = Path.Combine(baseDir, "win-x64");
                 fallbackDir = Path.Combine(baseDir, "win-x86");
 
@@ -48,7 +48,7 @@ internal class Program
 
             var exePath = Path.Combine(targetDir, ExeName);
 
-            // Se l'eseguibile target non esiste, prova il fallback
+            
             if (!File.Exists(exePath))
             {
                 Console.WriteLine($"[Launcher] Eseguibile non trovato in {targetDir}");
@@ -68,7 +68,7 @@ internal class Program
 
             Console.WriteLine($"[Launcher] Avvio: {exePath}");
 
-            // Avvia l'applicazione
+            
             var startInfo = new ProcessStartInfo
             {
                 FileName = exePath,
@@ -76,7 +76,7 @@ internal class Program
                 UseShellExecute = false
             };
 
-            // Passa eventuali argomenti
+            
             foreach (var arg in args)
             {
                 startInfo.ArgumentList.Add(arg);
@@ -110,28 +110,28 @@ internal class Program
     {
         Console.WriteLine("[Launcher] Rilevamento bitness Office...");
 
-        // Metodo 1: Chiave Outlook
+        
         var outlookBitness = DetectFromOutlookKey();
         if (outlookBitness != OfficeBitness.Unknown)
         {
             return outlookBitness;
         }
 
-        // Metodo 2: Chiave ClickToRun
+        
         var clickToRunBitness = DetectFromClickToRun();
         if (clickToRunBitness != OfficeBitness.Unknown)
         {
             return clickToRunBitness;
         }
 
-        // Metodo 3: Chiave Word MSI
+        
         var msiBitness = DetectFromMsiInstallation();
         if (msiBitness != OfficeBitness.Unknown)
         {
             return msiBitness;
         }
 
-        // Metodo 4: Verifica esistenza file Word
+        
         var wordExeBitness = DetectFromWordExecutable();
         if (wordExeBitness != OfficeBitness.Unknown)
         {
@@ -180,7 +180,7 @@ internal class Program
             }
             catch
             {
-                // Ignora errori di accesso al registro
+                
             }
         }
 
@@ -222,7 +222,7 @@ internal class Program
         }
         catch
         {
-            // Ignora errori di accesso al registro
+            
         }
 
         return OfficeBitness.Unknown;
@@ -265,7 +265,7 @@ internal class Program
             }
             catch
             {
-                // Ignora errori di accesso al registro
+                
             }
         }
 
@@ -302,8 +302,8 @@ internal class Program
     {
         Console.Error.WriteLine($"[Launcher] ERRORE: {message}");
 
-        // Mostra anche un MessageBox per l'utente
-        MessageBox(IntPtr.Zero, message, $"{AppName} - Errore", 0x10); // MB_ICONERROR
+        
+        MessageBox(IntPtr.Zero, message, $"{AppName} - Errore", 0x10); 
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]

@@ -1,8 +1,8 @@
 namespace OnlyFirmaOutlook.Models;
 
-/// <summary>
-/// Rappresenta un account Outlook.
-/// </summary>
+
+
+
 public class OutlookAccount
 {
     public string DisplayName { get; set; } = string.Empty;

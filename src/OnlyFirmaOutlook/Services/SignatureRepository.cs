@@ -3,10 +3,10 @@ using OnlyFirmaOutlook.Models;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Gestisce le firme esistenti nella cartella di destinazione.
-/// Permette di elencare ed eliminare le firme.
-/// </summary>
+
+
+
+
 public class SignatureRepository
 {
     private readonly LoggingService _logger;
@@ -16,9 +16,9 @@ public class SignatureRepository
         _logger = LoggingService.Instance;
     }
 
-    /// <summary>
-    /// Ottiene la cartella firme predefinita di Outlook.
-    /// </summary>
+    
+    
+    
     public static string GetDefaultOutlookSignaturesFolder()
     {
         return Path.Combine(
@@ -27,9 +27,9 @@ public class SignatureRepository
             "Signatures");
     }
 
-    /// <summary>
-    /// Ottiene la cartella di output alternativa quando Outlook non è disponibile.
-    /// </summary>
+    
+    
+    
     public static string GetAlternativeOutputFolder()
     {
         return Path.Combine(
@@ -38,10 +38,10 @@ public class SignatureRepository
             "Output");
     }
 
-    /// <summary>
-    /// Elenca tutte le firme presenti nella cartella specificata.
-    /// Una firma è identificata dalla presenza di un file .htm.
-    /// </summary>
+    
+    
+    
+    
     public List<SignatureInfo> GetSignatures(string folderPath)
     {
         var signatures = new List<SignatureInfo>();
@@ -86,9 +86,9 @@ public class SignatureRepository
         return signatures.OrderBy(s => s.Name).ToList();
     }
 
-    /// <summary>
-    /// Elimina una firma e tutti i suoi file associati.
-    /// </summary>
+    
+    
+    
     public bool DeleteSignature(SignatureInfo signature)
     {
         if (signature == null)
@@ -102,19 +102,19 @@ public class SignatureRepository
         var success = true;
         var basePath = Path.Combine(signature.FolderPath, signature.Name);
 
-        // Elimina file .htm
+        
         success &= TryDeleteFile(basePath + ".htm");
 
-        // Elimina file .rtf
+        
         success &= TryDeleteFile(basePath + ".rtf");
 
-        // Elimina file .txt
+        
         success &= TryDeleteFile(basePath + ".txt");
 
-        // Elimina cartella _files
+        
         success &= TryDeleteDirectory(basePath + "_files");
 
-        // Elimina cartella _file
+        
         success &= TryDeleteDirectory(basePath + "_file");
 
         if (success)
@@ -129,9 +129,9 @@ public class SignatureRepository
         return success;
     }
 
-    /// <summary>
-    /// Elimina i file esistenti di una firma prima di sovrascriverla.
-    /// </summary>
+    
+    
+    
     public void DeleteExistingSignatureFiles(string folderPath, string signatureName)
     {
         _logger.Log($"Eliminazione file firma esistente: {signatureName}");
@@ -145,33 +145,33 @@ public class SignatureRepository
         TryDeleteDirectory(basePath + "_file");
     }
 
-    /// <summary>
-    /// Verifica se una firma con il nome specificato esiste già.
-    /// </summary>
+    
+    
+    
     public bool SignatureExists(string folderPath, string signatureName)
     {
         var htmPath = Path.Combine(folderPath, signatureName + ".htm");
         return File.Exists(htmPath);
     }
 
-    /// <summary>
-    /// Verifica se è possibile scrivere nella cartella specificata.
-    /// Crea e elimina un file temporaneo di test.
-    /// </summary>
+    
+    
+    
+    
     public bool CanWriteToFolder(string folderPath)
     {
         _logger.Log($"Test scrittura cartella: {folderPath}");
 
         try
         {
-            // Crea la cartella se non esiste
+            
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
                 _logger.Log("Cartella creata");
             }
 
-            // Prova a creare e eliminare un file di test
+            
             var testFile = Path.Combine(folderPath, $".write_test_{Guid.NewGuid():N}.tmp");
             File.WriteAllText(testFile, "test");
             File.Delete(testFile);

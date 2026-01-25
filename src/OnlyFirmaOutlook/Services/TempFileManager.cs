@@ -2,11 +2,11 @@ using System.IO;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Gestisce i file temporanei per la sessione corrente.
-/// Copia i file dalla share di rete a una cartella locale temporanea.
-/// Esegue cleanup best-effort alla chiusura.
-/// </summary>
+
+
+
+
+
 public sealed class TempFileManager
 {
     private static readonly Lazy<TempFileManager> _instance = new(() => new TempFileManager());
@@ -42,10 +42,10 @@ public sealed class TempFileManager
         }
     }
 
-    /// <summary>
-    /// Copia un file dalla sorgente (possibilmente share di rete) alla cartella temporanea locale.
-    /// Restituisce il percorso del file copiato.
-    /// </summary>
+    
+    
+    
+    
     public string CopyToLocalTemp(string sourceFilePath)
     {
         if (!File.Exists(sourceFilePath))
@@ -56,7 +56,7 @@ public sealed class TempFileManager
         var fileName = Path.GetFileName(sourceFilePath);
         var destPath = Path.Combine(SessionTempFolder, fileName);
 
-        // Se esiste già un file con lo stesso nome, aggiungi un GUID
+        
         if (File.Exists(destPath))
         {
             var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
@@ -79,9 +79,9 @@ public sealed class TempFileManager
         }
     }
 
-    /// <summary>
-    /// Verifica se un percorso è su una share di rete (UNC path).
-    /// </summary>
+    
+    
+    
     public static bool IsUncPath(string path)
     {
         if (string.IsNullOrEmpty(path)) return false;
@@ -93,15 +93,15 @@ public sealed class TempFileManager
         }
         catch
         {
-            // Fallback per path che iniziano con \\
+            
             return path.StartsWith(@"\\", StringComparison.Ordinal);
         }
     }
 
-    /// <summary>
-    /// Cleanup best-effort della cartella temporanea della sessione.
-    /// Non blocca l'uscita dell'app, logga eventuali errori.
-    /// </summary>
+    
+    
+    
+    
     public void CleanupSessionFolder()
     {
         if (!Directory.Exists(SessionTempFolder))
@@ -119,7 +119,7 @@ public sealed class TempFileManager
         {
             try
             {
-                // Prima prova a eliminare tutti i file
+                
                 foreach (var file in Directory.GetFiles(SessionTempFolder, "*", SearchOption.AllDirectories))
                 {
                     try
@@ -133,7 +133,7 @@ public sealed class TempFileManager
                     }
                 }
 
-                // Poi elimina le sottocartelle
+                
                 foreach (var dir in Directory.GetDirectories(SessionTempFolder, "*", SearchOption.AllDirectories)
                                              .OrderByDescending(d => d.Length))
                 {
@@ -147,7 +147,7 @@ public sealed class TempFileManager
                     }
                 }
 
-                // Infine elimina la cartella principale
+                
                 Directory.Delete(SessionTempFolder, recursive: true);
                 _logger.Log("Cleanup cartella temporanea completato con successo");
                 return;
@@ -167,10 +167,10 @@ public sealed class TempFileManager
                           $"La cartella '{SessionTempFolder}' potrebbe richiedere pulizia manuale.");
     }
 
-    /// <summary>
-    /// Pulisce le cartelle temporanee orfane di sessioni precedenti.
-    /// Chiamato all'avvio per manutenzione.
-    /// </summary>
+    
+    
+    
+    
     public void CleanupOrphanedFolders()
     {
         if (!Directory.Exists(_baseTempFolder)) return;
@@ -183,10 +183,10 @@ public sealed class TempFileManager
             {
                 var dirName = Path.GetFileName(dir);
 
-                // Salta la cartella della sessione corrente
+                
                 if (dirName == _sessionId.ToString()) continue;
 
-                // Prova a eliminare solo se la cartella è vecchia (più di 1 giorno)
+                
                 var dirInfo = new DirectoryInfo(dir);
                 if (dirInfo.LastWriteTime < DateTime.Now.AddDays(-1))
                 {

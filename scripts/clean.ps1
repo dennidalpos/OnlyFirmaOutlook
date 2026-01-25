@@ -1,23 +1,4 @@
-<#
-.SYNOPSIS
-    Pulisce gli artefatti di build di OnlyFirmaOutlook.
 
-.DESCRIPTION
-    Questo script elimina:
-    - Cartelle bin\ e obj\ dei progetti
-    - Cartella .vs\ della soluzione
-    - Cartella dist\ con le build pubblicate
-    - Altri artefatti temporanei
-
-.PARAMETER All
-    Elimina anche la cartella .vs e altri file nascosti
-
-.EXAMPLE
-    .\clean.ps1
-
-.EXAMPLE
-    .\clean.ps1 -All
-#>
 
 param(
     [switch]$All
@@ -25,7 +6,6 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Percorsi
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Split-Path -Parent $scriptDir
 
@@ -75,7 +55,6 @@ foreach ($folder in $foldersToDelete) {
     }
 }
 
-# Elimina file temporanei
 $tempPatterns = @(
     "*.user",
     "*.suo",

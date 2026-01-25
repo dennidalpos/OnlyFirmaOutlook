@@ -1,8 +1,8 @@
 namespace OnlyFirmaOutlook.Models;
 
-/// <summary>
-/// Rappresenta un file preset nella cartella media.
-/// </summary>
+
+
+
 public class PresetFile
 {
     public string FullPath { get; set; } = string.Empty;

@@ -3,9 +3,9 @@ using OnlyFirmaOutlook.Models;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Servizio per la gestione dei file preset nella cartella media.
-/// </summary>
+
+
+
 public class PresetService
 {
     private readonly LoggingService _logger;
@@ -17,9 +17,9 @@ public class PresetService
         _mediaFolder = Path.Combine(AppContext.BaseDirectory, "media");
     }
 
-    /// <summary>
-    /// Carica i file preset dalla cartella media.
-    /// </summary>
+    
+    
+    
     public List<PresetFile> LoadPresets()
     {
         var presets = new List<PresetFile>();
@@ -34,7 +34,7 @@ public class PresetService
 
         try
         {
-            // Cerca file Word (.doc e .docx)
+            
             var wordExtensions = new[] { "*.doc", "*.docx" };
 
             foreach (var pattern in wordExtensions)
@@ -43,7 +43,7 @@ public class PresetService
 
                 foreach (var file in files)
                 {
-                    // Salta file temporanei di Word (iniziano con ~$)
+                    
                     var fileName = Path.GetFileName(file);
                     if (fileName.StartsWith("~$", StringComparison.Ordinal))
                     {
@@ -72,17 +72,17 @@ public class PresetService
         return presets.OrderBy(p => p.DisplayName).ToList();
     }
 
-    /// <summary>
-    /// Verifica se la cartella media esiste.
-    /// </summary>
+    
+    
+    
     public bool MediaFolderExists()
     {
         return Directory.Exists(_mediaFolder);
     }
 
-    /// <summary>
-    /// Ottiene il percorso della cartella media.
-    /// </summary>
+    
+    
+    
     public string GetMediaFolderPath()
     {
         return _mediaFolder;

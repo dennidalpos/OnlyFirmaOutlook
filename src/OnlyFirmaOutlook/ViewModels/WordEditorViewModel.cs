@@ -5,10 +5,10 @@ using OnlyFirmaOutlook.Services;
 
 namespace OnlyFirmaOutlook.ViewModels;
 
-/// <summary>
-/// ViewModel per WordEditorWindow.
-/// Gestisce lo stato dell'editor e i comandi.
-/// </summary>
+
+
+
+
 public class WordEditorViewModel : INotifyPropertyChanged
 {
     private readonly LoggingService _logger;

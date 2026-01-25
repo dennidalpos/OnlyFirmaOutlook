@@ -4,11 +4,11 @@ using OnlyFirmaOutlook.Models;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Servizio per la gestione dell'editor Word integrato.
-/// Gestisce la creazione di copie temporanee dei file, apertura editor,
-/// e cleanup post-conversione.
-/// </summary>
+
+
+
+
+
 public class WordEditorService
 {
     private readonly LoggingService _logger;
@@ -35,12 +35,12 @@ public class WordEditorService
         }
     }
 
-    /// <summary>
-    /// Prepara un file per l'editing creando una copia in una cartella temporanea dedicata.
-    /// </summary>
-    /// <param name="sourceFilePath">Percorso del file sorgente (preset o file caricato)</param>
-    /// <param name="proposedSignatureName">Nome proposto per la firma</param>
-    /// <returns>EditorState inizializzato con i percorsi temporanei</returns>
+    
+    
+    
+    
+    
+    
     public EditorState PrepareFileForEditing(string sourceFilePath, string proposedSignatureName)
     {
         if (!File.Exists(sourceFilePath))
@@ -56,7 +56,7 @@ public class WordEditorService
             ProposedSignatureName = proposedSignatureName
         };
 
-        // Crea cartella temporanea dedicata per questa sessione di editing
+        
         editorState.EditorTempFolder = Path.Combine(_editorBaseTempFolder, editorState.EditorSessionId.ToString());
 
         try
@@ -70,7 +70,7 @@ public class WordEditorService
             throw;
         }
 
-        // Copia il file nella cartella temporanea
+        
         var fileName = Path.GetFileName(sourceFilePath);
         editorState.LocalFilePath = Path.Combine(editorState.EditorTempFolder, fileName);
 
@@ -78,7 +78,7 @@ public class WordEditorService
         {
             File.Copy(sourceFilePath, editorState.LocalFilePath, overwrite: true);
 
-            // Assicurati che il file non sia read-only
+            
             File.SetAttributes(editorState.LocalFilePath, FileAttributes.Normal);
 
             _logger.Log($"File copiato in: {editorState.LocalFilePath}");
@@ -88,7 +88,7 @@ public class WordEditorService
         {
             _logger.LogError("Errore durante la copia del file per editing", ex);
 
-            // Cleanup cartella se la copia fallisce
+            
             CleanupEditorTempFolder(editorState.EditorSessionId);
             throw;
         }
@@ -96,10 +96,10 @@ public class WordEditorService
         return editorState;
     }
 
-    /// <summary>
-    /// Elimina la cartella temporanea dopo conversione riuscita.
-    /// </summary>
-    /// <param name="editorSessionId">GUID della sessione editor</param>
+    
+    
+    
+    
     public void CleanupEditorTempFolder(Guid editorSessionId)
     {
         var folderPath = Path.Combine(_editorBaseTempFolder, editorSessionId.ToString());
@@ -119,7 +119,7 @@ public class WordEditorService
         {
             try
             {
-                // Rimuovi attributi read-only da tutti i file
+                
                 foreach (var file in Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories))
                 {
                     try
@@ -133,7 +133,7 @@ public class WordEditorService
                     }
                 }
 
-                // Elimina sottocartelle
+                
                 foreach (var dir in Directory.GetDirectories(folderPath, "*", SearchOption.AllDirectories)
                                              .OrderByDescending(d => d.Length))
                 {
@@ -147,7 +147,7 @@ public class WordEditorService
                     }
                 }
 
-                // Elimina cartella principale
+                
                 Directory.Delete(folderPath, recursive: true);
                 _logger.Log($"Cleanup cartella editor completato: {editorSessionId}");
                 return;
@@ -167,10 +167,10 @@ public class WordEditorService
                           $"La cartella '{folderPath}' potrebbe richiedere pulizia manuale.");
     }
 
-    /// <summary>
-    /// Pulisce tutte le cartelle editor orfane (più vecchie di 1 giorno).
-    /// Chiamato all'avvio per manutenzione.
-    /// </summary>
+    
+    
+    
+    
     public void CleanupOrphanedEditorFolders()
     {
         if (!Directory.Exists(_editorBaseTempFolder))
@@ -186,7 +186,7 @@ public class WordEditorService
             {
                 var dirInfo = new DirectoryInfo(dir);
 
-                // Elimina solo cartelle più vecchie di 1 giorno
+                
                 if (dirInfo.LastWriteTime < DateTime.Now.AddDays(-1))
                 {
                     try
@@ -207,9 +207,9 @@ public class WordEditorService
         }
     }
 
-    /// <summary>
-    /// Verifica se il file locale esiste ancora.
-    /// </summary>
+    
+    
+    
     public bool ValidateEditorState(EditorState editorState)
     {
         if (editorState == null)
@@ -220,9 +220,9 @@ public class WordEditorService
         return File.Exists(editorState.LocalFilePath);
     }
 
-    /// <summary>
-    /// Aggiorna il timestamp di ultima modifica.
-    /// </summary>
+    
+    
+    
     public void UpdateLastModified(EditorState editorState)
     {
         editorState.LastModified = DateTime.Now;
