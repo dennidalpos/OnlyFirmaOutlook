@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace OnlyFirmaOutlook.Services;
 
@@ -122,7 +123,7 @@ public class WordConversionService
 
             
             _logger.Log($"Salvataggio HTML ({(useFilteredHtml ? "filtrato" : "completo")})...");
-            var htmlFormat = useFilteredHtml ? WdFormatFilteredHTML : WdFormatHTML;
+            var htmlFormat = WdFormatHTML;
             doc.SaveAs2(
                 FileName: htmPath,
                 FileFormat: htmlFormat,
@@ -193,12 +194,85 @@ public class WordConversionService
             CleanupComObjects(doc, wordApp);
         }
 
+        if (result.Success && result.HtmFilePath != null)
+        {
+            try
+            {
+                var normalizer = new WordHtmlSignatureNormalizer();
+                var cssInliner = new CssInliner();
+                var assetManager = new AssetManager();
+                var installer = new SignatureInstaller();
+
+                var html = ReadAllTextWithRetry(result.HtmFilePath);
+                if (html == null)
+                {
+                    _logger.LogWarning("Impossibile leggere HTML firma per normalizzazione");
+                    return result;
+                }
+
+                var normalized = normalizer.Normalize(html);
+                var inlined = cssInliner.InlineCss(normalized);
+
+                var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
+                var assetResult = assetManager.ProcessImages(inlined, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false);
+                installer.Install(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
+
+                result.AssetsFolderPath = assetsFolder;
+                result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
+                result.TxtFilePath = Path.Combine(destinationFolder, signatureName + ".txt");
+
+                CleanupWordAssetFolders(destinationFolder, signatureName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Errore normalizzazione HTML firma: {ex.Message}");
+            }
+        }
+
         return result;
     }
 
-    
-    
-    
+    private void CleanupWordAssetFolders(string destinationFolder, string signatureName)
+    {
+        var basePath = Path.Combine(destinationFolder, signatureName);
+        var filesFolderPath = basePath + "_files";
+        var fileFolderPath = basePath + "_file";
+
+        if (Directory.Exists(filesFolderPath) && Directory.Exists(fileFolderPath))
+        {
+            try
+            {
+                Directory.Delete(fileFolderPath, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Impossibile eliminare cartella assets duplicata: {ex.Message}");
+            }
+        }
+    }
+
+    private static string? ReadAllTextWithRetry(string path)
+    {
+        const int maxAttempts = 5;
+        const int delayMs = 150;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(stream);
+                return reader.ReadToEnd();
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(delayMs);
+            }
+        }
+
+        return null;
+    }
+
     private void CleanupComObjects(dynamic? doc, dynamic? wordApp)
     {
         _logger.Log("Cleanup oggetti COM...");

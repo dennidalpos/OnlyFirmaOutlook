@@ -1260,6 +1260,7 @@ public partial class MainWindow : Window
             _signatureRepository.DeleteSignature(signature);
             RefreshExistingSignatures();
             _logger.Log($"Firma '{signature.Name}' eliminata");
+            CheckOverwriteWarning();
         }
         catch (Exception ex)
         {
@@ -1409,8 +1410,8 @@ public partial class MainWindow : Window
         SignatureNameTextBox.Text = string.Empty;
         IdentifierTextBox.Text = string.Empty;
         AccountComboBox.SelectedIndex = _accounts.Count > 0 ? 0 : -1;
-        FilteredHtmlRadio.IsChecked = true;
-        CompleteHtmlRadio.IsChecked = false;
+        FilteredHtmlRadio.IsChecked = false;
+        CompleteHtmlRadio.IsChecked = true;
         ExistingSignaturesListBox.SelectedItem = null;
         BackupsListBox.SelectedItem = null;
 
