@@ -77,6 +77,15 @@ OutlookCidAttacher.AddInlineCidAttachments(mail, images);
 mail.Send();
 ```
 
+Se vuoi un automatismo pronto all'uso, puoi delegare tutto a:
+
+```csharp
+var outlook = new Application();
+var mail = (MailItem)outlook.CreateItem(OlItemType.olMailItem);
+OutlookSignatureEmbedder.ApplySignatureWithInlineImages(mail, htmlPath);
+mail.Send();
+```
+
 ### Note operative
 
 - Per verificare che le immagini siano realmente inline, controlla il sorgente della mail ricevuta: deve contenere `multipart/related`, header `Content-ID` sugli allegati e riferimenti `src="cid:..."` nell'HTML. La semplice visualizzazione corretta in Outlook non è sufficiente a garantire che l'email inviata abbia gli allegati inline corretti.
