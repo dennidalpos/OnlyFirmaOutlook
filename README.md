@@ -77,6 +77,11 @@ OutlookCidAttacher.AddInlineCidAttachments(mail, images);
 mail.Send();
 ```
 
+### Note operative
+
+- Per verificare che le immagini siano realmente inline, controlla il sorgente della mail ricevuta: deve contenere `multipart/related`, header `Content-ID` sugli allegati e riferimenti `src="cid:..."` nell'HTML. La semplice visualizzazione corretta in Outlook non è sufficiente a garantire che l'email inviata abbia gli allegati inline corretti.
+- In alternativa, se cambi approccio, puoi inserire le immagini direttamente nel WordEditor di Outlook come `InlineShapes.AddPicture(...)` invece di usare HTML con percorsi locali; in quel caso Outlook gestisce nativamente gli allegati inline, ma richiede un template/placeholder nel documento.
+
 ## Struttura del progetto
 
 ```
