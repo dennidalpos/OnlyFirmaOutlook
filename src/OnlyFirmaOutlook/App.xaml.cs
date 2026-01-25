@@ -16,6 +16,10 @@ public partial class App : Application
     {
         _loggingService = LoggingService.Instance;
         _tempFileManager = TempFileManager.Instance;
+
+        OfficeBitnessDetector.LogInfo = _loggingService.Log;
+        OfficeBitnessDetector.LogWarning = _loggingService.LogWarning;
+        OfficeBitnessDetector.LogError = _loggingService.LogError;
     }
 
     protected override void OnStartup(StartupEventArgs e)

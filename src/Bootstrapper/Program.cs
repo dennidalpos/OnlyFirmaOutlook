@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.Win32;
+using OnlyFirmaOutlook.Services;
 
 namespace OnlyFirmaOutlook.Launcher;
 
@@ -19,12 +19,13 @@ internal class Program
         try
         {
             var baseDir = AppContext.BaseDirectory;
-            var bitness = DetectOfficeBitness();
+            ConfigureLogging();
+            var bitness = OfficeBitnessDetector.DetectOfficeBitness();
 
             string targetDir;
             string fallbackDir;
 
-            if (bitness == OfficeBitness.x86)
+            if (bitness == OfficeBitnessDetector.OfficeBitness.x86)
             {
                 targetDir = Path.Combine(baseDir, "win-x86");
                 fallbackDir = Path.Combine(baseDir, "win-x64");
@@ -36,7 +37,7 @@ internal class Program
                 targetDir = Path.Combine(baseDir, "win-x64");
                 fallbackDir = Path.Combine(baseDir, "win-x86");
 
-                if (bitness == OfficeBitness.x64)
+                if (bitness == OfficeBitnessDetector.OfficeBitness.x64)
                 {
                     Console.WriteLine($"[Launcher] Rilevato Office 64-bit, avvio versione x64...");
                 }
@@ -99,203 +100,12 @@ internal class Program
         }
     }
 
-    private enum OfficeBitness
+    private static void ConfigureLogging()
     {
-        Unknown,
-        x86,
-        x64
-    }
-
-    private static OfficeBitness DetectOfficeBitness()
-    {
-        Console.WriteLine("[Launcher] Rilevamento bitness Office...");
-
-        
-        var outlookBitness = DetectFromOutlookKey();
-        if (outlookBitness != OfficeBitness.Unknown)
-        {
-            return outlookBitness;
-        }
-
-        
-        var clickToRunBitness = DetectFromClickToRun();
-        if (clickToRunBitness != OfficeBitness.Unknown)
-        {
-            return clickToRunBitness;
-        }
-
-        
-        var msiBitness = DetectFromMsiInstallation();
-        if (msiBitness != OfficeBitness.Unknown)
-        {
-            return msiBitness;
-        }
-
-        
-        var wordExeBitness = DetectFromWordExecutable();
-        if (wordExeBitness != OfficeBitness.Unknown)
-        {
-            return wordExeBitness;
-        }
-
-        return OfficeBitness.Unknown;
-    }
-
-    private static OfficeBitness DetectFromOutlookKey()
-    {
-        string[] versions = { "16.0", "15.0", "14.0" };
-
-        foreach (var version in versions)
-        {
-            try
-            {
-                using var key = Registry.LocalMachine.OpenSubKey(
-                    $@"SOFTWARE\Microsoft\Office\{version}\Outlook", false);
-                if (key != null)
-                {
-                    var bitness = key.GetValue("Bitness") as string;
-                    if (!string.IsNullOrEmpty(bitness))
-                    {
-                        Console.WriteLine($"[Launcher] Trovata chiave Outlook {version}, Bitness={bitness}");
-                        return bitness.Equals("x64", StringComparison.OrdinalIgnoreCase)
-                            ? OfficeBitness.x64
-                            : OfficeBitness.x86;
-                    }
-                }
-
-                using var key32 = Registry.LocalMachine.OpenSubKey(
-                    $@"SOFTWARE\WOW6432Node\Microsoft\Office\{version}\Outlook", false);
-                if (key32 != null)
-                {
-                    var bitness = key32.GetValue("Bitness") as string;
-                    if (!string.IsNullOrEmpty(bitness))
-                    {
-                        Console.WriteLine($"[Launcher] Trovata chiave Outlook {version} (WOW64), Bitness={bitness}");
-                        return bitness.Equals("x64", StringComparison.OrdinalIgnoreCase)
-                            ? OfficeBitness.x64
-                            : OfficeBitness.x86;
-                    }
-                    return OfficeBitness.x86;
-                }
-            }
-            catch
-            {
-                
-            }
-        }
-
-        return OfficeBitness.Unknown;
-    }
-
-    private static OfficeBitness DetectFromClickToRun()
-    {
-        try
-        {
-            using var key = Registry.LocalMachine.OpenSubKey(
-                @"SOFTWARE\Microsoft\Office\ClickToRun\Configuration", false);
-            if (key != null)
-            {
-                var platform = key.GetValue("Platform") as string;
-                if (!string.IsNullOrEmpty(platform))
-                {
-                    Console.WriteLine($"[Launcher] Trovata chiave ClickToRun, Platform={platform}");
-                    return platform.Equals("x64", StringComparison.OrdinalIgnoreCase)
-                        ? OfficeBitness.x64
-                        : OfficeBitness.x86;
-                }
-            }
-
-            using var key32 = Registry.LocalMachine.OpenSubKey(
-                @"SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration", false);
-            if (key32 != null)
-            {
-                var platform = key32.GetValue("Platform") as string;
-                if (!string.IsNullOrEmpty(platform))
-                {
-                    Console.WriteLine($"[Launcher] Trovata chiave ClickToRun (WOW64), Platform={platform}");
-                    return platform.Equals("x64", StringComparison.OrdinalIgnoreCase)
-                        ? OfficeBitness.x64
-                        : OfficeBitness.x86;
-                }
-                return OfficeBitness.x86;
-            }
-        }
-        catch
-        {
-            
-        }
-
-        return OfficeBitness.Unknown;
-    }
-
-    private static OfficeBitness DetectFromMsiInstallation()
-    {
-        string[] versions = { "16.0", "15.0", "14.0" };
-
-        foreach (var version in versions)
-        {
-            try
-            {
-                using var key = Registry.LocalMachine.OpenSubKey(
-                    $@"SOFTWARE\Microsoft\Office\{version}\Word\InstallRoot", false);
-                if (key != null)
-                {
-                    var path = key.GetValue("Path") as string;
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        Console.WriteLine($"[Launcher] Trovato Word MSI {version}: {path}");
-                        if (path.Contains("Program Files (x86)", StringComparison.OrdinalIgnoreCase))
-                        {
-                            return OfficeBitness.x86;
-                        }
-                        if (path.Contains("Program Files", StringComparison.OrdinalIgnoreCase))
-                        {
-                            return OfficeBitness.x64;
-                        }
-                    }
-                }
-
-                using var key32 = Registry.LocalMachine.OpenSubKey(
-                    $@"SOFTWARE\WOW6432Node\Microsoft\Office\{version}\Word\InstallRoot", false);
-                if (key32 != null)
-                {
-                    Console.WriteLine($"[Launcher] Trovato Word MSI {version} in WOW64 (32-bit)");
-                    return OfficeBitness.x86;
-                }
-            }
-            catch
-            {
-                
-            }
-        }
-
-        return OfficeBitness.Unknown;
-    }
-
-    private static OfficeBitness DetectFromWordExecutable()
-    {
-        string[] possiblePaths =
-        {
-            @"C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE",
-            @"C:\Program Files (x86)\Microsoft Office\root\Office16\WINWORD.EXE",
-            @"C:\Program Files\Microsoft Office\Office16\WINWORD.EXE",
-            @"C:\Program Files (x86)\Microsoft Office\Office16\WINWORD.EXE",
-            @"C:\Program Files\Microsoft Office\Office15\WINWORD.EXE",
-            @"C:\Program Files (x86)\Microsoft Office\Office15\WINWORD.EXE",
-        };
-
-        foreach (var path in possiblePaths)
-        {
-            if (File.Exists(path))
-            {
-                Console.WriteLine($"[Launcher] Trovato Word: {path}");
-                return path.Contains("Program Files (x86)", StringComparison.OrdinalIgnoreCase)
-                    ? OfficeBitness.x86
-                    : OfficeBitness.x64;
-            }
-        }
-
-        return OfficeBitness.Unknown;
+        OfficeBitnessDetector.LogInfo = message => Console.WriteLine($"[Launcher] {message}");
+        OfficeBitnessDetector.LogWarning = message => Console.WriteLine($"[Launcher] AVVISO: {message}");
+        OfficeBitnessDetector.LogError = (message, ex) =>
+            Console.WriteLine($"[Launcher] ERRORE: {message} - {ex.Message}");
     }
 
     private static void ShowError(string message)

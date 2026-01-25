@@ -1,11 +1,11 @@
 # OnlyFirmaOutlook
 
-OnlyFirmaOutlook è un'applicazione Windows che converte documenti Word in firme per Outlook Classic, con un editor Word integrato per la modifica obbligatoria prima della conversione.
+OnlyFirmaOutlook è un'applicazione Windows che converte documenti Word in firme per Outlook Classic, richiedendo l'apertura in Microsoft Word per la modifica obbligatoria prima della conversione.
 
 ## Funzionalità principali
 
 - Conversione di documenti Word (.doc/.docx) in firme Outlook (HTML/RTF/TXT)
-- Editor Word integrato con toolbar per formattazione, link, immagini e zoom
+- Apertura di Microsoft Word per la modifica obbligatoria prima della conversione
 - Preset gestiti tramite cartella media e file personalizzati
 - Rilevamento automatico account Outlook (opzionale)
 - Supporto build x86/x64 con launcher che rileva la bitness di Office
@@ -22,7 +22,7 @@ OnlyFirmaOutlook è un'applicazione Windows che converte documenti Word in firme
 
 1. Avvia `OnlyFirmaOutlook.Launcher.exe` dalla cartella di distribuzione.
 2. Seleziona un preset o carica un documento Word personalizzato.
-3. Modifica il documento nell'editor Word integrato e salva.
+3. Modifica il documento in Word e salva.
 4. Inserisci il nome della firma e completa la conversione.
 
 ## Preset

@@ -830,7 +830,7 @@ public partial class MainWindow : Window
         var dialog = new OpenFileDialog
         {
             Title = "Seleziona documento Word",
-            Filter = "Documenti Word (*.docx;*.doc)|*.docx;*.doc|Tutti i file (*.*)|*.*",
+            Filter = "Documenti Word (*.docx;*.doc)|*.docx;*.doc",
             CheckFileExists = true
         };
 
@@ -838,6 +838,16 @@ public partial class MainWindow : Window
         {
             try
             {
+                if (!IsWordDocument(dialog.FileName))
+                {
+                    MessageBox.Show(
+                        "Il file selezionato non è un documento Word valido (.doc/.docx).",
+                        "File non valido",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
                 
                 PresetListBox.SelectedItem = null;
 
@@ -878,6 +888,13 @@ public partial class MainWindow : Window
                     MessageBoxImage.Error);
             }
         }
+    }
+
+    private static bool IsWordDocument(string filePath)
+    {
+        var extension = Path.GetExtension(filePath);
+        return extension.Equals(".doc", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".docx", StringComparison.OrdinalIgnoreCase);
     }
 
     private void SignatureNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -953,7 +970,10 @@ public partial class MainWindow : Window
         var finalSignatureName = WordConversionService.GenerateSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
-        _signatureRepository.CreateBackupInSignaturesFolder();
+        if (ShouldCreateBackup(destinationFolder))
+        {
+            _signatureRepository.CreateBackupInSignaturesFolder();
+        }
 
         
         if (_signatureRepository.SignatureExists(destinationFolder, finalSignatureName))
@@ -1068,6 +1088,20 @@ public partial class MainWindow : Window
         {
             _logger.LogWarning($"Impossibile aprire Esplora File: {ex.Message}");
         }
+    }
+
+    private static bool ShouldCreateBackup(string destinationFolder)
+    {
+        if (string.IsNullOrWhiteSpace(destinationFolder))
+        {
+            return false;
+        }
+
+        var defaultFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+        return string.Equals(
+            Path.GetFullPath(destinationFolder).TrimEnd(Path.DirectorySeparatorChar),
+            Path.GetFullPath(defaultFolder).TrimEnd(Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private void ExistingSignaturesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
