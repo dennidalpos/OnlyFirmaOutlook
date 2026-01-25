@@ -222,7 +222,7 @@ public class WordConversionService
             _logger.LogWarning("Impossibile leggere HTML firma per normalizzazione immagini");
             return;
         }
-        var regex = new Regex("(?<attr>src|href)\\s*=\\s*(?<quote>[\"'])(?<value>[^\"']+)(\\k<quote>)", RegexOptions.IgnoreCase);
+        var regex = new Regex("(?<attr>src|href|o:href|v:href|xlink:href)\\s*=\\s*(?<quote>[\"'])(?<value>[^\"']+)(\\k<quote>)", RegexOptions.IgnoreCase);
         var updated = false;
 
         var updatedHtml = regex.Replace(html, match =>
