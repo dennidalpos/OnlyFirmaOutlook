@@ -123,7 +123,7 @@ public class WordConversionService
 
             
             _logger.Log($"Salvataggio HTML ({(useFilteredHtml ? "filtrato" : "completo")})...");
-            var htmlFormat = WdFormatHTML;
+            var htmlFormat = useFilteredHtml ? WdFormatFilteredHTML : WdFormatHTML;
             doc.SaveAs2(
                 FileName: htmPath,
                 FileFormat: htmlFormat,
@@ -210,11 +210,11 @@ public class WordConversionService
                     return result;
                 }
 
-                var normalized = normalizer.Normalize(html);
-                var inlined = cssInliner.InlineCss(normalized);
+                var inlined = cssInliner.InlineCss(html);
+                var normalized = normalizer.Normalize(inlined);
 
                 var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
-                var assetResult = assetManager.ProcessImages(inlined, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false);
+                var assetResult = assetManager.ProcessImages(normalized, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false);
                 installer.Install(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
 
                 result.AssetsFolderPath = assetsFolder;

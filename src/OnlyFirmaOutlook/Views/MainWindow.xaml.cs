@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     private readonly SignatureRepository _signatureRepository;
     private readonly WordConversionService _wordConversionService;
     private readonly WordEditorService _wordEditorService;
+    private readonly SignatureWorkflowService _signatureWorkflowService;
 
     private List<PresetFile> _presets = new();
     private List<OutlookAccount> _accounts = new();
@@ -58,6 +59,7 @@ public partial class MainWindow : Window
         _signatureRepository = new SignatureRepository();
         _wordConversionService = new WordConversionService();
         _wordEditorService = new WordEditorService();
+        _signatureWorkflowService = new SignatureWorkflowService(_signatureRepository, _wordConversionService);
 
         
         _logger.LogAdded += OnLogAdded;
@@ -459,12 +461,13 @@ public partial class MainWindow : Window
             identifier = IdentifierTextBox.Text.Trim();
         }
 
-        var finalName = WordConversionService.GenerateSignatureName(baseName, identifier);
+        var finalName = _signatureWorkflowService.BuildFinalSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
 
 
-        if (!string.IsNullOrEmpty(destinationFolder) && _signatureRepository.SignatureExists(destinationFolder, finalName))
+        if (!string.IsNullOrEmpty(destinationFolder) &&
+            _signatureWorkflowService.SignatureExists(destinationFolder, finalName))
         {
             OverwriteWarningText.Text = $"La firma '{finalName}' esiste già e verrà sovrascritta!";
             OverwriteWarningBorder.Visibility = Visibility.Visible;
@@ -520,7 +523,7 @@ public partial class MainWindow : Window
             identifier = IdentifierTextBox.Text.Trim();
         }
 
-        var finalName = WordConversionService.GenerateSignatureName(baseName, identifier);
+        var finalName = _signatureWorkflowService.BuildFinalSignatureName(baseName, identifier);
 
         FinalSignatureNameText.Text = finalName;
         FinalNameBorder.Visibility = Visibility.Visible;
@@ -1005,14 +1008,14 @@ public partial class MainWindow : Window
             identifier = IdentifierTextBox.Text.Trim();
         }
 
-        var finalSignatureName = WordConversionService.GenerateSignatureName(baseName, identifier);
+        var finalSignatureName = _signatureWorkflowService.BuildFinalSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
-        _signatureRepository.CreateBackupInSignaturesFolder();
+        _signatureWorkflowService.CreateBackupIfNeeded(destinationFolder);
         RefreshBackups();
 
         
-        if (_signatureRepository.SignatureExists(destinationFolder, finalSignatureName))
+        if (_signatureWorkflowService.SignatureExists(destinationFolder, finalSignatureName))
         {
             var result = MessageBox.Show(
                 $"Esiste già una firma con il nome '{finalSignatureName}'.\n\nVuoi sovrascriverla?",
@@ -1026,7 +1029,7 @@ public partial class MainWindow : Window
             }
 
             
-            _signatureRepository.DeleteExistingSignatureFiles(destinationFolder, finalSignatureName);
+            _signatureWorkflowService.DeleteExistingSignatureFiles(destinationFolder, finalSignatureName);
         }
 
         SetBusy(true, "Conversione in corso...");
@@ -1038,7 +1041,7 @@ public partial class MainWindow : Window
             
             var conversionResult = await Task.Run(() =>
             {
-                return _wordConversionService.ConvertDocument(
+                return _signatureWorkflowService.ConvertDocument(
                     _selectedFilePath,
                     destinationFolder,
                     finalSignatureName,
@@ -1124,20 +1127,6 @@ public partial class MainWindow : Window
         {
             _logger.LogWarning($"Impossibile aprire Esplora File: {ex.Message}");
         }
-    }
-
-    private static bool ShouldCreateBackup(string destinationFolder)
-    {
-        if (string.IsNullOrWhiteSpace(destinationFolder))
-        {
-            return false;
-        }
-
-        var defaultFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
-        return string.Equals(
-            Path.GetFullPath(destinationFolder).TrimEnd(Path.DirectorySeparatorChar),
-            Path.GetFullPath(defaultFolder).TrimEnd(Path.DirectorySeparatorChar),
-            StringComparison.OrdinalIgnoreCase);
     }
 
     private void ExistingSignaturesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

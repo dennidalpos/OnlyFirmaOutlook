@@ -110,61 +110,10 @@ public sealed class TempFileManager
             return;
         }
 
-        _logger.Log($"Avvio cleanup cartella temporanea: {SessionTempFolder}");
-
-        var maxRetries = 3;
-        var retryDelayMs = 100;
-
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
-        {
-            try
-            {
-                
-                foreach (var file in Directory.GetFiles(SessionTempFolder, "*", SearchOption.AllDirectories))
-                {
-                    try
-                    {
-                        File.SetAttributes(file, FileAttributes.Normal);
-                        File.Delete(file);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"Impossibile eliminare file '{file}': {ex.Message}");
-                    }
-                }
-
-                
-                foreach (var dir in Directory.GetDirectories(SessionTempFolder, "*", SearchOption.AllDirectories)
-                                             .OrderByDescending(d => d.Length))
-                {
-                    try
-                    {
-                        Directory.Delete(dir, recursive: false);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"Impossibile eliminare cartella '{dir}': {ex.Message}");
-                    }
-                }
-
-                
-                Directory.Delete(SessionTempFolder, recursive: true);
-                _logger.Log("Cleanup cartella temporanea completato con successo");
-                return;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"Tentativo {attempt}/{maxRetries} cleanup fallito: {ex.Message}");
-
-                if (attempt < maxRetries)
-                {
-                    Thread.Sleep(retryDelayMs * attempt);
-                }
-            }
-        }
-
-        _logger.LogWarning($"Cleanup cartella temporanea non completato dopo {maxRetries} tentativi. " +
-                          $"La cartella '{SessionTempFolder}' potrebbe richiedere pulizia manuale.");
+        TempCleanupHelper.CleanupDirectoryWithRetries(
+            SessionTempFolder,
+            _logger,
+            "cartella temporanea sessione");
     }
 
     
