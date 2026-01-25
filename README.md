@@ -13,6 +13,11 @@ OnlyFirmaOutlook è un'applicazione desktop Windows (WPF) che trasforma document
 - Supporta build x86/x64 con launcher che seleziona la bitness corretta in base a Office.
 - Consente l'esecuzione da share di rete con copia locale dei file temporanei.
 
+## Note su immagini e compatibilità
+
+- Le immagini vengono copiate nella cartella `signatureName_files` e i riferimenti nell'HTML vengono riscritti per massimizzare la compatibilità nei client esterni.
+- L'incorporamento effettivo delle immagini in uscita è gestito da Outlook al momento dell'invio e può variare in base a client e policy; la pipeline riduce le rotture ma non può forzare il comportamento di invio.
+
 ## Requisiti
 
 - Windows 10/11

@@ -1,6 +1,5 @@
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace OnlyFirmaOutlook.Services;
@@ -195,114 +194,40 @@ public class WordConversionService
             CleanupComObjects(doc, wordApp);
         }
 
-        if (result.Success)
+        if (result.Success && result.HtmFilePath != null)
         {
-            NormalizeHtmlImageReferences(result.HtmFilePath, result.AssetsFolderPath);
+            try
+            {
+                var normalizer = new WordHtmlSignatureNormalizer();
+                var cssInliner = new CssInliner();
+                var assetManager = new AssetManager();
+                var installer = new SignatureInstaller();
+
+                var html = ReadAllTextWithRetry(result.HtmFilePath);
+                if (html == null)
+                {
+                    _logger.LogWarning("Impossibile leggere HTML firma per normalizzazione");
+                    return result;
+                }
+
+                var normalized = normalizer.Normalize(html);
+                var inlined = cssInliner.InlineCss(normalized);
+
+                var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
+                var assetResult = assetManager.ProcessImages(inlined, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false);
+                installer.Install(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
+
+                result.AssetsFolderPath = assetsFolder;
+                result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
+                result.TxtFilePath = Path.Combine(destinationFolder, signatureName + ".txt");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Errore normalizzazione HTML firma: {ex.Message}");
+            }
         }
 
         return result;
-    }
-
-    private void NormalizeHtmlImageReferences(string? htmPath, string? assetsFolderPath)
-    {
-        if (string.IsNullOrWhiteSpace(assetsFolderPath) || string.IsNullOrWhiteSpace(htmPath) || !File.Exists(htmPath))
-        {
-            return;
-        }
-
-        var assetsFolderName = Path.GetFileName(assetsFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        if (string.IsNullOrWhiteSpace(assetsFolderName) || !Directory.Exists(assetsFolderPath))
-        {
-            return;
-        }
-
-        var html = ReadAllTextWithRetry(htmPath);
-        if (html == null)
-        {
-            _logger.LogWarning("Impossibile leggere HTML firma per normalizzazione immagini");
-            return;
-        }
-        var regex = new Regex("(?<attr>src|href|o:href|v:href|xlink:href)\\s*=\\s*(?<quote>[\"'])(?<value>[^\"']+)(\\k<quote>)", RegexOptions.IgnoreCase);
-        var updated = false;
-
-        var updatedHtml = regex.Replace(html, match =>
-        {
-            var value = match.Groups["value"].Value;
-            var normalized = NormalizeAssetReference(value, assetsFolderPath, assetsFolderName);
-
-            if (normalized == null || normalized == value)
-            {
-                return match.Value;
-            }
-
-            updated = true;
-            return $"{match.Groups["attr"].Value}={match.Groups["quote"].Value}{normalized}{match.Groups["quote"].Value}";
-        });
-
-        if (updated)
-        {
-            if (WriteAllTextWithRetry(htmPath, updatedHtml))
-            {
-                _logger.Log("Riferimenti immagini HTML normalizzati per embed Outlook");
-            }
-            else
-            {
-                _logger.LogWarning("Impossibile salvare HTML firma dopo normalizzazione immagini");
-            }
-        }
-    }
-
-    private static string? NormalizeAssetReference(string value, string assetsFolderPath, string assetsFolderName)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        if (value.StartsWith("cid:", StringComparison.OrdinalIgnoreCase) ||
-            value.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
-            value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            value.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-            value.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
-        {
-            return value;
-        }
-
-        var localPath = value;
-        if (value.StartsWith("file:", StringComparison.OrdinalIgnoreCase) && Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.IsFile)
-        {
-            localPath = uri.LocalPath;
-        }
-
-        var fileName = Path.GetFileName(localPath);
-        if (string.IsNullOrWhiteSpace(fileName))
-        {
-            return value;
-        }
-
-        if (value.Contains(assetsFolderName, StringComparison.OrdinalIgnoreCase))
-        {
-            return $"{assetsFolderName}/{fileName}";
-        }
-
-        if (Path.IsPathRooted(localPath))
-        {
-            var assetsFilePath = Path.Combine(assetsFolderPath, fileName);
-            if (File.Exists(assetsFilePath))
-            {
-                return $"{assetsFolderName}/{fileName}";
-            }
-        }
-        else
-        {
-            var assetsFilePath = Path.Combine(assetsFolderPath, fileName);
-            if (File.Exists(assetsFilePath))
-            {
-                return $"{assetsFolderName}/{fileName}";
-            }
-        }
-
-        return value;
     }
 
     private static string? ReadAllTextWithRetry(string path)
@@ -327,31 +252,6 @@ public class WordConversionService
         return null;
     }
 
-    private static bool WriteAllTextWithRetry(string path, string content)
-    {
-        const int maxAttempts = 5;
-        const int delayMs = 150;
-
-        for (var attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            try
-            {
-                using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                using var writer = new StreamWriter(stream);
-                writer.Write(content);
-                return true;
-            }
-            catch (IOException)
-            {
-                Thread.Sleep(delayMs);
-            }
-        }
-
-        return false;
-    }
-    
-    
-    
     private void CleanupComObjects(dynamic? doc, dynamic? wordApp)
     {
         _logger.Log("Cleanup oggetti COM...");

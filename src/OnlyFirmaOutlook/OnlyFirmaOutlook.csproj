@@ -44,7 +44,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.59" />
     <PackageReference Include="Microsoft.Office.Interop.Word" Version="15.0.4797.1004" />
+    <PackageReference Include="PreMailer.Net" Version="2.3.0" />
   </ItemGroup>
 
 </Project>
