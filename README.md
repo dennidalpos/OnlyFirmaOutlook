@@ -76,11 +76,14 @@ Requisiti sviluppo:
 Comandi principali:
 
 ```powershell
-# Build e publish
+# Build e publish (include i test)
 .\scripts\build.ps1
 
 # Build in Debug
 .\scripts\build.ps1 -Configuration Debug
+
+# Build senza test
+.\scripts\build.ps1 -SkipTests
 
 # Pulizia artefatti
 .\scripts\clean.ps1
