@@ -1,3 +1,4 @@
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Office.Interop.Outlook;
 using OnlyFirmaOutlook.Models;

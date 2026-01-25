@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.RegularExpressions;
 using OnlyFirmaOutlook.Models;
 
@@ -40,7 +41,7 @@ public static class WordHtmlCidPostProcessor
                 return match.Value;
             }
 
-            if (!imagesByPath.TryGetValue(resolvedPath, out var inlineImage))
+            if (!imagesByPath.TryGetValue(resolvedPath!, out var inlineImage))
             {
                 var fileName = Path.GetFileName(resolvedPath);
                 var contentId = $"{Guid.NewGuid():N}@onlyfirmaoutlook";
