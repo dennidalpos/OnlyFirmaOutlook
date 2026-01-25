@@ -230,6 +230,99 @@ public class SignatureRepository
         }
     }
 
+    public List<BackupInfo> GetBackups(string folderPath)
+    {
+        var backups = new List<BackupInfo>();
+
+        if (!Directory.Exists(folderPath))
+        {
+            _logger.LogWarning($"Cartella firme non trovata per lettura backup: {folderPath}");
+            return backups;
+        }
+
+        try
+        {
+            var backupFiles = Directory.EnumerateFiles(folderPath, "backup_firme_onlyfirmaoutlook_*.zip", SearchOption.TopDirectoryOnly);
+
+            foreach (var backupFile in backupFiles)
+            {
+                var info = new FileInfo(backupFile);
+                backups.Add(new BackupInfo
+                {
+                    FileName = info.Name,
+                    FullPath = info.FullName,
+                    CreatedAt = info.LastWriteTime,
+                    SizeBytes = info.Length
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Errore durante lettura backup firme: {ex.Message}");
+        }
+
+        return backups
+            .OrderByDescending(b => b.CreatedAt)
+            .ThenBy(b => b.FileName)
+            .ToList();
+    }
+
+    public bool DeleteBackup(BackupInfo backup)
+    {
+        if (backup == null)
+        {
+            _logger.LogWarning("Tentativo di eliminare backup null");
+            return false;
+        }
+
+        try
+        {
+            if (File.Exists(backup.FullPath))
+            {
+                File.Delete(backup.FullPath);
+                _logger.Log($"Backup eliminato: {backup.FullPath}");
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Errore durante eliminazione backup: {ex.Message}");
+            return false;
+        }
+    }
+
+    public bool RestoreBackup(BackupInfo backup, string destinationFolder)
+    {
+        if (backup == null)
+        {
+            _logger.LogWarning("Tentativo di ripristinare backup null");
+            return false;
+        }
+
+        if (!File.Exists(backup.FullPath))
+        {
+            _logger.LogWarning($"Backup non trovato: {backup.FullPath}");
+            return false;
+        }
+
+        try
+        {
+            if (!Directory.Exists(destinationFolder))
+            {
+                Directory.CreateDirectory(destinationFolder);
+            }
+
+            ZipFile.ExtractToDirectory(backup.FullPath, destinationFolder, overwriteFiles: true);
+            _logger.Log($"Backup ripristinato: {backup.FullPath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Errore durante ripristino backup: {ex.Message}");
+            return false;
+        }
+    }
+
     private bool TryDeleteFile(string path)
     {
         if (!File.Exists(path)) return true;

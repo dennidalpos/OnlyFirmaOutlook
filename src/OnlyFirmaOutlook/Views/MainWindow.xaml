@@ -277,6 +277,31 @@
                 </GroupBox>
 
                 
+                <GroupBox x:Name="Step7Group" Header="7. Backup firme (ripristino/eliminazione)" Style="{StaticResource PendingStepStyle}">
+                    <StackPanel>
+                        <TextBlock x:Name="BackupFolderText"
+                                   Text="Cartella backup: "
+                                   Foreground="#605E5C" FontSize="11" Margin="0,0,0,6"/>
+                        <ListBox x:Name="BackupsListBox" Height="100"
+                                 SelectionChanged="BackupsListBox_SelectionChanged"/>
+                        <TextBlock x:Name="NoBackupsText" Text="Nessun backup disponibile"
+                                   Visibility="Collapsed" Foreground="#A19F9D"
+                                   FontStyle="Italic" Margin="8"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="RestoreBackupButton" Content="Ripristina backup"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="RestoreBackupButton_Click" IsEnabled="False"/>
+                            <Button x:Name="DeleteBackupButton" Content="Elimina backup"
+                                    Style="{StaticResource DangerButtonStyle}"
+                                    Click="DeleteBackupButton_Click" IsEnabled="False"/>
+                            <Button x:Name="RefreshBackupsButton" Content="Aggiorna lista"
+                                    Click="RefreshBackupsButton_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                
                 <Button x:Name="ConvertButton" Content="✓ Converti e salva firma"
                         Style="{StaticResource PrimaryButtonStyle}"
                         HorizontalAlignment="Stretch" Height="48"
