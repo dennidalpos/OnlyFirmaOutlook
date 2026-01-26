@@ -14,7 +14,7 @@
         
         <Style x:Key="StepGroupBoxStyle" TargetType="GroupBox">
             <Setter Property="BorderBrush" Value="#CCCCCC"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
             <Setter Property="Padding" Value="12"/>
         </Style>
@@ -69,7 +69,7 @@
                                   Margin="0,2,0,0"
                                   Background="#FFF4CE"
                                   BorderBrush="#C19600"
-                                  BorderThickness="1"
+                                  BorderThickness="2"
                                   Foreground="#6B5B00"
                                   Checked="GuideToggleButton_Checked"
                                   Unchecked="GuideToggleButton_Unchecked"/>
@@ -92,7 +92,7 @@
 
                 
                 <Border x:Name="OutlookWarningBorder" Visibility="Collapsed"
-                        Background="#FFF4CE" BorderBrush="#C19600" BorderThickness="1"
+                        Background="#FFF4CE" BorderBrush="#C19600" BorderThickness="2"
                         CornerRadius="2" Padding="12" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock x:Name="OutlookWarningText" TextWrapping="Wrap"
@@ -192,7 +192,7 @@
                 
                 <GroupBox x:Name="Step4Group" Header="4. Modifica firma in Word" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
-                        <Border Background="#FFF4CE" BorderBrush="#C19600" BorderThickness="1"
+                        <Border Background="#FFF4CE" BorderBrush="#C19600" BorderThickness="2"
                                 CornerRadius="2" Padding="12" Margin="0,0,0,12">
                             <StackPanel>
                                 <TextBlock TextWrapping="Wrap" Foreground="#6B5B00">
@@ -221,7 +221,7 @@
 
                         
                         <Border x:Name="WordOpenIndicator" Visibility="Collapsed"
-                                Background="#E3F2FD" BorderBrush="#1976D2" BorderThickness="1"
+                                Background="#E3F2FD" BorderBrush="#1976D2" BorderThickness="2"
                                 CornerRadius="2" Padding="12">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📖 " FontSize="16" VerticalAlignment="Center"/>
@@ -247,7 +247,7 @@
                     <StackPanel>
                         
                         <Border x:Name="OverwriteWarningBorder" Visibility="Collapsed"
-                                Background="#FFEBEE" BorderBrush="#C62828" BorderThickness="1"
+                                Background="#FFEBEE" BorderBrush="#C62828" BorderThickness="2"
                                 CornerRadius="2" Padding="10" Margin="0,0,0,8">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚠ " FontSize="14" Foreground="#C62828" VerticalAlignment="Center"/>

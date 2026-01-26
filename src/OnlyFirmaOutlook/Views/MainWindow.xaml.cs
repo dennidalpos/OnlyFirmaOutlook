@@ -400,7 +400,6 @@ public partial class MainWindow : Window
         SetStepStyle(Step4Group, StepState.Completed);
 
         
-        SetStepStyle(Step7Group, StepState.Current);
     }
 
     private enum StepState { Pending, Current, Completed }
