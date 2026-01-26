@@ -362,16 +362,20 @@ public partial class MainWindow : Window
         var hasDestination = _isFolderWritable;
         var isDocumentReady = _currentEditorState?.IsReadyForConversion ?? false;
 
+        if (Resources.Contains("StepGroupBoxStyle"))
+        {
+            Step3Group.Style = (Style)Resources["StepGroupBoxStyle"];
+            Step5Group.Style = (Style)Resources["StepGroupBoxStyle"];
+            Step6Group.Style = (Style)Resources["StepGroupBoxStyle"];
+            Step7Group.Style = (Style)Resources["StepGroupBoxStyle"];
+        }
+
         
         if (!hasSignatureSelected)
         {
             SetStepStyle(Step1Group, StepState.Current);
             SetStepStyle(Step2Group, StepState.Pending);
-            SetStepStyle(Step3Group, StepState.Pending);
             SetStepStyle(Step4Group, StepState.Pending);
-            SetStepStyle(Step5Group, StepState.Pending);
-            SetStepStyle(Step6Group, StepState.Pending);
-            SetStepStyle(Step7Group, StepState.Pending);
             return;
         }
 
@@ -381,44 +385,22 @@ public partial class MainWindow : Window
         if (!hasSignatureName)
         {
             SetStepStyle(Step2Group, StepState.Current);
-            SetStepStyle(Step3Group, StepState.Pending);
             SetStepStyle(Step4Group, StepState.Pending);
-            SetStepStyle(Step5Group, StepState.Pending);
-            SetStepStyle(Step6Group, StepState.Pending);
-            SetStepStyle(Step7Group, StepState.Pending);
             return;
         }
 
         SetStepStyle(Step2Group, StepState.Completed);
 
         
-        if (!hasDestination)
-        {
-            SetStepStyle(Step3Group, StepState.Current);
-            SetStepStyle(Step4Group, StepState.Pending);
-            SetStepStyle(Step5Group, StepState.Pending);
-            SetStepStyle(Step6Group, StepState.Pending);
-            SetStepStyle(Step7Group, StepState.Pending);
-            return;
-        }
-
-        SetStepStyle(Step3Group, StepState.Completed);
-
-        
         if (!isDocumentReady)
         {
             SetStepStyle(Step4Group, StepState.Current);
-            SetStepStyle(Step5Group, StepState.Pending);
-            SetStepStyle(Step6Group, StepState.Pending);
-            SetStepStyle(Step7Group, StepState.Pending);
             return;
         }
 
         SetStepStyle(Step4Group, StepState.Completed);
 
         
-        SetStepStyle(Step5Group, StepState.Completed);
-        SetStepStyle(Step6Group, StepState.Completed);
         SetStepStyle(Step7Group, StepState.Current);
     }
 
