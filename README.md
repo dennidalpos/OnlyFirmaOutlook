@@ -1,124 +1,87 @@
 # OnlyFirmaOutlook
 
-OnlyFirmaOutlook è un'applicazione desktop Windows (WPF) che trasforma documenti Word in firme compatibili con Outlook Classic. L'app guida l'utente nella modifica del documento, nella scelta del formato HTML e nella gestione delle firme esistenti, includendo anche la creazione e il ripristino dei backup.
-
-## Cosa fa
-
-- Converte file Word (.doc/.docx) in firme Outlook (HTML/RTF/TXT + cartelle assets).
-- Integra l'apertura del documento in Word per una modifica obbligatoria prima della conversione.
-- Carica preset da una cartella `media` ed accetta file personalizzati.
-- Rileva account Outlook se presenti, altrimenti usa un identificativo manuale.
-- Gestisce firme esistenti con avvisi di sovrascrittura ed eliminazione dedicata.
-- Crea backup ZIP nella cartella firme e permette ripristino/eliminazione.
-- Supporta build x86/x64 con launcher che seleziona la bitness corretta in base a Office.
-- Consente l'esecuzione da share di rete con copia locale dei file temporanei.
-
-## Note su immagini e compatibilità
-
-- Le immagini vengono copiate nella cartella `signatureName_files` e i riferimenti nell'HTML vengono riscritti per massimizzare la compatibilità nei client esterni.
-- L'incorporamento effettivo delle immagini in uscita è gestito da Outlook al momento dell'invio e può variare in base a client e policy; la pipeline riduce le rotture ma non può forzare il comportamento di invio.
+OnlyFirmaOutlook è un'applicazione desktop Windows (WPF) che converte documenti Word in firme Outlook (HTML/RTF/TXT), con gestione degli asset e installazione nella cartella firme. Il launcher seleziona automaticamente la build corretta in base alla bitness di Office installata.
 
 ## Requisiti
 
-- Windows 10/11
-- Microsoft Word 2013+ (2013, 2016, 2019, 2021, 365)
-- .NET 8.0 Runtime (incluso nelle build self-contained)
-- Microsoft Outlook (opzionale)
+- Windows 10/11.
+- Microsoft Word installato (necessario per la conversione).
+- Microsoft Outlook opzionale (per rilevare account e gestire firme nella cartella predefinita).
+- .NET 8 SDK per sviluppo, oppure build self-contained generate dallo script di publish.
 
-## Avvio rapido (utenti finali)
+## Configurazione
 
-1. Avvia `OnlyFirmaOutlook.Launcher.exe` dalla cartella di distribuzione.
-2. Seleziona un preset o carica un documento Word.
-3. Modifica il documento in Word, salva (Maiusc+F12) e chiudi.
-4. Imposta il nome della firma (e l'account se disponibile).
-5. Conferma la conversione (HTML completo predefinito).
-6. Se necessario, ripristina un backup o elimina quelli obsoleti.
+- Variabili d'ambiente: nessuna.
+- Cartella firme Outlook predefinita: `%APPDATA%\Microsoft\Signatures`.
+- Log applicativi: `%LOCALAPPDATA%\OnlyFirmaOutlook\Logs\app.log`.
+- Preset Word runtime: `<cartella app>\media` (file `.doc`/`.docx`).
+- Backup firme: file ZIP con prefisso `backup_firme_onlyfirmaoutlook_` nella cartella firme di Outlook.
 
-## Backup firme
-
-- I backup vengono creati automaticamente prima della conversione.
-- I file sono salvati nella cartella firme di Outlook in formato ZIP con prefisso:
-  - `backup_firme_onlyfirmaoutlook_yyyy-MM-dd-HH-mm.zip`
-- Dal punto 7 dell'interfaccia puoi:
-  - Visualizzare i backup presenti.
-  - Ripristinare un backup (sovrascrive i file correnti nella cartella firme).
-  - Eliminare backup non più necessari.
-
-## Preset
-
-I preset sono documenti Word disponibili nella cartella `media` dell'app:
-
-- Percorso runtime: `AppContext.BaseDirectory\media`
-- I file temporanei `~$` di Word vengono ignorati.
-
-Per includerli nella distribuzione, copia i file in `src/OnlyFirmaOutlook/media` e usa lo script di build.
-
-## Struttura del progetto
+## Struttura cartelle
 
 ```
 OnlyFirmaOutlook.sln
+README.md
 scripts/
   build.ps1
   clean.ps1
 src/
-  Bootstrapper/        # Launcher per bitness Office
-  OnlyFirmaOutlook/    # App WPF principale
+  Bootstrapper/
+  OnlyFirmaOutlook/
+  Shared/
+tests/
+  OnlyFirmaOutlook.Tests/
 ```
 
-## Build e distribuzione
+- `src/Bootstrapper`: launcher che seleziona `win-x86`/`win-x64` in base a Office.
+- `src/OnlyFirmaOutlook`: applicazione WPF principale.
+- `src/Shared`: componenti condivisi.
 
-Requisiti sviluppo:
+## Setup e sviluppo locale
 
-- Visual Studio 2022+
-- .NET 8.0 SDK
-- PowerShell 5.1+
+1. Installare .NET 8 SDK.
+2. Ripristinare le dipendenze:
+   ```powershell
+   dotnet restore .\OnlyFirmaOutlook.sln
+   ```
+3. Avviare l'app in debug:
+   ```powershell
+   dotnet run --project .\src\OnlyFirmaOutlook\OnlyFirmaOutlook.csproj
+   ```
 
-Comandi principali:
+## Comandi principali
 
+### Build
 ```powershell
-# Build e publish (include i test)
 .\scripts\build.ps1
+```
 
-# Build in Debug
-.\scripts\build.ps1 -Configuration Debug
+### Test
+```powershell
+dotnet test .\OnlyFirmaOutlook.sln
+```
 
-# Build senza test
-.\scripts\build.ps1 -SkipTests
+### Lint
+Non è presente un comando di lint nel repository.
 
-# Pulizia artefatti
+### Dev
+```powershell
+dotnet run --project .\src\OnlyFirmaOutlook\OnlyFirmaOutlook.csproj
+```
+
+### Pulizia
+```powershell
 .\scripts\clean.ps1
 ```
 
-Output atteso:
+## Esecuzione in produzione
 
-```
-dist/
-├── OnlyFirmaOutlook.Launcher.exe
-├── win-x86/
-│   └── OnlyFirmaOutlook.exe
-└── win-x64/
-    └── OnlyFirmaOutlook.exe
-```
+1. Generare le build con `scripts/build.ps1` (output in `dist/`).
+2. Distribuire l'intera cartella `dist` su PC locali o share di rete.
+3. Avviare `OnlyFirmaOutlook.Launcher.exe`, che seleziona automaticamente la build corretta (`win-x86`/`win-x64`).
 
-Distribuzione consigliata:
+## Troubleshooting essenziale
 
-- Copiare l'intera cartella `dist` su una share di rete o in una cartella locale.
-- L'utente finale avvia sempre `OnlyFirmaOutlook.Launcher.exe`.
-
-## Log e diagnostica
-
-I log sono salvati in:
-
-```
-%LOCALAPPDATA%\OnlyFirmaOutlook\Logs\app.log
-```
-
-Dall'interfaccia è possibile copiare o pulire il log e aprire il file corrente. La pulizia elimina anche il file di log su disco e lo ricrea automaticamente alla successiva scrittura.
-
-## Pulizia file temporanei
-
-Durante l'editing l'app copia i documenti in cartelle temporanee locali per evitare blocchi su file di rete. Alla chiusura dell'app i file temporanei generati vengono rimossi automaticamente.
-
-## Licenza
-
-MIT.
+- Word non installato o non accessibile: la conversione non può partire. Verificare installazione di Word e riprovare.
+- Nessun preset visibile: creare la cartella `media` accanto all'eseguibile e aggiungere file `.doc/.docx`.
+- Backup non creati: vengono generati solo nella cartella firme predefinita di Outlook.

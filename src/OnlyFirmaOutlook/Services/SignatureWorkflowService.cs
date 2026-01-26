@@ -31,8 +31,8 @@ public class SignatureWorkflowService
 
         var defaultFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
         return string.Equals(
-            Path.GetFullPath(destinationFolder).TrimEnd(Path.DirectorySeparatorChar),
-            Path.GetFullPath(defaultFolder).TrimEnd(Path.DirectorySeparatorChar),
+            Path.GetFullPath(destinationFolder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+            Path.GetFullPath(defaultFolder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
             StringComparison.OrdinalIgnoreCase);
     }
 
