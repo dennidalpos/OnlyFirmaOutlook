@@ -157,6 +157,23 @@ public class WordEditorService
         }
     }
 
+    public void CleanupAllEditorFolders()
+    {
+        if (!Directory.Exists(_editorBaseTempFolder))
+        {
+            return;
+        }
+
+        foreach (var dir in Directory.GetDirectories(_editorBaseTempFolder))
+        {
+            TempCleanupHelper.CleanupDirectoryWithRetries(
+                dir,
+                _logger,
+                $"cartella editor {Path.GetFileName(dir)}",
+                retryDelayMs: 200);
+        }
+    }
+
     
     
     

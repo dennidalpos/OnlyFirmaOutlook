@@ -113,7 +113,11 @@ I log sono salvati in:
 %LOCALAPPDATA%\OnlyFirmaOutlook\Logs\app.log
 ```
 
-Dall'interfaccia è possibile copiare o pulire il log e aprire il file corrente.
+Dall'interfaccia è possibile copiare o pulire il log e aprire il file corrente. La pulizia elimina anche il file di log su disco e lo ricrea automaticamente alla successiva scrittura.
+
+## Pulizia file temporanei
+
+Durante l'editing l'app copia i documenti in cartelle temporanee locali per evitare blocchi su file di rete. Alla chiusura dell'app i file temporanei generati vengono rimossi automaticamente.
 
 ## Licenza
 

@@ -111,6 +111,24 @@ public sealed class LoggingService : IDisposable
         lock (_lockObject)
         {
             _logLines.Clear();
+            _fileWriter?.Dispose();
+            _fileWriter = null;
+
+            try
+            {
+                if (File.Exists(_logFilePath))
+                {
+                    File.Delete(_logFilePath);
+                }
+
+                _fileWriterFailureLogged = false;
+                _fileWriter = CreateWriter();
+            }
+            catch (Exception ex)
+            {
+                _fileWriter = null;
+                AddInternalWarning($"Pulizia log fallita: {ex.Message}");
+            }
         }
     }
 
