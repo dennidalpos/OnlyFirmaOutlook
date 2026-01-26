@@ -46,7 +46,6 @@ public partial class MainWindow : Window
     private DateTime _lastFileModifiedTime;
     private bool _isWordOpen;
     private GuideWindow? _guideWindow;
-    private bool _defaultSignatureWarningShown;
 
     public MainWindow()
     {
@@ -387,7 +386,7 @@ public partial class MainWindow : Window
 
     private void DefaultSignatureOption_Changed(object sender, RoutedEventArgs e)
     {
-        if (sender is System.Windows.Controls.CheckBox checkBox && checkBox.IsChecked == true && !_defaultSignatureWarningShown)
+        if (sender is System.Windows.Controls.CheckBox checkBox && checkBox.IsChecked == true)
         {
             MessageBox.Show(
                 "Attenzione: impostare la firma predefinita dall'app può rendere temporaneamente non modificabili le scelte in Outlook.\n" +
@@ -395,7 +394,6 @@ public partial class MainWindow : Window
                 "Avviso firma predefinita",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
-            _defaultSignatureWarningShown = true;
         }
 
         UpdateDefaultSignatureOptions();
@@ -1521,7 +1519,6 @@ public partial class MainWindow : Window
         DefaultSignatureExpander.IsExpanded = false;
         ExistingSignaturesListBox.SelectedItem = null;
         BackupsListBox.SelectedItem = null;
-        _defaultSignatureWarningShown = false;
 
         UpdateWordOpenIndicator();
         RefreshExistingSignatures();
