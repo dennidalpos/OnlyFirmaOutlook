@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Linq;
 
 namespace OnlyFirmaOutlook.Services;
 
@@ -343,7 +344,9 @@ public class WordConversionService
         if (string.IsNullOrWhiteSpace(name))
             return "Firma";
 
-        var invalidChars = Path.GetInvalidFileNameChars();
+        var invalidChars = Path.GetInvalidFileNameChars()
+            .Concat(new[] { '@' })
+            .ToArray();
         var sanitized = new string(name
             .Select(c => invalidChars.Contains(c) ? '_' : c)
             .ToArray());
