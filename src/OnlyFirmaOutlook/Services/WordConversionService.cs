@@ -344,9 +344,7 @@ public class WordConversionService
         if (string.IsNullOrWhiteSpace(name))
             return "Firma";
 
-        var invalidChars = Path.GetInvalidFileNameChars()
-            .Concat(new[] { '@' })
-            .ToArray();
+        var invalidChars = Path.GetInvalidFileNameChars();
         var sanitized = new string(name
             .Select(c => invalidChars.Contains(c) ? '_' : c)
             .ToArray());
