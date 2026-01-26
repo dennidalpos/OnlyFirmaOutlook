@@ -14,7 +14,7 @@
         
         <Style x:Key="StepGroupBoxStyle" TargetType="GroupBox">
             <Setter Property="BorderBrush" Value="#CCCCCC"/>
-            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
             <Setter Property="Padding" Value="12"/>
         </Style>
@@ -171,7 +171,7 @@
                 </GroupBox>
 
                 
-                <GroupBox x:Name="Step3Group" Header="3. Cartella destinazione" Style="{StaticResource PendingStepStyle}">
+                <GroupBox x:Name="Step3Group" Header="3. Cartella destinazione" Style="{StaticResource StepGroupBoxStyle}">
                     <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -233,7 +233,7 @@
                 </GroupBox>
 
                 
-                <GroupBox x:Name="Step5Group" Header="5. Formato HTML" Style="{StaticResource PendingStepStyle}">
+                <GroupBox x:Name="Step5Group" Header="5. Formato HTML" Style="{StaticResource StepGroupBoxStyle}">
                     <StackPanel>
                         <RadioButton x:Name="FilteredHtmlRadio" Content="HTML Filtrato"
                                      GroupName="HtmlType"/>
@@ -243,7 +243,7 @@
                 </GroupBox>
 
                 
-                <GroupBox x:Name="Step6Group" Header="6. Firme esistenti (verifica sovrascrittura)" Style="{StaticResource PendingStepStyle}">
+                <GroupBox x:Name="Step6Group" Header="6. Firme esistenti (verifica sovrascrittura)" Style="{StaticResource StepGroupBoxStyle}">
                     <StackPanel>
                         
                         <Border x:Name="OverwriteWarningBorder" Visibility="Collapsed"
@@ -275,7 +275,7 @@
                 </GroupBox>
 
                 
-                <GroupBox x:Name="Step7Group" Header="7. Backup firme" Style="{StaticResource PendingStepStyle}">
+                <GroupBox x:Name="Step7Group" Header="7. Backup firme" Style="{StaticResource StepGroupBoxStyle}">
                     <StackPanel>
                         <TextBlock x:Name="BackupFolderText"
                                    Text="Cartella backup: "
