@@ -151,7 +151,7 @@
                         <TextBox x:Name="IdentifierTextBox" Grid.Row="2" Grid.Column="1"
                                  Margin="0,8,0,0" Visibility="Collapsed"/>
                         <TextBlock x:Name="IdentifierHint" Grid.Row="3" Grid.Column="1"
-                                   Text="(Opzionale: email o nome utente, verrà aggiunto al nome firma)"
+                                   Text="(Opzionale)"
                                    Foreground="#A19F9D" FontSize="11" Visibility="Collapsed"/>
 
                         
@@ -195,7 +195,7 @@
                                     <Run Text="⚠ " FontWeight="Bold"/>
                                     <Run Text="Tutte le firme devono essere modificate in Word prima della conversione."/>
                                 </TextBlock>
-                                <TextBlock Text="Modifica il documento in Word, salvalo (Maiusc+F12) e chiudilo. Lo stato si aggiornerà automaticamente."
+                                <TextBlock Text="Apri in Word, salva e chiudi. Lo stato si aggiorna automaticamente."
                                            Foreground="#6B5B00" FontSize="11" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
@@ -223,7 +223,7 @@
                                 CornerRadius="2" Padding="12">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📖 " FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text="Word è aperto - modifica e salva il documento (Maiusc+F12), poi chiudi Word"
+                                <TextBlock Text="Word è aperto: modifica, salva, poi chiudi"
                                            Foreground="#1565C0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
@@ -235,12 +235,9 @@
                     <StackPanel>
                         <RadioButton x:Name="FilteredHtmlRadio" Content="HTML Filtrato"
                                      GroupName="HtmlType"/>
-                        <TextBlock Text="Rimuove stili superflui per firme più leggere e compatibili."
-                                   Foreground="#605E5C" FontSize="11" Margin="20,0,0,8"/>
-
                         <RadioButton x:Name="CompleteHtmlRadio" Content="HTML Completo (consigliato)"
                                      IsChecked="True" GroupName="HtmlType"/>
-                        <TextBlock Text="Mantiene più stili di Word, con output HTML potenzialmente più pesante."
+                        <TextBlock Text="Dettagli nella guida."
                                    Foreground="#605E5C" FontSize="11" Margin="20,0,0,0"/>
                     </StackPanel>
                 </GroupBox>
@@ -259,7 +256,7 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Il backup automatico viene creato solo se la destinazione è la cartella firme di Outlook."
+                        <TextBlock Text="Dettagli nella guida."
                                    Foreground="#605E5C" FontSize="11" Margin="0,0,0,6"/>
 
                         <ListBox x:Name="ExistingSignaturesListBox" Height="80"

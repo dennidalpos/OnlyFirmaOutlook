@@ -11,6 +11,9 @@
                 CornerRadius="4" Padding="12">
             <StackPanel>
                 <TextBlock Text="Guida dettagliata" FontWeight="Bold" FontSize="16" Margin="0,0,0,12"/>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,12">
+                    <Run Text="Questa guida raccoglie i dettagli su formato HTML, backup e pulizia automatica."/>
+                </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="1) Seleziona la firma di partenza:" FontWeight="SemiBold"/>
                     <LineBreak/>
@@ -19,7 +22,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="2) Configura nome e account:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Inserisci un nome chiaro per la firma. Se Outlook è configurato, seleziona l'account; altrimenti inserisci un identificativo (es. email o nome utente) per differenziare le firme. Il nome finale mostrato include l'identificativo."/>
+                    <Run Text="Inserisci un nome chiaro per la firma. Se Outlook è configurato, seleziona l'account; altrimenti inserisci un identificativo (es. email o nome utente) per differenziare le firme. L'identificativo viene aggiunto al nome finale della firma."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="3) Verifica la cartella di destinazione:" FontWeight="SemiBold"/>
@@ -34,7 +37,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="5) Scegli il formato HTML:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="HTML filtrato è consigliato per compatibilità e dimensioni ridotte; HTML completo preserva più stili di Word ma può generare output più pesante."/>
+                    <Run Text="HTML filtrato riduce stili superflui per compatibilità; HTML completo preserva più stili di Word ma può generare output più pesante."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="6) Controlla firme esistenti:" FontWeight="SemiBold"/>
