@@ -36,8 +36,12 @@
     </Window.Resources>
 
     <Grid>
-        
-        <Grid x:Name="BusyOverlay" Visibility="Collapsed" Panel.ZIndex="100">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="BusyOverlay" Visibility="Collapsed" Panel.ZIndex="100" Grid.RowSpan="2">
             <Rectangle Fill="#80000000"/>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ProgressBar IsIndeterminate="True" Width="200" Height="20"/>
@@ -48,43 +52,43 @@
         </Grid>
 
         
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+        <Grid Margin="16,16,16,0" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
             <StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="OnlyFirmaOutlook" FontSize="24" FontWeight="Bold"
+                               Foreground="#0078D4" Margin="0,0,8,0"/>
+                    <ToggleButton x:Name="GuideToggleButton"
+                                  Content="Guida"
+                                  FontWeight="SemiBold"
+                                  Padding="10,4"
+                                  Margin="0,2,0,0"
+                                  Background="#FFF4CE"
+                                  BorderBrush="#C19600"
+                                  BorderThickness="1"
+                                  Foreground="#6B5B00"
+                                  Checked="GuideToggleButton_Checked"
+                                  Unchecked="GuideToggleButton_Unchecked"/>
+                </StackPanel>
+                <TextBlock Text="Converti documenti Word in firme per Outlook"
+                           FontSize="12" Foreground="#605E5C"/>
+            </StackPanel>
 
-                <Grid Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                <TextBlock x:Name="AppVersionText" FontSize="12" Foreground="#605E5C" TextAlignment="Right"/>
+                <TextBlock Text="Sviluppato da Reparto IT" FontSize="11" Foreground="#605E5C"
+                           TextAlignment="Right"/>
+                <TextBlock x:Name="UserHostInfoText" FontSize="10" Foreground="#A19F9D"
+                           TextAlignment="Right"/>
+            </StackPanel>
+        </Grid>
 
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="OnlyFirmaOutlook" FontSize="24" FontWeight="Bold"
-                                       Foreground="#0078D4" Margin="0,0,8,0"/>
-                            <ToggleButton x:Name="GuideToggleButton"
-                                          Content="Guida"
-                                          FontWeight="SemiBold"
-                                          Padding="10,4"
-                                          Margin="0,2,0,0"
-                                          Background="#FFF4CE"
-                                          BorderBrush="#C19600"
-                                          BorderThickness="1"
-                                          Foreground="#6B5B00"
-                                          Checked="GuideToggleButton_Checked"
-                                          Unchecked="GuideToggleButton_Unchecked"/>
-                        </StackPanel>
-                        <TextBlock Text="Converti documenti Word in firme per Outlook"
-                                   FontSize="12" Foreground="#605E5C"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                        <TextBlock x:Name="AppVersionText" FontSize="12" Foreground="#605E5C" TextAlignment="Right"/>
-                        <TextBlock Text="Sviluppato da Reparto IT" FontSize="11" Foreground="#605E5C"
-                                   TextAlignment="Right"/>
-                        <TextBlock x:Name="UserHostInfoText" FontSize="10" Foreground="#A19F9D"
-                                   TextAlignment="Right"/>
-                    </StackPanel>
-                </Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16" Grid.Row="1">
+            <StackPanel>
 
                 
                 <Border x:Name="OutlookWarningBorder" Visibility="Collapsed"
@@ -97,7 +101,7 @@
                 </Border>
 
                 
-                <GroupBox x:Name="Step1Group" Header="1. Seleziona firma da modificare *" Style="{StaticResource CurrentStepStyle}">
+                <GroupBox x:Name="Step1Group" Header="1. Seleziona firma da modificare" Style="{StaticResource CurrentStepStyle}">
                     <StackPanel>
                         <TextBlock Text="Preset disponibili:" Margin="0,0,0,4"/>
                         <ListBox x:Name="PresetListBox" Height="100"/>
@@ -131,7 +135,7 @@
                         </Grid.RowDefinitions>
 
                         
-                        <Label Content="Nome firma *:" Grid.Row="0" Grid.Column="0"
+                        <Label Content="Nome firma:" Grid.Row="0" Grid.Column="0"
                                VerticalAlignment="Center"/>
                         <TextBox x:Name="SignatureNameTextBox" Grid.Row="0" Grid.Column="1"
                                  TextChanged="SignatureNameTextBox_TextChanged"/>
@@ -186,17 +190,15 @@
                 </GroupBox>
 
                 
-                <GroupBox x:Name="Step4Group" Header="4. Modifica firma in Word *" Style="{StaticResource PendingStepStyle}">
+                <GroupBox x:Name="Step4Group" Header="4. Modifica firma in Word" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
                         <Border Background="#FFF4CE" BorderBrush="#C19600" BorderThickness="1"
                                 CornerRadius="2" Padding="12" Margin="0,0,0,12">
                             <StackPanel>
                                 <TextBlock TextWrapping="Wrap" Foreground="#6B5B00">
                                     <Run Text="⚠ " FontWeight="Bold"/>
-                                    <Run Text="Tutte le firme devono essere modificate in Word prima della conversione."/>
+                                    <Run Text="Modifica in Word prima della conversione."/>
                                 </TextBlock>
-                                <TextBlock Text="Apri in Word, salva e chiudi. Lo stato si aggiorna automaticamente."
-                                           Foreground="#6B5B00" FontSize="11" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
 
@@ -237,8 +239,6 @@
                                      GroupName="HtmlType"/>
                         <RadioButton x:Name="CompleteHtmlRadio" Content="HTML Completo (consigliato)"
                                      IsChecked="True" GroupName="HtmlType"/>
-                        <TextBlock Text="Dettagli nella guida."
-                                   Foreground="#605E5C" FontSize="11" Margin="20,0,0,0"/>
                     </StackPanel>
                 </GroupBox>
 
@@ -255,9 +255,6 @@
                                            VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-
-                        <TextBlock Text="Dettagli nella guida."
-                                   Foreground="#605E5C" FontSize="11" Margin="0,0,0,6"/>
 
                         <ListBox x:Name="ExistingSignaturesListBox" Height="80"
                                  SelectionChanged="ExistingSignaturesListBox_SelectionChanged"/>
@@ -278,10 +275,8 @@
                 </GroupBox>
 
                 
-                <GroupBox x:Name="Step7Group" Header="7. Backup firme (ripristino/eliminazione)" Style="{StaticResource PendingStepStyle}">
+                <GroupBox x:Name="Step7Group" Header="7. Backup firme" Style="{StaticResource PendingStepStyle}">
                     <StackPanel>
-                        <TextBlock Text="Il backup delle firme esistenti viene creato automaticamente. I backup compaiono nella lista dopo aver generato almeno una firma con il programma. Il ripristino è opzionale."
-                                   Foreground="#605E5C" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
                         <TextBlock x:Name="BackupFolderText"
                                    Text="Cartella backup: "
                                    Foreground="#605E5C" FontSize="11" Margin="0,0,0,6"/>
