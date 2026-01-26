@@ -387,7 +387,7 @@ public partial class MainWindow : Window
 
     private void DefaultSignatureOption_Changed(object sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox checkBox && checkBox.IsChecked == true && !_defaultSignatureWarningShown)
+        if (sender is System.Windows.Controls.CheckBox checkBox && checkBox.IsChecked == true && !_defaultSignatureWarningShown)
         {
             MessageBox.Show(
                 "Attenzione: impostare la firma predefinita dall'app può rendere temporaneamente non modificabili le scelte in Outlook.\n" +
