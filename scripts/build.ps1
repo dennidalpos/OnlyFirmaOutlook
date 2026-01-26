@@ -10,6 +10,8 @@ param(
 
     [string[]]$Runtimes = @("win-x86", "win-x64"),
 
+    [switch]$SkipTests,
+
     [switch]$SkipPublish
 )
 
@@ -67,6 +69,12 @@ if (-not $SkipRestore) {
 
 Invoke-BuildCommand "Build soluzione ($Configuration)" {
     dotnet build "$rootDir\OnlyFirmaOutlook.sln" -c $Configuration --no-restore
+}
+
+if (-not $SkipTests) {
+    Invoke-BuildCommand "Esecuzione test" {
+        dotnet test "$rootDir\OnlyFirmaOutlook.sln" -c $Configuration --no-build
+    }
 }
 
 if (-not $SkipPublish) {

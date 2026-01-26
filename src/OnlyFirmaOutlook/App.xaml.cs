@@ -11,11 +11,13 @@ public partial class App : Application
 {
     private readonly TempFileManager _tempFileManager;
     private readonly LoggingService _loggingService;
+    private readonly WordEditorService _wordEditorService;
 
     public App()
     {
         _loggingService = LoggingService.Instance;
         _tempFileManager = TempFileManager.Instance;
+        _wordEditorService = new WordEditorService();
 
         OfficeBitnessDetector.LogInfo = _loggingService.Log;
         OfficeBitnessDetector.LogWarning = _loggingService.LogWarning;
@@ -34,9 +36,8 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _loggingService.Log("Chiusura applicazione in corso...");
-
-        
         _tempFileManager.CleanupSessionFolder();
+        _wordEditorService.CleanupAllEditorFolders();
 
         _loggingService.Log("Applicazione chiusa");
         _loggingService.Dispose();
