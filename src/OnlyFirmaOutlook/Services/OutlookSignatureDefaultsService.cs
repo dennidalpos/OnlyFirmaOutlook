@@ -44,6 +44,75 @@ public class OutlookSignatureDefaultsService
         return TryClearDefaultSignaturesViaRegistry(out message);
     }
 
+    public bool TryGetDefaultSignatures(out string? newSignature, out string? replySignature, out string message)
+    {
+        newSignature = null;
+        replySignature = null;
+
+        try
+        {
+            var version = ResolveOutlookVersion();
+            if (version == null)
+            {
+                message = "Versione Outlook non rilevata.";
+                return false;
+            }
+
+            using var key = Registry.CurrentUser.OpenSubKey(
+                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
+                writable: false);
+
+            if (key == null)
+            {
+                message = "Impostazioni Outlook non disponibili.";
+                return false;
+            }
+
+            newSignature = key.GetValue("NewSignature") as string;
+            replySignature = key.GetValue("ReplySignature") as string;
+            message = "OK";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Errore lettura impostazioni firma predefinita", ex);
+            message = $"Errore durante la lettura: {ex.Message}";
+            return false;
+        }
+    }
+
+    public bool CanWriteDefaultSignatureRegistry(out string message)
+    {
+        try
+        {
+            var version = ResolveOutlookVersion();
+            if (version == null)
+            {
+                message = "Versione Outlook non rilevata.";
+                return false;
+            }
+
+            using var key = Registry.CurrentUser.CreateSubKey(
+                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
+                writable: true);
+
+            if (key == null)
+            {
+                message = "Accesso al registro negato.";
+                return false;
+            }
+
+            message = "Accesso al registro disponibile.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Errore accesso registro firma predefinita", ex);
+            message = $"Accesso al registro negato: {ex.Message}";
+            return false;
+        }
+    }
+
     private bool TrySetDefaultSignaturesViaWord(
         string signatureName,
         bool setNewMessages,
