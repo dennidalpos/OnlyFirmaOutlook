@@ -1421,7 +1421,14 @@ public partial class MainWindow : Window
         BrowseFolderButton.IsEnabled = !isBusy;
         FilteredHtmlRadio.IsEnabled = !isBusy;
         CompleteHtmlRadio.IsEnabled = !isBusy;
-        ConvertButton.IsEnabled = !isBusy && _isFolderWritable;
+        if (isBusy)
+        {
+            ConvertButton.IsEnabled = false;
+        }
+        else
+        {
+            UpdateConvertButtonState();
+        }
         DeleteSignatureButton.IsEnabled = !isBusy && ExistingSignaturesListBox.SelectedItem != null;
         RefreshSignaturesButton.IsEnabled = !isBusy;
         BrowseSignaturesButton.IsEnabled = !isBusy;
