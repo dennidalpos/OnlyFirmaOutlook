@@ -1,108 +1,64 @@
-# Linee guida per firme universali (Outlook Classic + client esterni)
+# Guida semplice per creare firme compatibili (con Word)
 
-Queste indicazioni aiutano a creare firme stabili e compatibili con Outlook Classic, webmail e client esterni. L’obiettivo è ridurre al minimo i problemi di rendering, soprattutto nei client con supporto HTML limitato.
+Questa guida è pensata per utenti non tecnici. Segui questi passaggi per ottenere firme che funzionano bene su Outlook e sui client esterni.
 
-## 1) Struttura HTML consigliata
+## 1) Impostazioni base consigliate
 
-- Usa una struttura semplice con `table` per il layout principale.
-- Evita layout complessi basati su `div` annidati o `flex`, non sempre supportati.
-- Imposta larghezze fisse o massime in pixel per evitare ridimensionamenti imprevedibili.
+- **Font consigliati:** Calibri, Arial, Verdana.
+- **Dimensione testo:** 11–12 pt per il testo normale, 13–14 pt per il nome.
+- **Colore testo:** nero o grigio scuro (evita colori chiari).
+- **Spaziatura:** usa linee semplici e lascia poco spazio tra le righe.
 
-Esempio base:
+## 2) Struttura consigliata della firma
 
-```html
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Calibri, Arial, sans-serif; font-size:12px; line-height:1.3;">
-  <tr>
-    <td style="padding:0; vertical-align:top;">
-      <strong>Nome Cognome</strong><br>
-      Ruolo · Azienda<br>
-      +39 000 000000 · nome@azienda.it
-    </td>
-  </tr>
-</table>
-```
-
-## 2) Stili: solo inline
-
-- Usa esclusivamente **stili inline** (`style=""`), evita `<style>` e classi CSS.
-- Mantieni stili semplici: `font-family`, `font-size`, `color`, `line-height`, `text-decoration`, `padding`, `margin`.
-- Evita proprietà avanzate come `float`, `position`, `z-index`, `flex`, `grid`, `background-image`.
-
-## 3) Font e dimensioni
-
-- Scegli font comuni: `Calibri`, `Arial`, `Helvetica`, `Verdana`.
-- Mantieni dimensioni tra **11–13px** per il testo principale.
-- Usa `line-height: 1.3` o `1.4` per leggibilità.
-
-## 4) Immagini
-
-- Usa formati **PNG/JPG** con dimensioni ottimizzate.
-- Limita larghezza a **150–300px** per loghi.
-- Evita immagini troppo pesanti (consigliato < 200 KB).
-- Inserisci `alt` per le immagini.
-
-Esempio:
-
-```html
-<img src="logo.png" alt="Azienda" width="180" style="display:block; border:0;">
-```
-
-## 5) Colori e contrasto
-
-- Usa colori con buon contrasto (testo scuro su sfondo chiaro).
-- Evita testi molto chiari o su sfondo con immagini.
-- Limita l’uso di colori diversi: massimo 2–3 colori principali.
-
-## 6) Link
-
-- Sempre in formato completo: `https://`.
-- Evita link troppo lunghi visivamente, ma mantieni l’URL completo nel tag `href`.
-
-Esempio:
-
-```html
-<a href="https://www.azienda.it" style="color:#0078D4; text-decoration:none;">www.azienda.it</a>
-```
-
-## 7) Spaziatura e separatori
-
-- Usa `padding` e `line-height` per gestire la spaziatura, evitando `margin` eccessivi.
-- I separatori verticali o orizzontali sono più affidabili se realizzati con celle `td` e bordi sottili.
-
-Esempio separatore verticale:
-
-```html
-<td style="border-left:1px solid #CCCCCC; padding-left:12px;"></td>
-```
-
-## 8) Compatibilità con client esterni
-
-Per aumentare la compatibilità:
-
-- Evita HTML complesso e JavaScript.
-- Non usare form o elementi interattivi.
-- Mantieni il contenuto lineare e leggibile anche senza stili avanzati.
-- Testa con almeno: Outlook Classic, Outlook Web, Gmail Web, Apple Mail.
-
-## 9) Firma “fallback” testuale
-
-È utile includere anche una versione testuale coerente:
+Mantieni la firma breve e ordinata, ad esempio:
 
 ```
 Nome Cognome
 Ruolo · Azienda
-+39 000 000000 · nome@azienda.it
-www.azienda.it
+Telefono · Email
+Sito web
 ```
 
-## 10) Verifica finale
+## 3) Come preparare la firma in Word
 
-Prima dell’uso:
+1. **Apri Word** e crea un documento vuoto.
+2. **Scrivi i dati** in righe separate (nome, ruolo, telefono, email).
+3. **Usa un solo font** per tutto il testo.
+4. **Evita** grassetti e colori eccessivi: basta il nome in grassetto.
+5. **Non usare tabelle complesse** con più colonne, a meno che non sia indispensabile.
 
-- Invia una mail di prova verso client esterni.
-- Controlla che i link funzionino e le immagini siano visibili.
-- Verifica che il layout non si “rompa” su schermi piccoli.
+## 4) Immagini e loghi
 
-## Suggerimento pratico
+Se devi inserire un logo:
 
-Se parti da Word, mantieni il documento semplice e lineare, poi usa l’opzione HTML filtrato se noti stili eccessivi o layout instabile.
+- Usa immagini **PNG o JPG**.
+- Larghezza consigliata: **150–300 px**.
+- Evita immagini pesanti (consigliato sotto 200 KB).
+- Posiziona il logo sopra o accanto ai dati principali.
+
+## 5) Spaziature corrette
+
+- Non inserire molte righe vuote.
+- Se serve separare blocchi, usa una riga semplice con “·” oppure una linea sottile.
+
+## 6) Link e email
+
+- Scrivi sempre l’email in chiaro: `nome@azienda.it`.
+- Per il sito web usa un formato breve: `www.azienda.it`.
+- Evita link molto lunghi o complessi.
+
+## 7) Cosa evitare
+
+- Immagini troppo grandi o pesanti.
+- Font particolari non standard.
+- Testi colorati chiari o su sfondi scuri.
+- Tabelle complesse o layout con più colonne non necessari.
+
+## 8) Controllo finale
+
+Prima di usare la firma:
+
+- Invia una **mail di prova** a un account esterno (es. Gmail).
+- Verifica che testo e immagini siano corretti.
+- Se l’aspetto non è stabile, riduci formattazioni e usa HTML filtrato.
