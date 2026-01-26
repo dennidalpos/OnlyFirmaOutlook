@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -401,7 +400,6 @@ public partial class MainWindow : Window
         SetStepStyle(Step4Group, StepState.Completed);
 
         
-        SetStepStyle(Step7Group, StepState.Current);
     }
 
     private enum StepState { Pending, Current, Completed }
@@ -737,10 +735,15 @@ public partial class MainWindow : Window
         }
         catch (IOException)
         {
-            return true; 
+            return true;
         }
-        catch
+        catch (UnauthorizedAccessException)
         {
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Errore verifica lock file: {ex.Message}");
             return false;
         }
     }

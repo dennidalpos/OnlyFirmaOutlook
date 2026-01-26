@@ -8,6 +8,7 @@ public class WordConversionServiceTests
     [InlineData("Firma:Test", "Firma_Test")]
     [InlineData("   ", "Firma")]
     [InlineData("Nome__Firma", "Nome_Firma")]
+    [InlineData("Firma@Test", "Firma@Test")]
     public void SanitizeFileName_ProducesSafeName(string input, string expected)
     {
         var sanitized = WordConversionService.SanitizeFileName(input);
@@ -20,6 +21,6 @@ public class WordConversionServiceTests
     {
         var result = WordConversionService.GenerateSignatureName("Firma", "utente@example.com");
 
-        Assert.Equal("Firma (utente_example.com)", result);
+        Assert.Equal("Firma (utente@example.com)", result);
     }
 }

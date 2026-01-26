@@ -26,7 +26,7 @@
         <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
         <Setter Property="Padding" Value="16,8"/>
         <Setter Property="Margin" Value="4"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="#8A8886"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -130,7 +130,7 @@
     
     <Style TargetType="TextBox">
         <Setter Property="Padding" Value="8,6"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="#8A8886"/>
         <Setter Property="Background" Value="White"/>
         <Style.Triggers>
@@ -148,14 +148,14 @@
     
     <Style TargetType="ComboBox">
         <Setter Property="Padding" Value="8,6"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="#8A8886"/>
         <Setter Property="Background" Value="White"/>
     </Style>
 
     
     <Style TargetType="ListBox">
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="#8A8886"/>
         <Setter Property="Background" Value="White"/>
         <Setter Property="Padding" Value="4"/>
@@ -163,7 +163,7 @@
 
     
     <Style TargetType="GroupBox">
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="#E1DFDD"/>
         <Setter Property="Padding" Value="8"/>
         <Setter Property="Margin" Value="0,8"/>
@@ -218,7 +218,7 @@
         <Setter Property="Background" Value="#1E1E1E"/>
         <Setter Property="Foreground" Value="#DCDCDC"/>
         <Setter Property="Padding" Value="8"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="#3F3F3F"/>
     </Style>
 
