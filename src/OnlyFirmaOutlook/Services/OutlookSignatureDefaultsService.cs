@@ -68,6 +68,42 @@ public class OutlookSignatureDefaultsService
         }
     }
 
+    public bool TryClearDefaultSignatures(out string message)
+    {
+        try
+        {
+            var version = ResolveOutlookVersion();
+            if (version == null)
+            {
+                message = "Versione Outlook non rilevata.";
+                return false;
+            }
+
+            using var key = Registry.CurrentUser.CreateSubKey(
+                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
+                writable: true);
+
+            if (key == null)
+            {
+                message = "Impossibile accedere alle impostazioni di Outlook.";
+                return false;
+            }
+
+            key.DeleteValue("NewSignature", throwOnMissingValue: false);
+            key.DeleteValue("ReplySignature", throwOnMissingValue: false);
+
+            _logger.Log("Impostazioni firma predefinita rimosse dal registro.");
+            message = "Impostazioni predefinite rimosse.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Errore rimozione firma predefinita", ex);
+            message = $"Errore durante la rimozione: {ex.Message}";
+            return false;
+        }
+    }
+
     private string? ResolveOutlookVersion()
     {
         foreach (var version in OutlookVersions)

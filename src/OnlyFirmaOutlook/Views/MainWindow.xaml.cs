@@ -362,15 +362,24 @@ public partial class MainWindow : Window
         var destinationFolder = DestinationFolderTextBox.Text;
         var isDefaultFolder = _signatureWorkflowService.ShouldCreateBackup(destinationFolder);
         var canSetDefaults = _isOutlookAvailable && isDefaultFolder;
+        var clearChecked = ClearDefaultSignatureCheckBox.IsChecked == true;
 
-        DefaultNewSignatureCheckBox.IsEnabled = canSetDefaults;
-        DefaultReplySignatureCheckBox.IsEnabled = canSetDefaults;
+        if (clearChecked)
+        {
+            DefaultNewSignatureCheckBox.IsChecked = false;
+            DefaultReplySignatureCheckBox.IsChecked = false;
+        }
+
+        DefaultNewSignatureCheckBox.IsEnabled = canSetDefaults && !clearChecked;
+        DefaultReplySignatureCheckBox.IsEnabled = canSetDefaults && !clearChecked;
+        ClearDefaultSignatureCheckBox.IsEnabled = canSetDefaults;
         DefaultSignatureHintText.Visibility = canSetDefaults ? Visibility.Collapsed : Visibility.Visible;
 
         if (!canSetDefaults)
         {
             DefaultNewSignatureCheckBox.IsChecked = false;
             DefaultReplySignatureCheckBox.IsChecked = false;
+            ClearDefaultSignatureCheckBox.IsChecked = false;
         }
 
         if (!_isOutlookAvailable)
@@ -381,6 +390,11 @@ public partial class MainWindow : Window
         {
             DefaultSignatureHintText.Text = "Disponibile solo se la firma viene salvata nella cartella predefinita di Outlook.";
         }
+    }
+
+    private void DefaultSignatureOption_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateDefaultSignatureOptions();
     }
 
     
@@ -1090,8 +1104,16 @@ public partial class MainWindow : Window
                 var defaultSignatureMessage = string.Empty;
                 var setNewSignature = DefaultNewSignatureCheckBox.IsChecked == true;
                 var setReplySignature = DefaultReplySignatureCheckBox.IsChecked == true;
+                var clearDefaults = ClearDefaultSignatureCheckBox.IsChecked == true;
 
-                if (setNewSignature || setReplySignature)
+                if (clearDefaults)
+                {
+                    var cleared = _outlookSignatureDefaultsService.TryClearDefaultSignatures(out var clearMessage);
+                    defaultSignatureMessage = cleared
+                        ? "\n\nImpostazioni firma predefinita rimosse."
+                        : $"\n\nImpossibile rimuovere la firma predefinita: {clearMessage}";
+                }
+                else if (setNewSignature || setReplySignature)
                 {
                     var updated = _outlookSignatureDefaultsService.TrySetDefaultSignatures(
                         finalSignatureName,
@@ -1438,6 +1460,7 @@ public partial class MainWindow : Window
         CompleteHtmlRadio.IsChecked = true;
         DefaultNewSignatureCheckBox.IsChecked = false;
         DefaultReplySignatureCheckBox.IsChecked = false;
+        ClearDefaultSignatureCheckBox.IsChecked = false;
         ExistingSignaturesListBox.SelectedItem = null;
         BackupsListBox.SelectedItem = null;
 

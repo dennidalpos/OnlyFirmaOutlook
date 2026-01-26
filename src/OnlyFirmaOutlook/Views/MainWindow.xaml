@@ -305,10 +305,19 @@
                 <GroupBox Header="Imposta firma predefinita dopo la creazione" Style="{StaticResource StepGroupBoxStyle}">
                     <StackPanel>
                         <CheckBox x:Name="DefaultNewSignatureCheckBox"
-                                  Content="Imposta come firma predefinita per nuovi messaggi"/>
+                                  Content="Imposta come firma predefinita per nuovi messaggi"
+                                  Checked="DefaultSignatureOption_Changed"
+                                  Unchecked="DefaultSignatureOption_Changed"/>
                         <CheckBox x:Name="DefaultReplySignatureCheckBox"
                                   Content="Imposta come firma predefinita per risposte/inoltri"
-                                  Margin="0,6,0,0"/>
+                                  Margin="0,6,0,0"
+                                  Checked="DefaultSignatureOption_Changed"
+                                  Unchecked="DefaultSignatureOption_Changed"/>
+                        <CheckBox x:Name="ClearDefaultSignatureCheckBox"
+                                  Content="Rimuovi impostazioni firma predefinita (ripristina modifica in Outlook)"
+                                  Margin="0,6,0,0"
+                                  Checked="DefaultSignatureOption_Changed"
+                                  Unchecked="DefaultSignatureOption_Changed"/>
                         <TextBlock x:Name="DefaultSignatureHintText"
                                    Text="Disponibile solo se Outlook è installato e la firma viene salvata nella cartella predefinita."
                                    Foreground="#A19F9D" FontSize="11" Margin="0,8,0,0"/>
