@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text;
 using Microsoft.Win32;
 using OnlyFirmaOutlook.Models;
 
@@ -303,17 +304,26 @@ public class OutlookSignatureDefaultsService
 
     private static bool IsAccountMatch(RegistryKey key, IReadOnlyCollection<string> identifiers)
     {
+        var candidateValueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "001f3001",
+            "001f39fe",
+            "001e3001",
+            "Account Name",
+            "SMTP Address",
+            "Display Name",
+            "Email Address"
+        };
+
         var valueNames = key.GetValueNames();
         foreach (var valueName in valueNames)
         {
-            if (!valueName.Equals("001f3001", StringComparison.OrdinalIgnoreCase) &&
-                !valueName.Equals("001f39fe", StringComparison.OrdinalIgnoreCase) &&
-                !valueName.Equals("001e3001", StringComparison.OrdinalIgnoreCase))
+            if (!candidateValueNames.Contains(valueName))
             {
                 continue;
             }
 
-            var value = key.GetValue(valueName) as string;
+            var value = ExtractRegistryStringValue(key.GetValue(valueName));
             if (string.IsNullOrWhiteSpace(value))
             {
                 continue;
@@ -329,6 +339,19 @@ public class OutlookSignatureDefaultsService
         }
 
         return false;
+    }
+
+    private static string? ExtractRegistryStringValue(object? registryValue)
+    {
+        switch (registryValue)
+        {
+            case string text:
+                return text.TrimEnd('\0');
+            case byte[] bytes when bytes.Length > 0:
+                return Encoding.Unicode.GetString(bytes).TrimEnd('\0');
+            default:
+                return null;
+        }
     }
 
     private string? ResolveDefaultProfileName(string version)
