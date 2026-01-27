@@ -217,6 +217,7 @@ public class WordConversionService
                 var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
                 var assetResult = assetManager.ProcessImages(normalized, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false);
                 installer.Install(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
+                EnsureRtfFallback(destinationFolder, signatureName, assetResult.PlainText);
 
                 result.AssetsFolderPath = assetsFolder;
                 result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
@@ -231,6 +232,32 @@ public class WordConversionService
         }
 
         return result;
+    }
+
+    private void EnsureRtfFallback(string destinationFolder, string signatureName, string plainText)
+    {
+        var rtfPath = Path.Combine(destinationFolder, signatureName + ".rtf");
+        if (File.Exists(rtfPath))
+        {
+            return;
+        }
+
+        try
+        {
+            var escaped = plainText
+                .Replace(@"\", @"\\")
+                .Replace("{", "\\{")
+                .Replace("}", "\\}")
+                .Replace("\r\n", "\\par ")
+                .Replace("\n", "\\par ");
+            var rtfContent = $"{{\\rtf1\\ansi\\deff0{{\\fonttbl{{\\f0 Calibri;}}}}\\fs20 {escaped}}}";
+            File.WriteAllText(rtfPath, rtfContent);
+            _logger.Log($"RTF fallback creato: {rtfPath}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Impossibile creare RTF fallback: {ex.Message}");
+        }
     }
 
     private void CleanupWordAssetFolders(string destinationFolder, string signatureName)

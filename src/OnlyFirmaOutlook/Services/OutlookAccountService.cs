@@ -38,6 +38,7 @@ public class OutlookAccountService
         dynamic? outlookApp = null;
         dynamic? session = null;
         dynamic? accounts = null;
+        dynamic? stores = null;
 
         try
         {
@@ -125,6 +126,120 @@ public class OutlookAccountService
             }
 
             _logger.Log($"Totale account caricati: {result.Accounts.Count}");
+
+            var accountStoreIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                for (int i = 1; i <= accountCount; i++)
+                {
+                    dynamic? account = null;
+                    try
+                    {
+                        account = accounts.Item(i);
+                        if (account != null)
+                        {
+                            dynamic? accountStore = account.Store;
+                            if (accountStore != null)
+                            {
+                                var storeId = accountStore.StoreID as string;
+                                if (!string.IsNullOrEmpty(storeId))
+                                {
+                                    accountStoreIds.Add(storeId);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"Errore lettura store account {i}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        if (account != null)
+                        {
+                            try { Marshal.FinalReleaseComObject(account); }
+                            catch { }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Errore raccolta store account: {ex.Message}");
+            }
+
+            try
+            {
+                stores = session.Stores;
+                if (stores != null)
+                {
+                    var storeCount = stores.Count;
+                    for (int i = 1; i <= storeCount; i++)
+                    {
+                        dynamic? store = null;
+                        try
+                        {
+                            store = stores.Item(i);
+                            if (store == null)
+                            {
+                                continue;
+                            }
+
+                            var storeId = store.StoreID as string;
+                            if (!string.IsNullOrEmpty(storeId) && accountStoreIds.Contains(storeId))
+                            {
+                                continue;
+                            }
+
+                            var isDataFileStore = false;
+                            try
+                            {
+                                isDataFileStore = store.IsDataFileStore;
+                            }
+                            catch
+                            {
+                                isDataFileStore = false;
+                            }
+
+                            if (isDataFileStore)
+                            {
+                                continue;
+                            }
+
+                            var smtpAddress = TryGetStoreSmtpAddress(store);
+                            var displayName = store.DisplayName as string ?? "Mailbox delegata";
+
+                            var delegatedAccount = new OutlookAccount
+                            {
+                                DisplayName = displayName,
+                                SmtpAddress = smtpAddress ?? string.Empty,
+                                AccountType = "Delegato",
+                                IsDelegated = true,
+                                StoreId = storeId
+                            };
+
+                            result.Accounts.Add(delegatedAccount);
+                            _logger.Log($"Mailbox delegata trovata: {delegatedAccount.DisplayText}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning($"Errore lettura store {i}: {ex.Message}");
+                        }
+                        finally
+                        {
+                            if (store != null)
+                            {
+                                try { Marshal.FinalReleaseComObject(store); }
+                                catch { }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Errore accesso store Outlook: {ex.Message}");
+            }
         }
         catch (COMException comEx)
         {
@@ -146,7 +261,7 @@ public class OutlookAccountService
         finally
         {
             
-            CleanupComObjects(accounts, session, outlookApp);
+            CleanupComObjects(stores, accounts, session, outlookApp);
         }
 
         return result;
@@ -155,9 +270,22 @@ public class OutlookAccountService
     
     
     
-    private void CleanupComObjects(dynamic? accounts, dynamic? session, dynamic? outlookApp)
+    private void CleanupComObjects(dynamic? stores, dynamic? accounts, dynamic? session, dynamic? outlookApp)
     {
         _logger.Log("Cleanup oggetti COM Outlook...");
+
+        try
+        {
+            if (stores != null)
+            {
+                try { Marshal.FinalReleaseComObject(stores); }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"Errore rilascio stores COM: {ex.Message}");
+                }
+            }
+        }
+        catch { }
 
         try
         {
@@ -203,6 +331,27 @@ public class OutlookAccountService
         GC.WaitForPendingFinalizers();
 
         _logger.Log("Cleanup COM Outlook completato");
+    }
+
+    private string? TryGetStoreSmtpAddress(dynamic store)
+    {
+        try
+        {
+            var propertyAccessor = store.PropertyAccessor;
+            if (propertyAccessor == null)
+            {
+                return null;
+            }
+
+            const string smtpProperty = "http://schemas.microsoft.com/mapi/proptag/0x39FE001E";
+            var value = propertyAccessor.GetProperty(smtpProperty);
+            return value as string;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Errore lettura SMTP mailbox delegata: {ex.Message}");
+            return null;
+        }
     }
 
     

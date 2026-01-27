@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Threading;
 using OnlyFirmaOutlook.Models;
 using OnlyFirmaOutlook.Services;
@@ -196,8 +197,11 @@ public partial class MainWindow : Window
             OutlookWarningBorder.Visibility = Visibility.Collapsed;
             AccountLabel.Visibility = Visibility.Visible;
             AccountComboBox.Visibility = Visibility.Visible;
-            AccountComboBox.ItemsSource = _accounts;
-            AccountComboBox.DisplayMemberPath = "DisplayText";
+            AccountHint.Visibility = Visibility.Visible;
+            var view = CollectionViewSource.GetDefaultView(_accounts);
+            view.GroupDescriptions.Clear();
+            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OutlookAccount.GroupName)));
+            AccountComboBox.ItemsSource = view;
 
             IdentifierLabel.Visibility = Visibility.Collapsed;
             IdentifierTextBox.Visibility = Visibility.Collapsed;
@@ -218,6 +222,7 @@ public partial class MainWindow : Window
 
             AccountLabel.Visibility = Visibility.Collapsed;
             AccountComboBox.Visibility = Visibility.Collapsed;
+            AccountHint.Visibility = Visibility.Collapsed;
 
             IdentifierLabel.Visibility = Visibility.Visible;
             IdentifierTextBox.Visibility = Visibility.Visible;
@@ -232,6 +237,7 @@ public partial class MainWindow : Window
 
             AccountLabel.Visibility = Visibility.Collapsed;
             AccountComboBox.Visibility = Visibility.Collapsed;
+            AccountHint.Visibility = Visibility.Collapsed;
 
             IdentifierLabel.Visibility = Visibility.Visible;
             IdentifierTextBox.Visibility = Visibility.Visible;

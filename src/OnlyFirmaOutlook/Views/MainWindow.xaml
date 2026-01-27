@@ -132,6 +132,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         
@@ -146,20 +147,42 @@
                                Margin="0,8,0,0"/>
                         <ComboBox x:Name="AccountComboBox" Grid.Row="1" Grid.Column="1"
                                   Margin="0,8,0,0"
-                                  SelectionChanged="AccountComboBox_SelectionChanged"/>
+                                  SelectionChanged="AccountComboBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding DisplayText}"/>
+                                        <TextBlock Text=" • " Foreground="#8A8886" Margin="4,0"/>
+                                        <TextBlock Text="{Binding AccountType}" Foreground="#605E5C"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                            <ComboBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,6,0,2"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ComboBox.GroupStyle>
+                        </ComboBox>
 
-                        
+                        <TextBlock x:Name="AccountHint" Grid.Row="2" Grid.Column="1"
+                                   Text="Gli account con delega derivano dagli store aggiuntivi del profilo Outlook."
+                                   Foreground="#A19F9D" FontSize="11" Margin="0,4,0,0"/>
+
                         <Label x:Name="IdentifierLabel" Content="Identificativo:"
-                               Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                               Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
                                Margin="0,8,0,0" Visibility="Collapsed"/>
-                        <TextBox x:Name="IdentifierTextBox" Grid.Row="2" Grid.Column="1"
+                        <TextBox x:Name="IdentifierTextBox" Grid.Row="3" Grid.Column="1"
                                  Margin="0,8,0,0" Visibility="Collapsed"/>
-                        <TextBlock x:Name="IdentifierHint" Grid.Row="3" Grid.Column="1"
+                        <TextBlock x:Name="IdentifierHint" Grid.Row="4" Grid.Column="1"
                                    Text="(Opzionale)"
                                    Foreground="#A19F9D" FontSize="11" Visibility="Collapsed"/>
 
                         
-                        <Border Grid.Row="4" Grid.ColumnSpan="2" Background="#E8F5E9"
+                        <Border Grid.Row="5" Grid.ColumnSpan="2" Background="#E8F5E9"
                                 CornerRadius="4" Padding="10" Margin="0,12,0,0"
                                 x:Name="FinalNameBorder" Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
