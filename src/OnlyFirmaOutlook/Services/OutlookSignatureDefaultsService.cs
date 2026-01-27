@@ -69,20 +69,17 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
-            {
-                return false;
-            }
-
-            using var key = Registry.CurrentUser.OpenSubKey(accountKeyPath, writable: false);
+            using var key = Registry.CurrentUser.OpenSubKey(
+                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
+                writable: false);
             if (key == null)
             {
-                message = "Impostazioni account Outlook non disponibili.";
+                message = "Impostazioni Outlook non disponibili.";
                 return false;
             }
 
-            newSignature = key.GetValue("New Signature") as string;
-            replySignature = key.GetValue("Reply-Forward Signature") as string;
+            newSignature = key.GetValue("NewSignature") as string;
+            replySignature = key.GetValue("ReplySignature") as string;
             message = "OK";
             return true;
         }
@@ -111,12 +108,9 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
-            {
-                return false;
-            }
-
-            using var key = Registry.CurrentUser.CreateSubKey(accountKeyPath, writable: true);
+            using var key = Registry.CurrentUser.CreateSubKey(
+                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
+                writable: true);
 
             if (key == null)
             {
@@ -151,12 +145,9 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
-            {
-                return false;
-            }
-
-            using var key = Registry.CurrentUser.CreateSubKey(accountKeyPath, writable: true);
+            using var key = Registry.CurrentUser.CreateSubKey(
+                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
+                writable: true);
 
             if (key == null)
             {
@@ -166,14 +157,14 @@ public class OutlookSignatureDefaultsService
 
             if (setNewMessages)
             {
-                key.SetValue("New Signature", signatureName);
-                _logger.Log($"Firma predefinita per nuovi messaggi impostata ({account.DisplayText}): {signatureName}");
+                key.SetValue("NewSignature", signatureName);
+                _logger.Log($"Firma predefinita per nuovi messaggi impostata: {signatureName}");
             }
 
             if (setReplies)
             {
-                key.SetValue("Reply-Forward Signature", signatureName);
-                _logger.Log($"Firma predefinita per risposte/inoltri impostata ({account.DisplayText}): {signatureName}");
+                key.SetValue("ReplySignature", signatureName);
+                _logger.Log($"Firma predefinita per risposte/inoltri impostata: {signatureName}");
             }
 
             message = "Impostazioni predefinite aggiornate.";
@@ -198,12 +189,9 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
-            {
-                return false;
-            }
-
-            using var key = Registry.CurrentUser.CreateSubKey(accountKeyPath, writable: true);
+            using var key = Registry.CurrentUser.CreateSubKey(
+                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
+                writable: true);
 
             if (key == null)
             {
@@ -211,10 +199,10 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            key.DeleteValue("New Signature", throwOnMissingValue: false);
-            key.DeleteValue("Reply-Forward Signature", throwOnMissingValue: false);
+            key.DeleteValue("NewSignature", throwOnMissingValue: false);
+            key.DeleteValue("ReplySignature", throwOnMissingValue: false);
 
-            _logger.Log($"Impostazioni firma predefinita rimosse dal registro per {account.DisplayText}.");
+            _logger.Log("Impostazioni firma predefinita rimosse dal registro.");
             message = "Impostazioni predefinite rimosse.";
             return true;
         }
