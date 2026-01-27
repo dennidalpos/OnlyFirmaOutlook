@@ -82,17 +82,6 @@ public class OutlookAccountService
                 return result;
             }
 
-            string? defaultStoreId = null;
-            try
-            {
-                var defaultStore = session.DefaultStore;
-                defaultStoreId = defaultStore?.StoreID as string;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"Errore lettura DefaultStore: {ex.Message}");
-            }
-
             int accountCount = accounts.Count;
             if (accountCount == 0)
             {
@@ -113,7 +102,7 @@ public class OutlookAccountService
                     {
                         dynamic? accountStore = account.Store;
                         var storeId = accountStore?.StoreID as string;
-                        var isDelegated = IsDelegatedAccount(account, defaultStoreId);
+                        var isDelegated = IsDelegatedAccount(account);
                         var outlookAccount = new OutlookAccount
                         {
                             DisplayName = account.DisplayName ?? "Account senza nome",
@@ -372,30 +361,19 @@ public class OutlookAccountService
         _logger.Log("Cleanup COM Outlook completato");
     }
 
-    private static bool IsDelegatedAccount(dynamic account, string? defaultStoreId)
+    private static bool IsDelegatedAccount(dynamic account)
     {
         try
         {
-            dynamic? accountStore = account.Store;
             dynamic? deliveryStore = account.DeliveryStore;
-            var accountStoreId = accountStore?.StoreID as string;
             var deliveryStoreId = deliveryStore?.StoreID as string;
 
-            if (!string.IsNullOrEmpty(defaultStoreId) &&
-                !string.IsNullOrEmpty(accountStoreId) &&
-                accountStoreId.Equals(defaultStoreId, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (!string.IsNullOrEmpty(deliveryStoreId) &&
-                !string.IsNullOrEmpty(accountStoreId) &&
-                accountStoreId.Equals(deliveryStoreId, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
             if (deliveryStore == null)
+            {
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(deliveryStoreId))
             {
                 return true;
             }
