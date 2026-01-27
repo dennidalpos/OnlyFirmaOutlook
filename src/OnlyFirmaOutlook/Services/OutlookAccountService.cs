@@ -82,6 +82,17 @@ public class OutlookAccountService
                 return result;
             }
 
+            string? defaultStoreId = null;
+            try
+            {
+                var defaultStore = session.DefaultStore;
+                defaultStoreId = defaultStore?.StoreID as string;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Errore lettura DefaultStore: {ex.Message}");
+            }
+
             int accountCount = accounts.Count;
             if (accountCount == 0)
             {
@@ -100,11 +111,16 @@ public class OutlookAccountService
                     account = accounts.Item(i);
                     if (account != null)
                     {
+                        dynamic? accountStore = account.Store;
+                        var storeId = accountStore?.StoreID as string;
+                        var isDelegated = IsDelegatedAccount(account, defaultStoreId);
                         var outlookAccount = new OutlookAccount
                         {
                             DisplayName = account.DisplayName ?? "Account senza nome",
                             SmtpAddress = account.SmtpAddress ?? string.Empty,
-                            AccountType = GetAccountTypeName(account.AccountType)
+                            AccountType = isDelegated ? "Delegato" : GetAccountTypeName(account.AccountType),
+                            IsDelegated = isDelegated,
+                            StoreId = storeId
                         };
 
                         result.Accounts.Add(outlookAccount);
@@ -354,6 +370,42 @@ public class OutlookAccountService
         GC.WaitForPendingFinalizers();
 
         _logger.Log("Cleanup COM Outlook completato");
+    }
+
+    private static bool IsDelegatedAccount(dynamic account, string? defaultStoreId)
+    {
+        try
+        {
+            dynamic? accountStore = account.Store;
+            dynamic? deliveryStore = account.DeliveryStore;
+            var accountStoreId = accountStore?.StoreID as string;
+            var deliveryStoreId = deliveryStore?.StoreID as string;
+
+            if (!string.IsNullOrEmpty(defaultStoreId) &&
+                !string.IsNullOrEmpty(accountStoreId) &&
+                accountStoreId.Equals(defaultStoreId, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(deliveryStoreId) &&
+                !string.IsNullOrEmpty(accountStoreId) &&
+                accountStoreId.Equals(deliveryStoreId, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (deliveryStore == null)
+            {
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return false;
     }
 
     private static bool IsOnlineArchiveStore(dynamic store, string displayName)
