@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -34,6 +35,7 @@ public partial class MainWindow : Window
     private List<OutlookAccount> _accounts = new();
     private List<SignatureInfo> _existingSignatures = new();
     private List<BackupInfo> _existingBackups = new();
+    private List<SignatureInfo> _defaultSignatureCandidates = new();
 
     private string? _selectedFilePath;
     private EditorState? _currentEditorState;
@@ -198,6 +200,8 @@ public partial class MainWindow : Window
             AccountComboBox.Visibility = Visibility.Visible;
             AccountComboBox.ItemsSource = _accounts;
             AccountComboBox.DisplayMemberPath = "DisplayText";
+            DefaultAccountComboBox.ItemsSource = _accounts;
+            DefaultAccountComboBox.DisplayMemberPath = "DisplayText";
 
             IdentifierLabel.Visibility = Visibility.Collapsed;
             IdentifierTextBox.Visibility = Visibility.Collapsed;
@@ -207,6 +211,7 @@ public partial class MainWindow : Window
             if (_accounts.Count > 0)
             {
                 AccountComboBox.SelectedIndex = 0;
+                DefaultAccountComboBox.SelectedIndex = 0;
             }
         }
         else if (_isOutlookAvailable && _accounts.Count == 0)
@@ -218,6 +223,7 @@ public partial class MainWindow : Window
 
             AccountLabel.Visibility = Visibility.Collapsed;
             AccountComboBox.Visibility = Visibility.Collapsed;
+            DefaultAccountComboBox.ItemsSource = null;
 
             IdentifierLabel.Visibility = Visibility.Visible;
             IdentifierTextBox.Visibility = Visibility.Visible;
@@ -232,12 +238,14 @@ public partial class MainWindow : Window
 
             AccountLabel.Visibility = Visibility.Collapsed;
             AccountComboBox.Visibility = Visibility.Collapsed;
+            DefaultAccountComboBox.ItemsSource = null;
 
             IdentifierLabel.Visibility = Visibility.Visible;
             IdentifierTextBox.Visibility = Visibility.Visible;
             IdentifierHint.Visibility = Visibility.Visible;
         }
 
+        RefreshDefaultSignatureCandidates();
         UpdateDefaultSignatureOptions();
     }
 
@@ -304,6 +312,49 @@ public partial class MainWindow : Window
         }
 
         DeleteSignatureButton.IsEnabled = false;
+        RefreshDefaultSignatureCandidates();
+    }
+
+    private void RefreshDefaultSignatureCandidates(string? preferredSignature = null)
+    {
+        var defaultFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+        if (Directory.Exists(defaultFolder))
+        {
+            _defaultSignatureCandidates = _signatureRepository.GetSignatures(defaultFolder);
+        }
+        else
+        {
+            _defaultSignatureCandidates = new List<SignatureInfo>();
+        }
+
+        if (_defaultSignatureCandidates.Count > 0)
+        {
+            DefaultSignatureComboBox.ItemsSource = _defaultSignatureCandidates;
+            DefaultSignatureComboBox.DisplayMemberPath = "DisplayInfo";
+            DefaultSignatureEmptyText.Visibility = Visibility.Collapsed;
+
+            if (!string.IsNullOrWhiteSpace(preferredSignature))
+            {
+                var match = _defaultSignatureCandidates.FirstOrDefault(signature =>
+                    signature.Name.Equals(preferredSignature, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    DefaultSignatureComboBox.SelectedItem = match;
+                }
+            }
+
+            if (DefaultSignatureComboBox.SelectedItem == null)
+            {
+                DefaultSignatureComboBox.SelectedIndex = 0;
+            }
+        }
+        else
+        {
+            DefaultSignatureComboBox.ItemsSource = null;
+            DefaultSignatureEmptyText.Visibility = Visibility.Visible;
+        }
+
+        UpdateDefaultSignatureOptions();
     }
 
     private void RefreshBackups()
@@ -359,12 +410,13 @@ public partial class MainWindow : Window
 
     private void UpdateDefaultSignatureOptions()
     {
-        var destinationFolder = DestinationFolderTextBox.Text;
-        var isDefaultFolder = _signatureWorkflowService.ShouldCreateBackup(destinationFolder);
-        var hasAccountSelected = GetSelectedAccount() != null;
-        var canSetDefaults = _isOutlookAvailable && isDefaultFolder && hasAccountSelected;
+        var hasAccountSelected = GetSelectedDefaultAccount() != null;
+        var canSetDefaults = _isOutlookAvailable && hasAccountSelected;
+        DefaultAccountComboBox.IsEnabled = _isOutlookAvailable && _accounts.Count > 0;
         DefaultNewSignatureCheckBox.IsEnabled = canSetDefaults;
         DefaultReplySignatureCheckBox.IsEnabled = canSetDefaults;
+        DefaultSignatureComboBox.IsEnabled = _defaultSignatureCandidates.Count > 0;
+        ApplyDefaultSignatureButton.IsEnabled = canSetDefaults && GetSelectedDefaultSignatureName() != null;
         DefaultSignatureHintText.Visibility = canSetDefaults ? Visibility.Collapsed : Visibility.Visible;
 
         if (!canSetDefaults)
@@ -380,10 +432,6 @@ public partial class MainWindow : Window
         else if (!hasAccountSelected)
         {
             DefaultSignatureHintText.Text = "Seleziona un account o mailbox condivisa per impostare la firma predefinita.";
-        }
-        else if (!isDefaultFolder)
-        {
-            DefaultSignatureHintText.Text = "Disponibile solo se la firma viene salvata nella cartella predefinita di Outlook.";
         }
 
         UpdateDefaultSignatureStatus();
@@ -406,7 +454,7 @@ public partial class MainWindow : Window
 
     private void UpdateDefaultSignatureStatus()
     {
-        var selectedAccount = GetSelectedAccount();
+        var selectedAccount = GetSelectedDefaultAccount();
         var registryMessage = selectedAccount == null
             ? "Seleziona un account o mailbox condivisa."
             : string.Empty;
@@ -449,7 +497,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var selectedAccount = GetSelectedAccount();
+        var selectedAccount = GetSelectedDefaultAccount();
         if (selectedAccount == null)
         {
             MessageBox.Show(
@@ -466,6 +514,61 @@ public partial class MainWindow : Window
             cleared ? "Operazione completata" : "Errore rimozione",
             MessageBoxButton.OK,
             cleared ? MessageBoxImage.Information : MessageBoxImage.Error);
+
+        UpdateDefaultSignatureStatus();
+    }
+
+    private void ApplyDefaultSignatureButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedAccount = GetSelectedDefaultAccount();
+        if (selectedAccount == null)
+        {
+            MessageBox.Show(
+                "Seleziona un account o mailbox condivisa.",
+                "Account non selezionato",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        var selectedSignature = GetSelectedDefaultSignatureName();
+        if (string.IsNullOrWhiteSpace(selectedSignature))
+        {
+            MessageBox.Show(
+                "Seleziona una firma esistente per impostarla come predefinita.",
+                "Firma non selezionata",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        var setNewSignature = DefaultNewSignatureCheckBox.IsChecked == true;
+        var setReplySignature = DefaultReplySignatureCheckBox.IsChecked == true;
+
+        if (!setNewSignature && !setReplySignature)
+        {
+            MessageBox.Show(
+                "Seleziona almeno una opzione (nuovi messaggi o risposte/inoltri).",
+                "Opzione mancante",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        var updated = _outlookSignatureDefaultsService.TrySetDefaultSignatures(
+            selectedAccount,
+            selectedSignature,
+            setNewSignature,
+            setReplySignature,
+            out var updateMessage);
+
+        MessageBox.Show(
+            updated
+                ? "Firma predefinita aggiornata con successo."
+                : $"Impossibile impostare la firma predefinita: {updateMessage}",
+            updated ? "Operazione completata" : "Errore",
+            MessageBoxButton.OK,
+            updated ? MessageBoxImage.Information : MessageBoxImage.Error);
 
         UpdateDefaultSignatureStatus();
     }
@@ -636,6 +739,26 @@ public partial class MainWindow : Window
         }
 
         return AccountComboBox.SelectedItem as OutlookAccount;
+    }
+
+    private OutlookAccount? GetSelectedDefaultAccount()
+    {
+        if (!_isOutlookAvailable)
+        {
+            return null;
+        }
+
+        return DefaultAccountComboBox.SelectedItem as OutlookAccount;
+    }
+
+    private string? GetSelectedDefaultSignatureName()
+    {
+        if (DefaultSignatureComboBox.SelectedItem is SignatureInfo signature)
+        {
+            return signature.Name;
+        }
+
+        return null;
     }
 
 
@@ -1061,6 +1184,20 @@ public partial class MainWindow : Window
     {
         UpdateFinalSignatureName();
         UpdateDefaultSignatureOptions();
+        if (AccountComboBox.SelectedItem != null)
+        {
+            DefaultAccountComboBox.SelectedItem = AccountComboBox.SelectedItem;
+        }
+    }
+
+    private void DefaultAccountComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateDefaultSignatureOptions();
+    }
+
+    private void DefaultSignatureComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateDefaultSignatureOptions();
     }
 
     private void BrowseFolderButton_Click(object sender, RoutedEventArgs e)
@@ -1191,12 +1328,13 @@ public partial class MainWindow : Window
 
                 if (setNewSignature || setReplySignature)
                 {
-                    var selectedAccount = GetSelectedAccount();
+                    var selectedAccount = GetSelectedDefaultAccount();
+                    var selectedSignatureName = GetSelectedDefaultSignatureName() ?? finalSignatureName;
                     if (selectedAccount != null)
                     {
                         var updated = _outlookSignatureDefaultsService.TrySetDefaultSignatures(
                             selectedAccount,
-                            finalSignatureName,
+                            selectedSignatureName,
                             setNewSignature,
                             setReplySignature,
                             out var updateMessage);
@@ -1226,6 +1364,7 @@ public partial class MainWindow : Window
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
 
+                RefreshDefaultSignatureCandidates(finalSignatureName);
                 ResetUiForNewSignature();
             }
             else
@@ -1504,6 +1643,8 @@ public partial class MainWindow : Window
         LoadCustomButton.IsEnabled = !isBusy;
         SignatureNameTextBox.IsEnabled = !isBusy;
         AccountComboBox.IsEnabled = !isBusy;
+        DefaultAccountComboBox.IsEnabled = !isBusy;
+        DefaultSignatureComboBox.IsEnabled = !isBusy;
         IdentifierTextBox.IsEnabled = !isBusy;
         BrowseFolderButton.IsEnabled = !isBusy;
         FilteredHtmlRadio.IsEnabled = !isBusy;
@@ -1519,6 +1660,7 @@ public partial class MainWindow : Window
         if (isBusy)
         {
             RemoveDefaultSignatureButton.IsEnabled = false;
+            ApplyDefaultSignatureButton.IsEnabled = false;
         }
         else
         {
@@ -1558,6 +1700,7 @@ public partial class MainWindow : Window
         SignatureNameTextBox.Text = string.Empty;
         IdentifierTextBox.Text = string.Empty;
         AccountComboBox.SelectedIndex = _accounts.Count > 0 ? 0 : -1;
+        DefaultAccountComboBox.SelectedIndex = _accounts.Count > 0 ? 0 : -1;
         FilteredHtmlRadio.IsChecked = false;
         CompleteHtmlRadio.IsChecked = true;
         DefaultNewSignatureCheckBox.IsChecked = false;

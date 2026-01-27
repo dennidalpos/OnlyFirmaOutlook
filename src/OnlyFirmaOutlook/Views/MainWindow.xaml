@@ -307,6 +307,18 @@
                           IsExpanded="False"
                           Margin="0,0,0,12">
                     <StackPanel Margin="12">
+                        <TextBlock Text="Account:" FontWeight="SemiBold"/>
+                        <ComboBox x:Name="DefaultAccountComboBox"
+                                  Margin="0,4,0,8"
+                                  SelectionChanged="DefaultAccountComboBox_SelectionChanged"/>
+                        <TextBlock Text="Firma disponibile:" FontWeight="SemiBold"/>
+                        <ComboBox x:Name="DefaultSignatureComboBox"
+                                  Margin="0,4,0,4"
+                                  SelectionChanged="DefaultSignatureComboBox_SelectionChanged"/>
+                        <TextBlock x:Name="DefaultSignatureEmptyText"
+                                   Text="Nessuna firma disponibile nella cartella predefinita."
+                                   Foreground="#A19F9D" FontSize="11" Margin="0,0,0,8"
+                                   Visibility="Collapsed"/>
                         <CheckBox x:Name="DefaultNewSignatureCheckBox"
                                   Content="Imposta come firma predefinita per nuovi messaggi"
                                   Checked="DefaultSignatureOption_Changed"
@@ -316,6 +328,11 @@
                                   Margin="0,6,0,0"
                                   Checked="DefaultSignatureOption_Changed"
                                   Unchecked="DefaultSignatureOption_Changed"/>
+                        <Button x:Name="ApplyDefaultSignatureButton"
+                                Content="Imposta firma predefinita"
+                                Margin="0,8,0,0"
+                                Click="ApplyDefaultSignatureButton_Click"
+                                Style="{StaticResource PrimaryButtonStyle}"/>
                         <Button x:Name="RemoveDefaultSignatureButton"
                                 Content="Rimuovi impostazioni firma predefinita (registro)"
                                 Margin="0,8,0,0"
@@ -328,7 +345,7 @@
                                    Text="Accesso registro: N/D"
                                    Foreground="#605E5C" FontSize="11" Margin="0,4,0,0"/>
                         <TextBlock x:Name="DefaultSignatureHintText"
-                               Text="Disponibile solo se Outlook è installato, la firma è salvata nella cartella predefinita e hai selezionato un account."
+                                   Text="Disponibile solo se Outlook è installato e hai selezionato un account."
                                    Foreground="#A19F9D" FontSize="11" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Expander>
