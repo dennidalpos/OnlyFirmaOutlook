@@ -129,6 +129,7 @@ public class OutlookAccountService
 
             var accountStoreIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var accountSmtpAddresses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var accountDisplayNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try
             {
                 for (int i = 1; i <= accountCount; i++)
@@ -153,6 +154,12 @@ public class OutlookAccountService
                             if (!string.IsNullOrWhiteSpace(smtp))
                             {
                                 accountSmtpAddresses.Add(smtp);
+                            }
+
+                            var displayName = account.DisplayName as string;
+                            if (!string.IsNullOrWhiteSpace(displayName))
+                            {
+                                accountDisplayNames.Add(displayName);
                             }
                         }
                     }
@@ -221,6 +228,11 @@ public class OutlookAccountService
 
                             var smtpAddress = TryGetStoreSmtpAddress(store);
                             if (!string.IsNullOrWhiteSpace(smtpAddress) && accountSmtpAddresses.Contains(smtpAddress))
+                            {
+                                continue;
+                            }
+
+                            if (accountDisplayNames.Contains(displayName))
                             {
                                 continue;
                             }
