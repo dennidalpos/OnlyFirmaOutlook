@@ -128,6 +128,7 @@ public class OutlookAccountService
             _logger.Log($"Totale account caricati: {result.Accounts.Count}");
 
             var accountStoreIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var accountSmtpAddresses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try
             {
                 for (int i = 1; i <= accountCount; i++)
@@ -146,6 +147,12 @@ public class OutlookAccountService
                                 {
                                     accountStoreIds.Add(storeId);
                                 }
+                            }
+
+                            var smtp = account.SmtpAddress as string;
+                            if (!string.IsNullOrWhiteSpace(smtp))
+                            {
+                                accountSmtpAddresses.Add(smtp);
                             }
                         }
                     }
@@ -206,8 +213,17 @@ public class OutlookAccountService
                                 continue;
                             }
 
-                            var smtpAddress = TryGetStoreSmtpAddress(store);
                             var displayName = store.DisplayName as string ?? "Mailbox delegata";
+                            if (IsOnlineArchiveStore(store, displayName))
+                            {
+                                continue;
+                            }
+
+                            var smtpAddress = TryGetStoreSmtpAddress(store);
+                            if (!string.IsNullOrWhiteSpace(smtpAddress) && accountSmtpAddresses.Contains(smtpAddress))
+                            {
+                                continue;
+                            }
 
                             var delegatedAccount = new OutlookAccount
                             {
@@ -331,6 +347,33 @@ public class OutlookAccountService
         GC.WaitForPendingFinalizers();
 
         _logger.Log("Cleanup COM Outlook completato");
+    }
+
+    private static bool IsOnlineArchiveStore(dynamic store, string displayName)
+    {
+        try
+        {
+            var isArchive = store.IsArchive;
+            if (isArchive is bool boolValue && boolValue)
+            {
+                return true;
+            }
+        }
+        catch
+        {
+        }
+
+        if (displayName.Contains("Archivio online", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (displayName.Contains("Online Archive", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private string? TryGetStoreSmtpAddress(dynamic store)
