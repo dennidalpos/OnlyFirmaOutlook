@@ -338,6 +338,28 @@ public class OutlookSignatureDefaultsService
             }
         }
 
+        foreach (var valueName in valueNames)
+        {
+            if (candidateValueNames.Contains(valueName))
+            {
+                continue;
+            }
+
+            var value = ExtractRegistryStringValue(key.GetValue(valueName));
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            foreach (var identifier in identifiers)
+            {
+                if (value.Equals(identifier, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
