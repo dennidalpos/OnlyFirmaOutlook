@@ -227,12 +227,7 @@ public class OutlookAccountService
                             }
 
                             var smtpAddress = TryGetStoreSmtpAddress(store);
-                            if (!string.IsNullOrWhiteSpace(smtpAddress) && accountSmtpAddresses.Contains(smtpAddress))
-                            {
-                                continue;
-                            }
-
-                            if (accountDisplayNames.Contains(displayName))
+                            if (IsDuplicateStore(displayName, smtpAddress, accountSmtpAddresses, accountDisplayNames))
                             {
                                 continue;
                             }
@@ -383,6 +378,46 @@ public class OutlookAccountService
         if (displayName.Contains("Online Archive", StringComparison.OrdinalIgnoreCase))
         {
             return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsDuplicateStore(
+        string displayName,
+        string? smtpAddress,
+        HashSet<string> accountSmtpAddresses,
+        HashSet<string> accountDisplayNames)
+    {
+        if (!string.IsNullOrWhiteSpace(smtpAddress) && accountSmtpAddresses.Contains(smtpAddress))
+        {
+            return true;
+        }
+
+        if (accountDisplayNames.Contains(displayName))
+        {
+            return true;
+        }
+
+        foreach (var accountSmtp in accountSmtpAddresses)
+        {
+            if (!string.IsNullOrWhiteSpace(accountSmtp) &&
+                displayName.Contains(accountSmtp, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(smtpAddress))
+        {
+            foreach (var accountName in accountDisplayNames)
+            {
+                if (!string.IsNullOrWhiteSpace(accountName) &&
+                    smtpAddress.Contains(accountName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
         }
 
         return false;
