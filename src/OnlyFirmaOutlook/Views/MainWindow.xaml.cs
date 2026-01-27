@@ -361,7 +361,8 @@ public partial class MainWindow : Window
     {
         var destinationFolder = DestinationFolderTextBox.Text;
         var isDefaultFolder = _signatureWorkflowService.ShouldCreateBackup(destinationFolder);
-        var canSetDefaults = _isOutlookAvailable && isDefaultFolder;
+        var hasAccountSelected = GetSelectedAccount() != null;
+        var canSetDefaults = _isOutlookAvailable && isDefaultFolder && hasAccountSelected;
         DefaultNewSignatureCheckBox.IsEnabled = canSetDefaults;
         DefaultReplySignatureCheckBox.IsEnabled = canSetDefaults;
         DefaultSignatureHintText.Visibility = canSetDefaults ? Visibility.Collapsed : Visibility.Visible;
@@ -376,6 +377,10 @@ public partial class MainWindow : Window
         {
             DefaultSignatureHintText.Text = "Disponibile solo se Outlook è installato.";
         }
+        else if (!hasAccountSelected)
+        {
+            DefaultSignatureHintText.Text = "Seleziona un account o mailbox condivisa per impostare la firma predefinita.";
+        }
         else if (!isDefaultFolder)
         {
             DefaultSignatureHintText.Text = "Disponibile solo se la firma viene salvata nella cartella predefinita di Outlook.";
@@ -389,7 +394,7 @@ public partial class MainWindow : Window
         if (sender is System.Windows.Controls.CheckBox checkBox && checkBox.IsChecked == true)
         {
             MessageBox.Show(
-                "Attenzione: impostare la firma predefinita dall'app può rendere temporaneamente non modificabili le scelte in Outlook.\n" +
+                "Attenzione: impostare la firma predefinita dall'app può rendere temporaneamente non modificabili le scelte per l'account selezionato in Outlook.\n" +
                 "Se succede, usa il pulsante per rimuovere le impostazioni dal registro.",
                 "Avviso firma predefinita",
                 MessageBoxButton.OK,
@@ -401,18 +406,28 @@ public partial class MainWindow : Window
 
     private void UpdateDefaultSignatureStatus()
     {
-        var canWriteRegistry = _outlookSignatureDefaultsService.CanWriteDefaultSignatureRegistry(out var registryMessage);
+        var selectedAccount = GetSelectedAccount();
+        var registryMessage = selectedAccount == null
+            ? "Seleziona un account o mailbox condivisa."
+            : string.Empty;
+        var canWriteRegistry = selectedAccount != null &&
+            _outlookSignatureDefaultsService.CanWriteDefaultSignatureRegistry(selectedAccount, out registryMessage);
         RegistryAccessStatusText.Text = canWriteRegistry
             ? "Accesso registro: disponibile per l'utente corrente (senza privilegi admin)."
             : $"Accesso registro: {registryMessage}";
 
-        RemoveDefaultSignatureButton.IsEnabled = _isOutlookAvailable && canWriteRegistry;
+        RemoveDefaultSignatureButton.IsEnabled = _isOutlookAvailable && canWriteRegistry && selectedAccount != null;
 
-        if (_outlookSignatureDefaultsService.TryGetDefaultSignatures(out var newSignature, out var replySignature, out var statusMessage))
+        var statusMessage = selectedAccount == null
+            ? "Seleziona un account o mailbox condivisa."
+            : "Impossibile leggere lo stato della firma.";
+
+        if (selectedAccount != null &&
+            _outlookSignatureDefaultsService.TryGetDefaultSignatures(selectedAccount, out var newSignature, out var replySignature, out statusMessage))
         {
             var newText = string.IsNullOrWhiteSpace(newSignature) ? "(nessuna)" : newSignature;
             var replyText = string.IsNullOrWhiteSpace(replySignature) ? "(nessuna)" : replySignature;
-            DefaultSignatureStatusText.Text = $"Stato firma predefinita: nuovi messaggi = {newText} | risposte/inoltri = {replyText}";
+            DefaultSignatureStatusText.Text = $"Stato firma predefinita ({selectedAccount.DisplayText}): nuovi messaggi = {newText} | risposte/inoltri = {replyText}";
         }
         else
         {
@@ -423,7 +438,7 @@ public partial class MainWindow : Window
     private void RemoveDefaultSignatureButton_Click(object sender, RoutedEventArgs e)
     {
         var result = MessageBox.Show(
-            "Rimuovere le impostazioni di firma predefinita dal registro di Outlook?\n\n" +
+            "Rimuovere le impostazioni di firma predefinita dal registro di Outlook per l'account selezionato?\n\n" +
             "Questo consente di modificare nuovamente le firme da Outlook.",
             "Conferma rimozione impostazioni",
             MessageBoxButton.YesNo,
@@ -434,7 +449,18 @@ public partial class MainWindow : Window
             return;
         }
 
-        var cleared = _outlookSignatureDefaultsService.TryClearDefaultSignatures(out var clearMessage);
+        var selectedAccount = GetSelectedAccount();
+        if (selectedAccount == null)
+        {
+            MessageBox.Show(
+                "Seleziona un account o mailbox condivisa.",
+                "Account non selezionato",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        var cleared = _outlookSignatureDefaultsService.TryClearDefaultSignatures(selectedAccount, out var clearMessage);
         MessageBox.Show(
             cleared ? "Impostazioni firma predefinita rimosse." : $"Impossibile rimuovere le impostazioni: {clearMessage}",
             cleared ? "Operazione completata" : "Errore rimozione",
@@ -600,6 +626,16 @@ public partial class MainWindow : Window
 
         FinalSignatureNameText.Text = finalName;
         FinalNameBorder.Visibility = Visibility.Visible;
+    }
+
+    private OutlookAccount? GetSelectedAccount()
+    {
+        if (!_isOutlookAvailable)
+        {
+            return null;
+        }
+
+        return AccountComboBox.SelectedItem as OutlookAccount;
     }
 
 
@@ -1024,6 +1060,7 @@ public partial class MainWindow : Window
     private void AccountComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateFinalSignatureName();
+        UpdateDefaultSignatureOptions();
     }
 
     private void BrowseFolderButton_Click(object sender, RoutedEventArgs e)
@@ -1154,14 +1191,23 @@ public partial class MainWindow : Window
 
                 if (setNewSignature || setReplySignature)
                 {
-                    var updated = _outlookSignatureDefaultsService.TrySetDefaultSignatures(
-                        finalSignatureName,
-                        setNewSignature,
-                        setReplySignature,
-                        out var updateMessage);
-                    defaultSignatureMessage = updated
-                        ? "\n\nFirma predefinita aggiornata in Outlook."
-                        : $"\n\nImpossibile impostare la firma predefinita: {updateMessage}";
+                    var selectedAccount = GetSelectedAccount();
+                    if (selectedAccount != null)
+                    {
+                        var updated = _outlookSignatureDefaultsService.TrySetDefaultSignatures(
+                            selectedAccount,
+                            finalSignatureName,
+                            setNewSignature,
+                            setReplySignature,
+                            out var updateMessage);
+                        defaultSignatureMessage = updated
+                            ? "\n\nFirma predefinita aggiornata per l'account selezionato."
+                            : $"\n\nImpossibile impostare la firma predefinita: {updateMessage}";
+                    }
+                    else
+                    {
+                        defaultSignatureMessage = "\n\nImpossibile impostare la firma predefinita: nessun account selezionato.";
+                    }
                 }
 
                 UpdateDefaultSignatureStatus();

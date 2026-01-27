@@ -1,4 +1,6 @@
+using System.Linq;
 using Microsoft.Win32;
+using OnlyFirmaOutlook.Models;
 
 namespace OnlyFirmaOutlook.Services;
 
@@ -12,8 +14,14 @@ public class OutlookSignatureDefaultsService
         _logger = LoggingService.Instance;
     }
 
-    public bool TrySetDefaultSignatures(string signatureName, bool setNewMessages, bool setReplies, out string message)
+    public bool TrySetDefaultSignatures(OutlookAccount account, string signatureName, bool setNewMessages, bool setReplies, out string message)
     {
+        if (account == null)
+        {
+            message = "Account Outlook non valido.";
+            return false;
+        }
+
         if (string.IsNullOrWhiteSpace(signatureName))
         {
             message = "Nome firma non valido.";
@@ -26,28 +34,30 @@ public class OutlookSignatureDefaultsService
             return false;
         }
 
-        if (TrySetDefaultSignaturesViaWord(signatureName, setNewMessages, setReplies, out message))
-        {
-            return true;
-        }
-
-        return TrySetDefaultSignaturesViaRegistry(signatureName, setNewMessages, setReplies, out message);
+        return TrySetDefaultSignaturesViaRegistry(account, signatureName, setNewMessages, setReplies, out message);
     }
 
-    public bool TryClearDefaultSignatures(out string message)
+    public bool TryClearDefaultSignatures(OutlookAccount account, out string message)
     {
-        if (TrySetDefaultSignaturesViaWord(string.Empty, true, true, out message))
+        if (account == null)
         {
-            return true;
+            message = "Account Outlook non valido.";
+            return false;
         }
 
-        return TryClearDefaultSignaturesViaRegistry(out message);
+        return TryClearDefaultSignaturesViaRegistry(account, out message);
     }
 
-    public bool TryGetDefaultSignatures(out string? newSignature, out string? replySignature, out string message)
+    public bool TryGetDefaultSignatures(OutlookAccount account, out string? newSignature, out string? replySignature, out string message)
     {
         newSignature = null;
         replySignature = null;
+
+        if (account == null)
+        {
+            message = "Account Outlook non valido.";
+            return false;
+        }
 
         try
         {
@@ -58,18 +68,20 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            using var key = Registry.CurrentUser.OpenSubKey(
-                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
-                writable: false);
-
-            if (key == null)
+            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
             {
-                message = "Impostazioni Outlook non disponibili.";
                 return false;
             }
 
-            newSignature = key.GetValue("NewSignature") as string;
-            replySignature = key.GetValue("ReplySignature") as string;
+            using var key = Registry.CurrentUser.OpenSubKey(accountKeyPath, writable: false);
+            if (key == null)
+            {
+                message = "Impostazioni account Outlook non disponibili.";
+                return false;
+            }
+
+            newSignature = key.GetValue("New Signature") as string;
+            replySignature = key.GetValue("Reply-Forward Signature") as string;
             message = "OK";
             return true;
         }
@@ -81,8 +93,14 @@ public class OutlookSignatureDefaultsService
         }
     }
 
-    public bool CanWriteDefaultSignatureRegistry(out string message)
+    public bool CanWriteDefaultSignatureRegistry(OutlookAccount account, out string message)
     {
+        if (account == null)
+        {
+            message = "Account Outlook non valido.";
+            return false;
+        }
+
         try
         {
             var version = ResolveOutlookVersion();
@@ -92,9 +110,12 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            using var key = Registry.CurrentUser.CreateSubKey(
-                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
-                writable: true);
+            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
+            {
+                return false;
+            }
+
+            using var key = Registry.CurrentUser.CreateSubKey(accountKeyPath, writable: true);
 
             if (key == null)
             {
@@ -113,72 +134,8 @@ public class OutlookSignatureDefaultsService
         }
     }
 
-    private bool TrySetDefaultSignaturesViaWord(
-        string signatureName,
-        bool setNewMessages,
-        bool setReplies,
-        out string message)
-    {
-        dynamic? wordApp = null;
-
-        try
-        {
-            var wordType = Type.GetTypeFromProgID("Word.Application");
-            if (wordType == null)
-            {
-                message = "Microsoft Word non è installato o non accessibile.";
-                return false;
-            }
-
-            wordApp = Activator.CreateInstance(wordType);
-            if (wordApp == null)
-            {
-                message = "Impossibile creare istanza di Word.";
-                return false;
-            }
-
-            wordApp.Visible = false;
-
-            var emailSignature = wordApp.EmailOptions.EmailSignature;
-
-            if (setNewMessages)
-            {
-                emailSignature.NewMessageSignature = signatureName;
-                _logger.Log($"Firma predefinita per nuovi messaggi impostata (Word): {signatureName}");
-            }
-
-            if (setReplies)
-            {
-                emailSignature.ReplyMessageSignature = signatureName;
-                _logger.Log($"Firma predefinita per risposte/inoltri impostata (Word): {signatureName}");
-            }
-
-            message = "Impostazioni predefinite aggiornate.";
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Errore impostazione firma predefinita via Word", ex);
-            message = $"Errore durante l'aggiornamento: {ex.Message}";
-            return false;
-        }
-        finally
-        {
-            if (wordApp != null)
-            {
-                try
-                {
-                    wordApp.Quit(false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Errore chiusura Word dopo impostazione firma: {ex.Message}");
-                }
-            }
-        }
-    }
-
     private bool TrySetDefaultSignaturesViaRegistry(
+        OutlookAccount account,
         string signatureName,
         bool setNewMessages,
         bool setReplies,
@@ -193,9 +150,12 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            using var key = Registry.CurrentUser.CreateSubKey(
-                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
-                writable: true);
+            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
+            {
+                return false;
+            }
+
+            using var key = Registry.CurrentUser.CreateSubKey(accountKeyPath, writable: true);
 
             if (key == null)
             {
@@ -205,14 +165,14 @@ public class OutlookSignatureDefaultsService
 
             if (setNewMessages)
             {
-                key.SetValue("NewSignature", signatureName);
-                _logger.Log($"Firma predefinita per nuovi messaggi impostata: {signatureName}");
+                key.SetValue("New Signature", signatureName);
+                _logger.Log($"Firma predefinita per nuovi messaggi impostata ({account.DisplayText}): {signatureName}");
             }
 
             if (setReplies)
             {
-                key.SetValue("ReplySignature", signatureName);
-                _logger.Log($"Firma predefinita per risposte/inoltri impostata: {signatureName}");
+                key.SetValue("Reply-Forward Signature", signatureName);
+                _logger.Log($"Firma predefinita per risposte/inoltri impostata ({account.DisplayText}): {signatureName}");
             }
 
             message = "Impostazioni predefinite aggiornate.";
@@ -226,7 +186,7 @@ public class OutlookSignatureDefaultsService
         }
     }
 
-    private bool TryClearDefaultSignaturesViaRegistry(out string message)
+    private bool TryClearDefaultSignaturesViaRegistry(OutlookAccount account, out string message)
     {
         try
         {
@@ -237,9 +197,12 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            using var key = Registry.CurrentUser.CreateSubKey(
-                $@"Software\Microsoft\Office\{version}\Common\MailSettings",
-                writable: true);
+            if (!TryGetAccountRegistryKeyPath(version, account, out var accountKeyPath, out message))
+            {
+                return false;
+            }
+
+            using var key = Registry.CurrentUser.CreateSubKey(accountKeyPath, writable: true);
 
             if (key == null)
             {
@@ -247,10 +210,10 @@ public class OutlookSignatureDefaultsService
                 return false;
             }
 
-            key.DeleteValue("NewSignature", throwOnMissingValue: false);
-            key.DeleteValue("ReplySignature", throwOnMissingValue: false);
+            key.DeleteValue("New Signature", throwOnMissingValue: false);
+            key.DeleteValue("Reply-Forward Signature", throwOnMissingValue: false);
 
-            _logger.Log("Impostazioni firma predefinita rimosse dal registro.");
+            _logger.Log($"Impostazioni firma predefinita rimosse dal registro per {account.DisplayText}.");
             message = "Impostazioni predefinite rimosse.";
             return true;
         }
@@ -260,6 +223,144 @@ public class OutlookSignatureDefaultsService
             message = $"Errore durante la rimozione: {ex.Message}";
             return false;
         }
+    }
+
+    private bool TryGetAccountRegistryKeyPath(string version, OutlookAccount account, out string accountKeyPath, out string message)
+    {
+        accountKeyPath = string.Empty;
+
+        var profileName = ResolveDefaultProfileName(version);
+        if (string.IsNullOrWhiteSpace(profileName))
+        {
+            message = "Profilo Outlook non rilevato.";
+            return false;
+        }
+
+        var profileRootPath = $@"Software\Microsoft\Office\{version}\Outlook\Profiles\{profileName}";
+        var accountsRootPath = $@"{profileRootPath}\9375CFF0413111d3B88A00104B2A6676";
+
+        var identifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            account.SmtpAddress,
+            account.OwnerSmtpAddress,
+            account.DisplayName
+        }.Where(value => !string.IsNullOrWhiteSpace(value)).ToList();
+
+        if (identifiers.Count == 0)
+        {
+            message = "Identificativo account non disponibile per la ricerca nel registro.";
+            return false;
+        }
+
+        string? matchPath = null;
+
+        matchPath = FindAccountKeyPath(accountsRootPath, identifiers);
+
+        if (matchPath == null)
+        {
+            matchPath = FindAccountKeyPath(profileRootPath, identifiers);
+        }
+
+        if (matchPath == null)
+        {
+            message = "Impossibile associare l'account selezionato al profilo Outlook.";
+            return false;
+        }
+
+        accountKeyPath = matchPath;
+        message = "OK";
+        return true;
+    }
+
+    private static string? FindAccountKeyPath(string rootPath, IReadOnlyCollection<string> identifiers)
+    {
+        var queue = new Queue<string>();
+        queue.Enqueue(rootPath);
+
+        while (queue.Count > 0)
+        {
+            var currentPath = queue.Dequeue();
+            using var currentKey = Registry.CurrentUser.OpenSubKey(currentPath, writable: false);
+            if (currentKey == null)
+            {
+                continue;
+            }
+
+            if (IsAccountMatch(currentKey, identifiers))
+            {
+                return currentPath;
+            }
+
+            foreach (var subKeyName in currentKey.GetSubKeyNames())
+            {
+                var subKeyPath = $@"{currentPath}\{subKeyName}";
+                queue.Enqueue(subKeyPath);
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsAccountMatch(RegistryKey key, IReadOnlyCollection<string> identifiers)
+    {
+        var valueNames = key.GetValueNames();
+        foreach (var valueName in valueNames)
+        {
+            if (!valueName.Equals("001f3001", StringComparison.OrdinalIgnoreCase) &&
+                !valueName.Equals("001f39fe", StringComparison.OrdinalIgnoreCase) &&
+                !valueName.Equals("001e3001", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var value = key.GetValue(valueName) as string;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            foreach (var identifier in identifiers)
+            {
+                if (value.Equals(identifier, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private string? ResolveDefaultProfileName(string version)
+    {
+        try
+        {
+            using var outlookKey = Registry.CurrentUser.OpenSubKey(
+                $@"Software\Microsoft\Office\{version}\Outlook",
+                writable: false);
+
+            var defaultProfile = outlookKey?.GetValue("DefaultProfile") as string;
+            if (!string.IsNullOrWhiteSpace(defaultProfile))
+            {
+                return defaultProfile;
+            }
+
+            using var profilesKey = Registry.CurrentUser.OpenSubKey(
+                $@"Software\Microsoft\Office\{version}\Outlook\Profiles",
+                writable: false);
+
+            var profileNames = profilesKey?.GetSubKeyNames();
+            if (profileNames != null && profileNames.Length > 0)
+            {
+                return profileNames[0];
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Errore risoluzione profilo Outlook: {ex.Message}");
+        }
+
+        return null;
     }
 
     private string? ResolveOutlookVersion()

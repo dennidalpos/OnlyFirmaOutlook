@@ -328,7 +328,7 @@
                                    Text="Accesso registro: N/D"
                                    Foreground="#605E5C" FontSize="11" Margin="0,4,0,0"/>
                         <TextBlock x:Name="DefaultSignatureHintText"
-                                   Text="Disponibile solo se Outlook è installato e la firma viene salvata nella cartella predefinita."
+                               Text="Disponibile solo se Outlook è installato, la firma è salvata nella cartella predefinita e hai selezionato un account."
                                    Foreground="#A19F9D" FontSize="11" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Expander>
