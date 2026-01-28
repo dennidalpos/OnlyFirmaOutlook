@@ -11,7 +11,7 @@ namespace OnlyFirmaOutlook.Services;
 /// </summary>
 public class WordHtmlSignatureNormalizer
 {
-    public string Normalize(string html)
+    public string Normalize(string html, bool fixOutlook2512 = true)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(html);
@@ -24,7 +24,11 @@ public class WordHtmlSignatureNormalizer
 
         RemoveNonRenderingElements(workingDoc);
         CleanupStyles(workingDoc);
-        FixTableBordersForOutlook2512(workingDoc);
+
+        if (fixOutlook2512)
+        {
+            FixTableBordersForOutlook2512(workingDoc);
+        }
 
         return workingDoc.DocumentNode.InnerHtml;
     }

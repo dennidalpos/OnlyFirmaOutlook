@@ -50,12 +50,14 @@ public class WordConversionService
         string sourceDocPath,
         string destinationFolder,
         string signatureName,
-        bool useFilteredHtml = true)
+        bool useFilteredHtml = true,
+        bool fixOutlook2512 = true)
     {
         _logger.Log($"Avvio conversione documento: {sourceDocPath}");
         _logger.Log($"Cartella destinazione: {destinationFolder}");
         _logger.Log($"Nome firma: {signatureName}");
         _logger.Log($"Tipo HTML: {(useFilteredHtml ? "Filtrato" : "Completo")}");
+        _logger.Log($"Fix Outlook 2512: {(fixOutlook2512 ? "Attivo" : "Disattivo")}");
 
         var result = new ConversionResult();
         dynamic? wordApp = null;
@@ -212,7 +214,7 @@ public class WordConversionService
                 }
 
                 var inlined = cssInliner.InlineCss(html);
-                var normalized = normalizer.Normalize(inlined);
+                var normalized = normalizer.Normalize(inlined, fixOutlook2512);
 
                 var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
                 var assetResult = assetManager.ProcessImages(normalized, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false, embedImages: true);

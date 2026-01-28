@@ -990,15 +990,16 @@ public partial class MainWindow : Window
         try
         {
             var useFilteredHtml = FilteredHtmlRadio.IsChecked ?? false;
+            var fixOutlook2512 = FixOutlook2512CheckBox.IsChecked ?? true;
 
-            
             var conversionResult = await Task.Run(() =>
             {
                 return _signatureWorkflowService.ConvertDocument(
                     _selectedFilePath,
                     destinationFolder,
                     finalSignatureName,
-                    useFilteredHtml);
+                    useFilteredHtml,
+                    fixOutlook2512);
             });
 
             if (conversionResult.Success)

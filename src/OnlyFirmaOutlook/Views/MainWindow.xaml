@@ -244,12 +244,19 @@
                 </GroupBox>
 
                 
-                <GroupBox x:Name="Step5Group" Header="5. Formato HTML" Style="{StaticResource StepGroupBoxStyle}">
+                <GroupBox x:Name="Step5Group" Header="5. Opzioni export" Style="{StaticResource StepGroupBoxStyle}">
                     <StackPanel>
+                        <TextBlock Text="Formato HTML:" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <RadioButton x:Name="FilteredHtmlRadio" Content="HTML Filtrato"
                                      GroupName="HtmlType"/>
                         <RadioButton x:Name="CompleteHtmlRadio" Content="HTML Completo (consigliato)"
                                      IsChecked="True" GroupName="HtmlType"/>
+
+                        <TextBlock Text="Correzioni:" FontWeight="SemiBold" Margin="0,12,0,4"/>
+                        <CheckBox x:Name="FixOutlook2512CheckBox"
+                                  Content="Fix bordi tabelle Outlook 2512+"
+                                  IsChecked="True"
+                                  ToolTip="Corregge il bug di Outlook Classic 2512+ che aggiunge bordi indesiderati alle tabelle nelle firme"/>
                     </StackPanel>
                 </GroupBox>
 

@@ -61,8 +61,9 @@ public class SignatureWorkflowService
         string sourceDocPath,
         string destinationFolder,
         string signatureName,
-        bool useFilteredHtml)
+        bool useFilteredHtml,
+        bool fixOutlook2512 = true)
     {
-        return _wordConversionService.ConvertDocument(sourceDocPath, destinationFolder, signatureName, useFilteredHtml);
+        return _wordConversionService.ConvertDocument(sourceDocPath, destinationFolder, signatureName, useFilteredHtml, fixOutlook2512);
     }
 }
