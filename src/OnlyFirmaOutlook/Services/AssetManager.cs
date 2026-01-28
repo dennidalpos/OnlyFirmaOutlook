@@ -23,6 +23,10 @@ public class AssetManager
 
         var imgNodes = doc.DocumentNode.SelectNodes("//img[@src]");
         var vmlNodes = doc.DocumentNode.SelectNodes("//*[@o:href or @v:href or @xlink:href]");
+        var vmlImageNodes = doc.DocumentNode.Descendants()
+            .Where(node => node.Name.Contains("imagedata", StringComparison.OrdinalIgnoreCase)
+                           && node.Attributes["src"] != null)
+            .ToList();
         var baseDir = Path.GetDirectoryName(sourceHtmlPath) ?? string.Empty;
         var pathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -41,6 +45,14 @@ public class AssetManager
                 ProcessAttribute(node, "o:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
                 ProcessAttribute(node, "v:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
                 ProcessAttribute(node, "xlink:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+            }
+        }
+
+        if (vmlImageNodes.Count > 0)
+        {
+            foreach (var node in vmlImageNodes)
+            {
+                ProcessAttribute(node, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
             }
         }
 
