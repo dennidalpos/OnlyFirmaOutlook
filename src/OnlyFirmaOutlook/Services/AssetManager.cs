@@ -63,6 +63,15 @@ public class AssetManager
 
     private static string? ResolveImagePath(string srcValue, string baseDir)
     {
+        var normalized = Uri.UnescapeDataString(srcValue.Trim());
+
+        if (normalized.StartsWith("file:", StringComparison.OrdinalIgnoreCase) &&
+            Uri.TryCreate(normalized, UriKind.Absolute, out var normalizedUri) &&
+            normalizedUri.IsFile)
+        {
+            return normalizedUri.LocalPath;
+        }
+
         if (srcValue.StartsWith("file:", StringComparison.OrdinalIgnoreCase) &&
             Uri.TryCreate(srcValue, UriKind.Absolute, out var uri) &&
             uri.IsFile)
@@ -70,12 +79,12 @@ public class AssetManager
             return uri.LocalPath;
         }
 
-        if (Path.IsPathRooted(srcValue))
+        if (Path.IsPathRooted(normalized))
         {
-            return srcValue;
+            return normalized;
         }
 
-        var combined = Path.Combine(baseDir, srcValue);
+        var combined = Path.Combine(baseDir, normalized);
         return combined;
     }
 
