@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
@@ -85,12 +86,43 @@ public class WordHtmlSignatureNormalizer
     private static string CleanStyle(string styleValue)
     {
         var parts = styleValue.Split(';', StringSplitOptions.RemoveEmptyEntries)
-            .Select(part => part.Trim())
-            .Where(part => !part.StartsWith("mso-", StringComparison.OrdinalIgnoreCase)
-                && !part.Contains("tab-stops", StringComparison.OrdinalIgnoreCase)
-                && !part.StartsWith("font-variant", StringComparison.OrdinalIgnoreCase));
+            .Select(part => part.Trim());
 
-        return string.Join("; ", parts);
+        var cleanedParts = new List<string>();
+        var hasMsoHide = false;
+        var hasDisplayNone = false;
+
+        foreach (var part in parts)
+        {
+            if (part.StartsWith("mso-hide", StringComparison.OrdinalIgnoreCase))
+            {
+                hasMsoHide = true;
+                cleanedParts.Add(part);
+                continue;
+            }
+
+            if (part.StartsWith("display", StringComparison.OrdinalIgnoreCase)
+                && part.Contains("none", StringComparison.OrdinalIgnoreCase))
+            {
+                hasDisplayNone = true;
+            }
+
+            if (part.StartsWith("mso-", StringComparison.OrdinalIgnoreCase)
+                || part.Contains("tab-stops", StringComparison.OrdinalIgnoreCase)
+                || part.StartsWith("font-variant", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            cleanedParts.Add(part);
+        }
+
+        if (hasMsoHide && !hasDisplayNone)
+        {
+            cleanedParts.Add("display:none");
+        }
+
+        return string.Join("; ", cleanedParts);
     }
 
     private static void AppendInlineStyle(HtmlNode node, string styleFragment)
