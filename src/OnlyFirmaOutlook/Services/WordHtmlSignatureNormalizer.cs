@@ -105,6 +105,7 @@ public class WordHtmlSignatureNormalizer
 
             EnsureDisplayNone(table);
             RemoveTableBorders(table);
+            RemoveTableBorders(table.Descendants());
         }
     }
 
@@ -188,9 +189,7 @@ public class WordHtmlSignatureNormalizer
 
     private static void RemoveTableBorders(HtmlNode table)
     {
-        table.Attributes.Remove("border");
-        table.Attributes.Remove("cellspacing");
-        table.Attributes.Remove("cellpadding");
+        RemoveTableBorderAttributes(table);
 
         var style = table.GetAttributeValue("style", string.Empty);
         if (!string.IsNullOrWhiteSpace(style))
@@ -200,6 +199,43 @@ public class WordHtmlSignatureNormalizer
         }
 
         AppendInlineStyleIfMissing(table, "border:none; border-collapse:collapse; border-spacing:0;", "border");
+    }
+
+    private static void RemoveTableBorders(IEnumerable<HtmlNode> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.Name is not ("table" or "tr" or "td" or "th"))
+            {
+                continue;
+            }
+
+            RemoveTableBorderAttributes(node);
+
+            var style = node.GetAttributeValue("style", string.Empty);
+            if (!string.IsNullOrWhiteSpace(style))
+            {
+                var cleaned = RemoveBorderStyles(style);
+                if (string.IsNullOrWhiteSpace(cleaned))
+                {
+                    node.Attributes.Remove("style");
+                }
+                else
+                {
+                    node.SetAttributeValue("style", cleaned);
+                }
+            }
+        }
+    }
+
+    private static void RemoveTableBorderAttributes(HtmlNode node)
+    {
+        node.Attributes.Remove("border");
+        node.Attributes.Remove("cellspacing");
+        node.Attributes.Remove("cellpadding");
+        node.Attributes.Remove("bordercolor");
+        node.Attributes.Remove("bordercolorlight");
+        node.Attributes.Remove("bordercolordark");
     }
 
     private static string RemoveBorderStyles(string styleValue)
