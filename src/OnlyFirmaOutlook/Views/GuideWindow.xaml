@@ -22,7 +22,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="2) Configura nome e account:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Inserisci un nome chiaro per la firma. Se Outlook è configurato, seleziona l'account o la mailbox condivisa; altrimenti inserisci un identificativo (es. email o nome utente) per differenziare le firme. L'identificativo viene aggiunto al nome finale della firma."/>
+                    <Run Text="Inserisci un nome chiaro per la firma. Se Outlook è configurato, seleziona l'account; altrimenti inserisci un identificativo (es. email o nome utente) per differenziare le firme. L'identificativo viene aggiunto al nome finale della firma."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="3) Verifica la cartella di destinazione:" FontWeight="SemiBold"/>
@@ -52,12 +52,12 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="8) Converti e salva la firma:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Premi 'Converti e salva firma'. L'app genera HTML/RTF/TXT e ricostruisce gli asset delle immagini."/>
+                    <Run Text="Premi 'Converti e salva firma'. L'app genera HTML/RTF/TXT, ricostruisce gli asset delle immagini e apre la cartella di destinazione al termine."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="9) Verifica in Outlook (classic):" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e imposta manualmente la firma per nuovi messaggi e risposte/inoltri."/>
+                    <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e imposta la nuova firma come predefinita. In alternativa, puoi usare l'opzione 'Imposta firma predefinita' nella schermata principale o rimuovere le impostazioni predefinite se vuoi modificare la firma da Outlook."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap">
                     <Run Text="10) Pulizia automatica e log:" FontWeight="SemiBold"/>

@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Runtime.InteropServices;
 using OnlyFirmaOutlook.Models;
 
@@ -39,7 +38,6 @@ public class OutlookAccountService
         dynamic? outlookApp = null;
         dynamic? session = null;
         dynamic? accounts = null;
-        dynamic? stores = null;
 
         try
         {
@@ -93,8 +91,6 @@ public class OutlookAccountService
             _logger.Log($"Trovati {accountCount} account");
 
             
-            var accountStoreIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
             for (int i = 1; i <= accountCount; i++)
             {
                 dynamic? account = null;
@@ -103,32 +99,11 @@ public class OutlookAccountService
                     account = accounts.Item(i);
                     if (account != null)
                     {
-                        string storeId = string.Empty;
-                        try
-                        {
-                            dynamic? deliveryStore = account.DeliveryStore;
-                            if (deliveryStore != null)
-                            {
-                                storeId = deliveryStore.StoreID ?? string.Empty;
-                                if (!string.IsNullOrEmpty(storeId))
-                                {
-                                    accountStoreIds.Add(storeId);
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            storeId = string.Empty;
-                        }
-
                         var outlookAccount = new OutlookAccount
                         {
                             DisplayName = account.DisplayName ?? "Account senza nome",
                             SmtpAddress = account.SmtpAddress ?? string.Empty,
-                            AccountType = GetAccountTypeName(account.AccountType),
-                            StoreId = storeId,
-                            OwnerSmtpAddress = account.SmtpAddress ?? string.Empty,
-                            IsSharedMailbox = false
+                            AccountType = GetAccountTypeName(account.AccountType)
                         };
 
                         result.Accounts.Add(outlookAccount);
@@ -147,75 +122,6 @@ public class OutlookAccountService
                         catch {  }
                     }
                 }
-            }
-
-            try
-            {
-                stores = session.Stores;
-                if (stores != null)
-                {
-                    int storeCount = stores.Count;
-                    _logger.Log($"Trovati {storeCount} store Outlook");
-
-                    for (int i = 1; i <= storeCount; i++)
-                    {
-                        dynamic? store = null;
-                        try
-                        {
-                            store = stores.Item(i);
-                            if (store == null)
-                            {
-                                continue;
-                            }
-
-                            string storeId = store.StoreID ?? string.Empty;
-                            if (!string.IsNullOrEmpty(storeId) && accountStoreIds.Contains(storeId))
-                            {
-                                continue;
-                            }
-
-                            var displayName = store.DisplayName ?? "Mailbox condivisa";
-                            var smtpAddress = TryGetStoreSmtpAddress(store) ?? string.Empty;
-
-                            if (result.Accounts.Any(existing =>
-                                    (!string.IsNullOrEmpty(smtpAddress) &&
-                                     existing.SmtpAddress.Equals(smtpAddress, StringComparison.OrdinalIgnoreCase)) ||
-                                    existing.DisplayName.Equals(displayName, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-
-                            var sharedMailbox = new OutlookAccount
-                            {
-                                DisplayName = displayName,
-                                SmtpAddress = smtpAddress,
-                                AccountType = "Mailbox condivisa",
-                                StoreId = storeId,
-                                OwnerSmtpAddress = smtpAddress,
-                                IsSharedMailbox = true
-                            };
-
-                            result.Accounts.Add(sharedMailbox);
-                            _logger.Log($"Mailbox condivisa trovata: {sharedMailbox.DisplayText}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning($"Errore lettura store {i}: {ex.Message}");
-                        }
-                        finally
-                        {
-                            if (store != null)
-                            {
-                                try { Marshal.FinalReleaseComObject(store); }
-                                catch { }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"Errore lettura store Outlook: {ex.Message}");
             }
 
             _logger.Log($"Totale account caricati: {result.Accounts.Count}");
@@ -239,7 +145,8 @@ public class OutlookAccountService
         }
         finally
         {
-            CleanupComObjects(stores, accounts, session, outlookApp);
+            
+            CleanupComObjects(accounts, session, outlookApp);
         }
 
         return result;
@@ -248,22 +155,9 @@ public class OutlookAccountService
     
     
     
-    private void CleanupComObjects(dynamic? stores, dynamic? accounts, dynamic? session, dynamic? outlookApp)
+    private void CleanupComObjects(dynamic? accounts, dynamic? session, dynamic? outlookApp)
     {
         _logger.Log("Cleanup oggetti COM Outlook...");
-
-        try
-        {
-            if (stores != null)
-            {
-                try { Marshal.FinalReleaseComObject(stores); }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Errore rilascio stores COM: {ex.Message}");
-                }
-            }
-        }
-        catch { }
 
         try
         {
@@ -309,28 +203,6 @@ public class OutlookAccountService
         GC.WaitForPendingFinalizers();
 
         _logger.Log("Cleanup COM Outlook completato");
-    }
-
-    private string? TryGetStoreSmtpAddress(dynamic store)
-    {
-        try
-        {
-            dynamic? propertyAccessor = store.PropertyAccessor;
-            if (propertyAccessor != null)
-            {
-                const string smtpTag = "http://schemas.microsoft.com/mapi/proptag/0x39FE001E";
-                var smtp = propertyAccessor.GetProperty(smtpTag) as string;
-                if (!string.IsNullOrWhiteSpace(smtp))
-                {
-                    return smtp;
-                }
-            }
-        }
-        catch
-        {
-        }
-
-        return null;
     }
 
     
