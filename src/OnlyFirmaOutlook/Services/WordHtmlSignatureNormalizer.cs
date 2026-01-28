@@ -23,7 +23,7 @@ public class WordHtmlSignatureNormalizer
         var container = new HtmlDocument();
         container.LoadHtml("<div></div>");
         var root = container.DocumentNode.FirstChild;
-        root.SetAttributeValue("style", "font-family:Calibri, Arial, sans-serif;font-size:12px;line-height:1.3;");
+        root.SetAttributeValue("style", "font-family:Calibri, Arial, sans-serif;font-size:11pt;line-height:1.3;mso-line-height-rule:exactly;");
         root.InnerHtml = workingDoc.DocumentNode.InnerHtml;
 
         return root.OuterHtml;

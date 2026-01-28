@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Runtime.InteropServices;
 using OnlyFirmaOutlook.Models;
 
@@ -38,6 +39,7 @@ public class OutlookAccountService
         dynamic? outlookApp = null;
         dynamic? session = null;
         dynamic? accounts = null;
+        dynamic? stores = null;
 
         try
         {
@@ -124,6 +126,74 @@ public class OutlookAccountService
                 }
             }
 
+            var accountIdentifiers = BuildAccountIdentifiers(result.Accounts);
+
+            
+            stores = session.Stores;
+            if (stores != null)
+            {
+                int storeCount = stores.Count;
+                _logger.Log($"Trovati {storeCount} store Outlook");
+
+                for (int i = 1; i <= storeCount; i++)
+                {
+                    dynamic? store = null;
+                    try
+                    {
+                        store = stores.Item(i);
+                        if (store == null)
+                        {
+                            continue;
+                        }
+
+                        var displayName = store.DisplayName ?? string.Empty;
+                        if (string.IsNullOrWhiteSpace(displayName))
+                        {
+                            continue;
+                        }
+
+                        if (accountIdentifiers.Contains(displayName))
+                        {
+                            continue;
+                        }
+
+                        if (!IsDelegatedStore(store))
+                        {
+                            continue;
+                        }
+
+                        var delegatedAccount = new OutlookAccount
+                        {
+                            DisplayName = displayName,
+                            SmtpAddress = string.Empty,
+                            AccountType = "Delega",
+                            IsDelegate = true
+                        };
+
+                        result.Accounts.Add(delegatedAccount);
+                        accountIdentifiers.Add(displayName);
+                        _logger.Log($"Delega trovata: {delegatedAccount.DisplayText}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"Errore lettura store {i}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        if (store != null)
+                        {
+                            try { Marshal.FinalReleaseComObject(store); }
+                            catch { }
+                        }
+                    }
+                }
+            }
+
+            result.Accounts = result.Accounts
+                .OrderBy(account => account.IsDelegate)
+                .ThenBy(account => account.DisplayText)
+                .ToList();
+
             _logger.Log($"Totale account caricati: {result.Accounts.Count}");
         }
         catch (COMException comEx)
@@ -146,7 +216,7 @@ public class OutlookAccountService
         finally
         {
             
-            CleanupComObjects(accounts, session, outlookApp);
+            CleanupComObjects(accounts, stores, session, outlookApp);
         }
 
         return result;
@@ -155,7 +225,7 @@ public class OutlookAccountService
     
     
     
-    private void CleanupComObjects(dynamic? accounts, dynamic? session, dynamic? outlookApp)
+    private void CleanupComObjects(dynamic? accounts, dynamic? stores, dynamic? session, dynamic? outlookApp)
     {
         _logger.Log("Cleanup oggetti COM Outlook...");
 
@@ -171,6 +241,19 @@ public class OutlookAccountService
             }
         }
         catch {  }
+
+        try
+        {
+            if (stores != null)
+            {
+                try { Marshal.FinalReleaseComObject(stores); }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"Errore rilascio stores COM: {ex.Message}");
+                }
+            }
+        }
+        catch { }
 
         try
         {
@@ -203,6 +286,38 @@ public class OutlookAccountService
         GC.WaitForPendingFinalizers();
 
         _logger.Log("Cleanup COM Outlook completato");
+    }
+
+    private static HashSet<string> BuildAccountIdentifiers(IEnumerable<OutlookAccount> accounts)
+    {
+        var identifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var account in accounts)
+        {
+            if (!string.IsNullOrWhiteSpace(account.DisplayName))
+            {
+                identifiers.Add(account.DisplayName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(account.SmtpAddress))
+            {
+                identifiers.Add(account.SmtpAddress);
+            }
+        }
+
+        return identifiers;
+    }
+
+    private static bool IsDelegatedStore(dynamic store)
+    {
+        try
+        {
+            var exchangeStoreType = (int)store.ExchangeStoreType;
+            return exchangeStoreType == 1;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     

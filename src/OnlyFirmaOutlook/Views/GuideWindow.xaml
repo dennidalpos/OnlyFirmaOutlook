@@ -57,7 +57,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="9) Verifica in Outlook (classic):" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e imposta la nuova firma come predefinita. In alternativa, puoi usare l'opzione 'Imposta firma predefinita' nella schermata principale o rimuovere le impostazioni predefinite se vuoi modificare la firma da Outlook."/>
+                    <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e imposta la nuova firma come predefinita. Verifica che la firma risulti corretta nelle email di prova."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap">
                     <Run Text="10) Pulizia automatica e log:" FontWeight="SemiBold"/>
