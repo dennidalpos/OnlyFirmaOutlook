@@ -9,8 +9,9 @@ public class WordHtmlSignatureNormalizer
 {
     public string Normalize(string html)
     {
+        var correctedHtml = ApplyManualBorderFixes(html);
         var doc = new HtmlDocument();
-        doc.LoadHtml(html);
+        doc.LoadHtml(correctedHtml);
 
         var bodyNode = doc.DocumentNode.SelectSingleNode("//body");
         var workingHtml = bodyNode?.InnerHtml ?? doc.DocumentNode.InnerHtml;
@@ -20,6 +21,8 @@ public class WordHtmlSignatureNormalizer
 
         RemoveUnsafeNodes(workingDoc);
         NormalizeNodes(workingDoc);
+        NormalizeTableGridClasses(workingDoc);
+        NormalizeTableBorders(workingDoc);
         NormalizeHiddenTables(workingDoc);
 
         var container = new HtmlDocument();
@@ -109,6 +112,63 @@ public class WordHtmlSignatureNormalizer
         }
     }
 
+    private static void NormalizeTableGridClasses(HtmlDocument doc)
+    {
+        var tableNodes = doc.DocumentNode.SelectNodes("//table");
+        if (tableNodes == null)
+        {
+            return;
+        }
+
+        foreach (var table in tableNodes)
+        {
+            var classValue = table.GetAttributeValue("class", string.Empty);
+            if (!classValue.Contains("MsoTableGrid", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var cleaned = string.Join(' ', classValue
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Where(value => !value.Equals("MsoTableGrid", StringComparison.OrdinalIgnoreCase)));
+
+            if (string.IsNullOrWhiteSpace(cleaned))
+            {
+                table.Attributes.Remove("class");
+            }
+            else
+            {
+                table.SetAttributeValue("class", cleaned);
+            }
+        }
+    }
+
+    private static void NormalizeTableBorders(HtmlDocument doc)
+    {
+        var tableNodes = doc.DocumentNode.SelectNodes("//table");
+        if (tableNodes == null)
+        {
+            return;
+        }
+
+        foreach (var table in tableNodes)
+        {
+            if (!HasBorderIndicators(table))
+            {
+                var hasBorderInCells = table
+                    .Descendants()
+                    .Any(node => node.Name is "tr" or "td" or "th" && HasBorderIndicators(node));
+
+                if (!hasBorderInCells)
+                {
+                    continue;
+                }
+            }
+
+            ApplyBorderReset(table);
+        }
+    }
+
     private static string CleanStyle(string styleValue)
     {
         var parts = styleValue.Split(';', StringSplitOptions.RemoveEmptyEntries)
@@ -172,6 +232,19 @@ public class WordHtmlSignatureNormalizer
         return false;
     }
 
+    private static string ApplyManualBorderFixes(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+        {
+            return html;
+        }
+
+        return html
+            .Replace("mso-border-alt:solid", "mso-border-alt:none", StringComparison.OrdinalIgnoreCase)
+            .Replace("border:solid", "border:none", StringComparison.OrdinalIgnoreCase)
+            .Replace("border-style:solid", "border-style:none", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void EnsureDisplayNone(HtmlNode node)
     {
         var style = node.GetAttributeValue("style", string.Empty);
@@ -199,6 +272,51 @@ public class WordHtmlSignatureNormalizer
         }
 
         AppendInlineStyleIfMissing(table, "border:none; border-collapse:collapse; border-spacing:0;", "border");
+    }
+
+    private static void ApplyBorderReset(HtmlNode table)
+    {
+        RemoveTableBorderAttributes(table);
+        table.SetAttributeValue("border", "0");
+        table.SetAttributeValue("cellspacing", "0");
+        table.SetAttributeValue("cellpadding", "0");
+
+        var style = table.GetAttributeValue("style", string.Empty);
+        if (!string.IsNullOrWhiteSpace(style))
+        {
+            var cleaned = RemoveBorderStyles(style);
+            if (string.IsNullOrWhiteSpace(cleaned))
+            {
+                table.Attributes.Remove("style");
+            }
+            else
+            {
+                table.SetAttributeValue("style", cleaned);
+            }
+        }
+
+        AppendInlineStyleIfMissing(table, "border:none; border-collapse:collapse; border-spacing:0;", "border");
+
+        foreach (var node in table.Descendants().Where(n => n.Name is "table" or "tr" or "td" or "th"))
+        {
+            RemoveTableBorderAttributes(node);
+
+            var nodeStyle = node.GetAttributeValue("style", string.Empty);
+            if (!string.IsNullOrWhiteSpace(nodeStyle))
+            {
+                var cleaned = RemoveBorderStyles(nodeStyle);
+                if (string.IsNullOrWhiteSpace(cleaned))
+                {
+                    node.Attributes.Remove("style");
+                }
+                else
+                {
+                    node.SetAttributeValue("style", cleaned);
+                }
+            }
+
+            AppendInlineStyleIfMissing(node, "border:none;", "border");
+        }
     }
 
     private static void RemoveTableBorders(IEnumerable<HtmlNode> nodes)
@@ -250,6 +368,24 @@ public class WordHtmlSignatureNormalizer
             && !part.StartsWith("border-spacing", StringComparison.OrdinalIgnoreCase));
 
         return string.Join("; ", keptParts);
+    }
+
+    private static bool HasBorderIndicators(HtmlNode node)
+    {
+        var classValue = node.GetAttributeValue("class", string.Empty);
+        if (classValue.Contains("MsoTableGrid", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var style = node.GetAttributeValue("style", string.Empty);
+        if (style.Contains("mso-border", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return style.Contains("border:solid", StringComparison.OrdinalIgnoreCase)
+               || style.Contains("border-style:solid", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AppendInlineStyleIfMissing(HtmlNode node, string styleFragment, string propertyName)
