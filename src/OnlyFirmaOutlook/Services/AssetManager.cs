@@ -22,6 +22,7 @@ public class AssetManager
         doc.LoadHtml(html);
 
         var imgNodes = doc.DocumentNode.SelectNodes("//img[@src]");
+        var vmlImageNodes = doc.DocumentNode.SelectNodes("//v:imagedata[@src]");
         var vmlNodes = doc.DocumentNode.SelectNodes("//*[@o:href or @v:href or @xlink:href]");
         var baseDir = Path.GetDirectoryName(sourceHtmlPath) ?? string.Empty;
         var pathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -31,6 +32,14 @@ public class AssetManager
             foreach (var img in imgNodes)
             {
                 ProcessAttribute(img, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+            }
+        }
+
+        if (vmlImageNodes != null)
+        {
+            foreach (var vmlImage in vmlImageNodes)
+            {
+                ProcessAttribute(vmlImage, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
             }
         }
 
@@ -83,10 +92,18 @@ public class AssetManager
         }
 
         if (srcValue.StartsWith("cid:", StringComparison.OrdinalIgnoreCase) ||
-            srcValue.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
             srcValue.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             srcValue.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
+            return;
+        }
+
+        if (srcValue.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            if (TrySaveEmbeddedImage(srcValue, assetsFolderPath, useAbsolutePaths, assetsFolderName, out var rewrittenPath))
+            {
+                node.SetAttributeValue(attributeName, rewrittenPath);
+            }
             return;
         }
 
@@ -115,6 +132,50 @@ public class AssetManager
         node.SetAttributeValue(attributeName, rewritten);
     }
 
+    private bool TrySaveEmbeddedImage(
+        string srcValue,
+        string assetsFolderPath,
+        bool useAbsolutePaths,
+        string assetsFolderName,
+        out string rewrittenPath)
+    {
+        rewrittenPath = string.Empty;
+
+        try
+        {
+            const string prefix = "data:";
+            var base64Index = srcValue.IndexOf("base64,", StringComparison.OrdinalIgnoreCase);
+            if (base64Index <= 0)
+            {
+                _logger.LogWarning("Data URI non supportato (base64 mancante).");
+                return false;
+            }
+
+            var meta = srcValue[prefix.Length..base64Index].TrimEnd(';');
+            var mimeType = meta.Split(';')[0].Trim();
+            var base64Data = srcValue[(base64Index + "base64,".Length)..].Trim();
+            var bytes = Convert.FromBase64String(base64Data);
+            var extension = GetExtensionFromMime(mimeType);
+            var fileName = CreateStableFileName(bytes, extension);
+            var destinationPath = Path.Combine(assetsFolderPath, fileName);
+
+            if (!File.Exists(destinationPath))
+            {
+                File.WriteAllBytes(destinationPath, bytes);
+            }
+
+            rewrittenPath = useAbsolutePaths
+                ? destinationPath
+                : $"{assetsFolderName}/{fileName}";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Impossibile salvare immagine embedded: {ex.Message}");
+            return false;
+        }
+    }
+
     private static string CreateStableFileName(string sourcePath)
     {
         using var sha = SHA256.Create();
@@ -128,6 +189,29 @@ public class AssetManager
         }
 
         return $"{hashString}{extension}";
+    }
+
+    private static string CreateStableFileName(byte[] content, string extension)
+    {
+        using var sha = SHA256.Create();
+        var hash = sha.ComputeHash(content);
+        var hashString = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        var normalizedExtension = string.IsNullOrWhiteSpace(extension) ? ".img" : extension;
+        return $"{hashString}{normalizedExtension}";
+    }
+
+    private static string GetExtensionFromMime(string mimeType)
+    {
+        return mimeType.ToLowerInvariant() switch
+        {
+            "image/png" => ".png",
+            "image/jpeg" => ".jpg",
+            "image/jpg" => ".jpg",
+            "image/gif" => ".gif",
+            "image/bmp" => ".bmp",
+            "image/svg+xml" => ".svg",
+            _ => ".img"
+        };
     }
 }
 

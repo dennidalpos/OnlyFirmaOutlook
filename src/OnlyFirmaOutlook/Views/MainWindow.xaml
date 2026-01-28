@@ -146,7 +146,18 @@
                                Margin="0,8,0,0"/>
                         <ComboBox x:Name="AccountComboBox" Grid.Row="1" Grid.Column="1"
                                   Margin="0,8,0,0"
-                                  SelectionChanged="AccountComboBox_SelectionChanged"/>
+                                  SelectionChanged="AccountComboBox_SelectionChanged">
+                            <ComboBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                       Foreground="#605E5C" Margin="0,4,0,2"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ComboBox.GroupStyle>
+                        </ComboBox>
 
                         
                         <Label x:Name="IdentifierLabel" Content="Identificativo:"
@@ -302,37 +313,6 @@
                 </GroupBox>
 
                 
-                <Expander x:Name="DefaultSignatureExpander"
-                          Header="Imposta firma predefinita dopo la creazione"
-                          IsExpanded="False"
-                          Margin="0,0,0,12">
-                    <StackPanel Margin="12">
-                        <CheckBox x:Name="DefaultNewSignatureCheckBox"
-                                  Content="Imposta come firma predefinita per nuovi messaggi"
-                                  Checked="DefaultSignatureOption_Changed"
-                                  Unchecked="DefaultSignatureOption_Changed"/>
-                        <CheckBox x:Name="DefaultReplySignatureCheckBox"
-                                  Content="Imposta come firma predefinita per risposte/inoltri"
-                                  Margin="0,6,0,0"
-                                  Checked="DefaultSignatureOption_Changed"
-                                  Unchecked="DefaultSignatureOption_Changed"/>
-                        <Button x:Name="RemoveDefaultSignatureButton"
-                                Content="Rimuovi impostazioni firma predefinita (registro)"
-                                Margin="0,8,0,0"
-                                Click="RemoveDefaultSignatureButton_Click"
-                                Style="{StaticResource DangerButtonStyle}"/>
-                        <TextBlock x:Name="DefaultSignatureStatusText"
-                                   Text="Stato firma predefinita: N/D"
-                                   Foreground="#605E5C" FontSize="11" Margin="0,8,0,0"/>
-                        <TextBlock x:Name="RegistryAccessStatusText"
-                                   Text="Accesso registro: N/D"
-                                   Foreground="#605E5C" FontSize="11" Margin="0,4,0,0"/>
-                        <TextBlock x:Name="DefaultSignatureHintText"
-                                   Text="Disponibile solo se Outlook è installato e la firma viene salvata nella cartella predefinita."
-                                   Foreground="#A19F9D" FontSize="11" Margin="0,8,0,0"/>
-                    </StackPanel>
-                </Expander>
-
                 
                 <Button x:Name="ConvertButton" Content="✓ Converti e salva firma"
                         Style="{StaticResource PrimaryButtonStyle}"

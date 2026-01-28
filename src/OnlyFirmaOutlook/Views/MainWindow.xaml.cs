@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Threading;
 using OnlyFirmaOutlook.Models;
 using OnlyFirmaOutlook.Services;
@@ -24,7 +25,6 @@ public partial class MainWindow : Window
     private readonly TempFileManager _tempFileManager;
     private readonly PresetService _presetService;
     private readonly OutlookAccountService _outlookAccountService;
-    private readonly OutlookSignatureDefaultsService _outlookSignatureDefaultsService;
     private readonly SignatureRepository _signatureRepository;
     private readonly WordConversionService _wordConversionService;
     private readonly WordEditorService _wordEditorService;
@@ -56,7 +56,6 @@ public partial class MainWindow : Window
         _tempFileManager = TempFileManager.Instance;
         _presetService = new PresetService();
         _outlookAccountService = new OutlookAccountService();
-        _outlookSignatureDefaultsService = new OutlookSignatureDefaultsService();
         _signatureRepository = new SignatureRepository();
         _wordConversionService = new WordConversionService();
         _wordEditorService = new WordEditorService();
@@ -196,7 +195,10 @@ public partial class MainWindow : Window
             OutlookWarningBorder.Visibility = Visibility.Collapsed;
             AccountLabel.Visibility = Visibility.Visible;
             AccountComboBox.Visibility = Visibility.Visible;
-            AccountComboBox.ItemsSource = _accounts;
+            var view = CollectionViewSource.GetDefaultView(_accounts);
+            view.GroupDescriptions.Clear();
+            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OutlookAccount.GroupLabel)));
+            AccountComboBox.ItemsSource = view;
             AccountComboBox.DisplayMemberPath = "DisplayText";
 
             IdentifierLabel.Visibility = Visibility.Collapsed;
@@ -238,7 +240,6 @@ public partial class MainWindow : Window
             IdentifierHint.Visibility = Visibility.Visible;
         }
 
-        UpdateDefaultSignatureOptions();
     }
 
     private void SetDefaultDestinationFolder()
@@ -256,7 +257,6 @@ public partial class MainWindow : Window
 
         DestinationFolderTextBox.Text = defaultFolder;
         ValidateDestinationFolder(defaultFolder);
-        UpdateDefaultSignatureOptions();
     }
 
     private void ValidateDestinationFolder(string folderPath)
@@ -275,7 +275,6 @@ public partial class MainWindow : Window
         }
 
         UpdateConvertButtonState();
-        UpdateDefaultSignatureOptions();
     }
 
     private void RefreshExistingSignatures()
@@ -355,93 +354,6 @@ public partial class MainWindow : Window
 
         
         CheckOverwriteWarning();
-    }
-
-    private void UpdateDefaultSignatureOptions()
-    {
-        var destinationFolder = DestinationFolderTextBox.Text;
-        var isDefaultFolder = _signatureWorkflowService.ShouldCreateBackup(destinationFolder);
-        var canSetDefaults = _isOutlookAvailable && isDefaultFolder;
-        DefaultNewSignatureCheckBox.IsEnabled = canSetDefaults;
-        DefaultReplySignatureCheckBox.IsEnabled = canSetDefaults;
-        DefaultSignatureHintText.Visibility = canSetDefaults ? Visibility.Collapsed : Visibility.Visible;
-
-        if (!canSetDefaults)
-        {
-            DefaultNewSignatureCheckBox.IsChecked = false;
-            DefaultReplySignatureCheckBox.IsChecked = false;
-        }
-
-        if (!_isOutlookAvailable)
-        {
-            DefaultSignatureHintText.Text = "Disponibile solo se Outlook è installato.";
-        }
-        else if (!isDefaultFolder)
-        {
-            DefaultSignatureHintText.Text = "Disponibile solo se la firma viene salvata nella cartella predefinita di Outlook.";
-        }
-
-        UpdateDefaultSignatureStatus();
-    }
-
-    private void DefaultSignatureOption_Changed(object sender, RoutedEventArgs e)
-    {
-        if (sender is System.Windows.Controls.CheckBox checkBox && checkBox.IsChecked == true)
-        {
-            MessageBox.Show(
-                "Attenzione: impostare la firma predefinita dall'app può rendere temporaneamente non modificabili le scelte in Outlook.\n" +
-                "Se succede, usa il pulsante per rimuovere le impostazioni dal registro.",
-                "Avviso firma predefinita",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-        }
-
-        UpdateDefaultSignatureOptions();
-    }
-
-    private void UpdateDefaultSignatureStatus()
-    {
-        var canWriteRegistry = _outlookSignatureDefaultsService.CanWriteDefaultSignatureRegistry(out var registryMessage);
-        RegistryAccessStatusText.Text = canWriteRegistry
-            ? "Accesso registro: disponibile per l'utente corrente (senza privilegi admin)."
-            : $"Accesso registro: {registryMessage}";
-
-        RemoveDefaultSignatureButton.IsEnabled = _isOutlookAvailable && canWriteRegistry;
-
-        if (_outlookSignatureDefaultsService.TryGetDefaultSignatures(out var newSignature, out var replySignature, out var statusMessage))
-        {
-            var newText = string.IsNullOrWhiteSpace(newSignature) ? "(nessuna)" : newSignature;
-            var replyText = string.IsNullOrWhiteSpace(replySignature) ? "(nessuna)" : replySignature;
-            DefaultSignatureStatusText.Text = $"Stato firma predefinita: nuovi messaggi = {newText} | risposte/inoltri = {replyText}";
-        }
-        else
-        {
-            DefaultSignatureStatusText.Text = $"Stato firma predefinita: {statusMessage}";
-        }
-    }
-
-    private void RemoveDefaultSignatureButton_Click(object sender, RoutedEventArgs e)
-    {
-        var result = MessageBox.Show(
-            "Rimuovere le impostazioni di firma predefinita dal registro di Outlook?\n\n" +
-            "Questo consente di modificare nuovamente le firme da Outlook.",
-            "Conferma rimozione impostazioni",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (result != MessageBoxResult.Yes)
-        {
-            return;
-        }
-
-        var cleared = _outlookSignatureDefaultsService.TryClearDefaultSignatures(out var clearMessage);
-        MessageBox.Show(
-            cleared ? "Impostazioni firma predefinita rimosse." : $"Impossibile rimuovere le impostazioni: {clearMessage}",
-            cleared ? "Operazione completata" : "Errore rimozione",
-            MessageBoxButton.OK,
-            cleared ? MessageBoxImage.Information : MessageBoxImage.Error);
-
-        UpdateDefaultSignatureStatus();
     }
 
     
@@ -1045,7 +957,6 @@ public partial class MainWindow : Window
             DestinationFolderTextBox.Text = dialog.SelectedPath;
             ValidateDestinationFolder(dialog.SelectedPath);
             RefreshExistingSignatures();
-            UpdateDefaultSignatureOptions();
         }
     }
 
@@ -1148,24 +1059,6 @@ public partial class MainWindow : Window
                 
                 OpenDestinationFolder(destinationFolder, conversionResult.HtmFilePath);
 
-                var defaultSignatureMessage = string.Empty;
-                var setNewSignature = DefaultNewSignatureCheckBox.IsChecked == true;
-                var setReplySignature = DefaultReplySignatureCheckBox.IsChecked == true;
-
-                if (setNewSignature || setReplySignature)
-                {
-                    var updated = _outlookSignatureDefaultsService.TrySetDefaultSignatures(
-                        finalSignatureName,
-                        setNewSignature,
-                        setReplySignature,
-                        out var updateMessage);
-                    defaultSignatureMessage = updated
-                        ? "\n\nFirma predefinita aggiornata in Outlook."
-                        : $"\n\nImpossibile impostare la firma predefinita: {updateMessage}";
-                }
-
-                UpdateDefaultSignatureStatus();
-
                 MessageBox.Show(
                     $"Firma '{finalSignatureName}' creata con successo!\n\n" +
                     $"File creati:\n" +
@@ -1174,8 +1067,7 @@ public partial class MainWindow : Window
                     $"- {Path.GetFileName(conversionResult.TxtFilePath)}" +
                     (conversionResult.AssetsFolderPath != null
                         ? $"\n- {Path.GetFileName(conversionResult.AssetsFolderPath)}/"
-                        : string.Empty) +
-                    defaultSignatureMessage,
+                        : string.Empty),
                     "Conversione completata",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -1470,14 +1362,6 @@ public partial class MainWindow : Window
         {
             UpdateConvertButtonState();
         }
-        if (isBusy)
-        {
-            RemoveDefaultSignatureButton.IsEnabled = false;
-        }
-        else
-        {
-            UpdateDefaultSignatureStatus();
-        }
         DeleteSignatureButton.IsEnabled = !isBusy && ExistingSignaturesListBox.SelectedItem != null;
         RefreshSignaturesButton.IsEnabled = !isBusy;
         BrowseSignaturesButton.IsEnabled = !isBusy;
@@ -1514,9 +1398,6 @@ public partial class MainWindow : Window
         AccountComboBox.SelectedIndex = _accounts.Count > 0 ? 0 : -1;
         FilteredHtmlRadio.IsChecked = false;
         CompleteHtmlRadio.IsChecked = true;
-        DefaultNewSignatureCheckBox.IsChecked = false;
-        DefaultReplySignatureCheckBox.IsChecked = false;
-        DefaultSignatureExpander.IsExpanded = false;
         ExistingSignaturesListBox.SelectedItem = null;
         BackupsListBox.SelectedItem = null;
 
@@ -1524,7 +1405,6 @@ public partial class MainWindow : Window
         RefreshExistingSignatures();
         RefreshBackups();
         UpdateConvertButtonState();
-        UpdateDefaultSignatureOptions();
     }
 
     private void GuideToggleButton_Checked(object sender, RoutedEventArgs e)
