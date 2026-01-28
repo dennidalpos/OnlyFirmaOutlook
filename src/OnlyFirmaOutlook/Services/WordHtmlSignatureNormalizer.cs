@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
@@ -153,16 +154,9 @@ public class WordHtmlSignatureNormalizer
 
         foreach (var table in tableNodes)
         {
-            if (!HasBorderIndicators(table))
+            if (!ShouldForceBorderReset(table))
             {
-                var hasBorderInCells = table
-                    .Descendants()
-                    .Any(node => node.Name is "tr" or "td" or "th" && HasBorderIndicators(node));
-
-                if (!hasBorderInCells)
-                {
-                    continue;
-                }
+                continue;
             }
 
             ApplyBorderReset(table);
@@ -386,6 +380,69 @@ public class WordHtmlSignatureNormalizer
 
         return style.Contains("border:solid", StringComparison.OrdinalIgnoreCase)
                || style.Contains("border-style:solid", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ShouldForceBorderReset(HtmlNode table)
+    {
+        if (HasBorderIndicators(table))
+        {
+            return true;
+        }
+
+        var hasBorderIndicatorsInCells = table
+            .Descendants()
+            .Any(node => node.Name is "tr" or "td" or "th" && HasBorderIndicators(node));
+
+        if (hasBorderIndicatorsInCells)
+        {
+            return true;
+        }
+
+        var borderAttribute = table.GetAttributeValue("border", string.Empty);
+        if (!string.IsNullOrWhiteSpace(borderAttribute) && !IsZeroBorderValue(borderAttribute))
+        {
+            return false;
+        }
+
+        var style = table.GetAttributeValue("style", string.Empty);
+        if (!string.IsNullOrWhiteSpace(style) && HasExplicitBorderStyle(style))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool HasExplicitBorderStyle(string style)
+    {
+        var matches = Regex.Matches(style, @"\bborder(?:-(?:top|right|bottom|left))?\s*:\s*([^;]+)", RegexOptions.IgnoreCase);
+        foreach (Match match in matches)
+        {
+            var value = match.Groups[1].Value.Trim();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            if (value.Contains("none", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (Regex.IsMatch(value, @"\b0(?:px|pt|em|rem|%)?\b", RegexOptions.IgnoreCase))
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsZeroBorderValue(string borderValue)
+    {
+        return borderValue.Trim() is "0" or "0px" or "0pt";
     }
 
     private static void AppendInlineStyleIfMissing(HtmlNode node, string styleFragment, string propertyName)
