@@ -32,7 +32,7 @@ public class WordHtmlSignatureNormalizer
 
     private static void RemoveUnsafeNodes(HtmlDocument doc)
     {
-        var nodesToRemove = doc.DocumentNode.SelectNodes("//script|//meta|//link|//xml|//style|//o:p");
+        var nodesToRemove = doc.DocumentNode.SelectNodes("//script|//meta|//link|//xml|//style");
         if (nodesToRemove != null)
         {
             foreach (var node in nodesToRemove)
@@ -41,19 +41,21 @@ public class WordHtmlSignatureNormalizer
             }
         }
 
-        var commentNodes = doc.DocumentNode.SelectNodes("//comment()");
-        if (commentNodes != null)
+        var commentNodes = doc.DocumentNode.Descendants()
+            .Where(node => node.NodeType == HtmlNodeType.Comment)
+            .ToList();
+
+        foreach (var comment in commentNodes)
         {
-            foreach (var comment in commentNodes)
-            {
-                comment.Remove();
-            }
+            comment.Remove();
         }
 
         var namespaceNodes = doc.DocumentNode.Descendants()
-            .Where(node => node.Name.StartsWith("w:", StringComparison.OrdinalIgnoreCase));
+            .Where(node => node.Name.StartsWith("w:", StringComparison.OrdinalIgnoreCase)
+                           || node.Name.StartsWith("o:", StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        foreach (var node in namespaceNodes.ToList())
+        foreach (var node in namespaceNodes)
         {
             node.Remove();
         }
