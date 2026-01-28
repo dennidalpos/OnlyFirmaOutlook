@@ -49,7 +49,7 @@ public static class OfficeBitnessDetector
         }
 
         Warn("Impossibile determinare bitness Office. Utilizzo x64 come default.");
-        return OfficeBitness.Unknown;
+        return OfficeBitness.x64;
     }
 
     private static OfficeBitness DetectFromOutlookKey()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
@@ -19,6 +20,7 @@ public class WordHtmlSignatureNormalizer
 
         RemoveUnsafeNodes(workingDoc);
         NormalizeNodes(workingDoc);
+        NormalizeHiddenTables(workingDoc);
 
         var container = new HtmlDocument();
         container.LoadHtml("<div></div>");
@@ -31,7 +33,7 @@ public class WordHtmlSignatureNormalizer
 
     private static void RemoveUnsafeNodes(HtmlDocument doc)
     {
-        var nodesToRemove = doc.DocumentNode.SelectNodes("//script|//meta|//link|//xml|//style|//o:p");
+        var nodesToRemove = doc.DocumentNode.SelectNodes("//script|//meta|//link|//xml|//style");
         if (nodesToRemove != null)
         {
             foreach (var node in nodesToRemove)
@@ -40,19 +42,21 @@ public class WordHtmlSignatureNormalizer
             }
         }
 
-        var commentNodes = doc.DocumentNode.SelectNodes("//comment()");
-        if (commentNodes != null)
+        var commentNodes = doc.DocumentNode.Descendants()
+            .Where(node => node.NodeType == HtmlNodeType.Comment)
+            .ToList();
+
+        foreach (var comment in commentNodes)
         {
-            foreach (var comment in commentNodes)
-            {
-                comment.Remove();
-            }
+            comment.Remove();
         }
 
         var namespaceNodes = doc.DocumentNode.Descendants()
-            .Where(node => node.Name.StartsWith("w:", StringComparison.OrdinalIgnoreCase));
+            .Where(node => node.Name.StartsWith("w:", StringComparison.OrdinalIgnoreCase)
+                           || node.Name.StartsWith("o:", StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        foreach (var node in namespaceNodes.ToList())
+        foreach (var node in namespaceNodes)
         {
             node.Remove();
         }
@@ -77,26 +81,181 @@ public class WordHtmlSignatureNormalizer
 
             if (node.Name is "p" or "div" or "span")
             {
-                AppendInlineStyle(node, "margin:0;");
+                AppendInlineStyleIfMissing(node, "margin:0;", "margin");
             }
+        }
+    }
+
+    private static void NormalizeHiddenTables(HtmlDocument doc)
+    {
+        var hiddenNodes = doc.DocumentNode.Descendants()
+            .Where(HasHiddenStyle)
+            .ToList();
+
+        foreach (var node in hiddenNodes)
+        {
+            var table = node.Name.Equals("table", StringComparison.OrdinalIgnoreCase)
+                ? node
+                : node.Ancestors("table").FirstOrDefault();
+
+            if (table == null)
+            {
+                continue;
+            }
+
+            EnsureDisplayNone(table);
+            RemoveTableBorders(table);
+            RemoveTableBorders(table.Descendants());
         }
     }
 
     private static string CleanStyle(string styleValue)
     {
         var parts = styleValue.Split(';', StringSplitOptions.RemoveEmptyEntries)
-            .Select(part => part.Trim())
-            .Where(part => !part.StartsWith("mso-", StringComparison.OrdinalIgnoreCase)
-                && !part.Contains("tab-stops", StringComparison.OrdinalIgnoreCase)
-                && !part.StartsWith("font-variant", StringComparison.OrdinalIgnoreCase));
+            .Select(part => part.Trim());
 
-        return string.Join("; ", parts);
+        var cleanedParts = new List<string>();
+        var hasMsoHide = false;
+        var hasDisplayNone = false;
+
+        foreach (var part in parts)
+        {
+            if (part.StartsWith("mso-hide", StringComparison.OrdinalIgnoreCase))
+            {
+                hasMsoHide = true;
+                cleanedParts.Add(part);
+                continue;
+            }
+
+            if (part.StartsWith("display", StringComparison.OrdinalIgnoreCase)
+                && part.Contains("none", StringComparison.OrdinalIgnoreCase))
+            {
+                hasDisplayNone = true;
+            }
+
+            if (part.StartsWith("mso-", StringComparison.OrdinalIgnoreCase)
+                || part.Contains("tab-stops", StringComparison.OrdinalIgnoreCase)
+                || part.StartsWith("font-variant", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            cleanedParts.Add(part);
+        }
+
+        if (hasMsoHide && !hasDisplayNone)
+        {
+            cleanedParts.Add("display:none");
+        }
+
+        return string.Join("; ", cleanedParts);
     }
 
-    private static void AppendInlineStyle(HtmlNode node, string styleFragment)
+    private static bool HasHiddenStyle(HtmlNode node)
+    {
+        var style = node.GetAttributeValue("style", string.Empty);
+        if (!string.IsNullOrWhiteSpace(style))
+        {
+            if (style.Contains("mso-hide", StringComparison.OrdinalIgnoreCase)
+                || style.Contains("display:none", StringComparison.OrdinalIgnoreCase)
+                || style.Contains("visibility:hidden", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        if (node.Attributes.Contains("hidden"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void EnsureDisplayNone(HtmlNode node)
+    {
+        var style = node.GetAttributeValue("style", string.Empty);
+        if (style.Contains("display:none", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var merged = string.IsNullOrWhiteSpace(style)
+            ? "display:none"
+            : $"{style.TrimEnd(';')}; display:none";
+
+        node.SetAttributeValue("style", merged);
+    }
+
+    private static void RemoveTableBorders(HtmlNode table)
+    {
+        RemoveTableBorderAttributes(table);
+
+        var style = table.GetAttributeValue("style", string.Empty);
+        if (!string.IsNullOrWhiteSpace(style))
+        {
+            var cleaned = RemoveBorderStyles(style);
+            table.SetAttributeValue("style", cleaned);
+        }
+
+        AppendInlineStyleIfMissing(table, "border:none; border-collapse:collapse; border-spacing:0;", "border");
+    }
+
+    private static void RemoveTableBorders(IEnumerable<HtmlNode> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.Name is not ("table" or "tr" or "td" or "th"))
+            {
+                continue;
+            }
+
+            RemoveTableBorderAttributes(node);
+
+            var style = node.GetAttributeValue("style", string.Empty);
+            if (!string.IsNullOrWhiteSpace(style))
+            {
+                var cleaned = RemoveBorderStyles(style);
+                if (string.IsNullOrWhiteSpace(cleaned))
+                {
+                    node.Attributes.Remove("style");
+                }
+                else
+                {
+                    node.SetAttributeValue("style", cleaned);
+                }
+            }
+        }
+    }
+
+    private static void RemoveTableBorderAttributes(HtmlNode node)
+    {
+        node.Attributes.Remove("border");
+        node.Attributes.Remove("cellspacing");
+        node.Attributes.Remove("cellpadding");
+        node.Attributes.Remove("bordercolor");
+        node.Attributes.Remove("bordercolorlight");
+        node.Attributes.Remove("bordercolordark");
+    }
+
+    private static string RemoveBorderStyles(string styleValue)
+    {
+        var parts = styleValue.Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part.Trim());
+
+        var keptParts = parts.Where(part =>
+            !part.StartsWith("border", StringComparison.OrdinalIgnoreCase)
+            && !part.StartsWith("border-", StringComparison.OrdinalIgnoreCase)
+            && !part.StartsWith("border-collapse", StringComparison.OrdinalIgnoreCase)
+            && !part.StartsWith("border-spacing", StringComparison.OrdinalIgnoreCase));
+
+        return string.Join("; ", keptParts);
+    }
+
+    private static void AppendInlineStyleIfMissing(HtmlNode node, string styleFragment, string propertyName)
     {
         var existing = node.GetAttributeValue("style", string.Empty);
-        if (existing.Contains("margin", StringComparison.OrdinalIgnoreCase))
+        if (existing.Contains(propertyName, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
