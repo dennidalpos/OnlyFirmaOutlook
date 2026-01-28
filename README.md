@@ -1,87 +1,131 @@
 # OnlyFirmaOutlook
 
-OnlyFirmaOutlook è un'applicazione desktop Windows (WPF) che converte documenti Word in firme Outlook (HTML/RTF/TXT), con gestione degli asset e installazione nella cartella firme. Il launcher seleziona automaticamente la build corretta in base alla bitness di Office installata.
+Applicazione Windows per convertire documenti Word in firme email Outlook.
+
+## Funzionalità
+
+- Conversione documenti Word (.doc/.docx) in firme Outlook (HTML, RTF, TXT)
+- Gestione automatica immagini e asset incorporati
+- Normalizzazione HTML per compatibilità Outlook (rimozione bordi tabelle, stili Word)
+- Preset di firma preconfigurati
+- Backup e ripristino firme esistenti
+- Rilevamento account Outlook configurati (Exchange, IMAP, POP3, deleghe)
+- Launcher automatico per Office 32/64-bit
 
 ## Requisiti
 
-- Windows 10/11.
-- Microsoft Word installato (necessario per la conversione).
-- Microsoft Outlook opzionale (per rilevare account e gestire firme nella cartella predefinita).
-- .NET 8 SDK per sviluppo, oppure build self-contained generate dallo script di publish.
+- Windows 10/11
+- Microsoft Word (per conversione documenti)
+- Microsoft Outlook (opzionale, per gestione firme)
+- .NET 8 SDK (solo per sviluppo)
 
-## Configurazione
+## Installazione
 
-- Variabili d'ambiente: nessuna.
-- Cartella firme Outlook predefinita: `%APPDATA%\Microsoft\Signatures`.
-- Log applicativi: `%LOCALAPPDATA%\OnlyFirmaOutlook\Logs\app.log`.
-- Preset Word runtime: `<cartella app>\media` (file `.doc`/`.docx`).
-- Backup firme: file ZIP con prefisso `backup_firme_onlyfirmaoutlook_` nella cartella firme di Outlook.
+### Utente finale
 
-## Struttura cartelle
+1. Scaricare la cartella `dist` dalla release
+2. Eseguire `OnlyFirmaOutlook.Launcher.exe`
 
-```
-OnlyFirmaOutlook.sln
-README.md
-scripts/
-  build.ps1
-  clean.ps1
-src/
-  Bootstrapper/
-  OnlyFirmaOutlook/
-  Shared/
-tests/
-  OnlyFirmaOutlook.Tests/
+Il launcher rileva automaticamente la versione di Office installata (32/64-bit) e avvia la build corretta.
+
+### Sviluppatore
+
+```powershell
+git clone https://github.com/user/OnlyFirmaOutlook.git
+cd OnlyFirmaOutlook
+dotnet restore
+dotnet run --project src/OnlyFirmaOutlook
 ```
 
-- `src/Bootstrapper`: launcher che seleziona `win-x86`/`win-x64` in base a Office.
-- `src/OnlyFirmaOutlook`: applicazione WPF principale.
-- `src/Shared`: componenti condivisi.
+## Struttura progetto
 
-## Setup e sviluppo locale
+```
+OnlyFirmaOutlook/
+├── src/
+│   ├── Bootstrapper/          # Launcher per selezione build 32/64-bit
+│   ├── OnlyFirmaOutlook/      # Applicazione WPF principale
+│   │   ├── Models/            # Classi dati
+│   │   ├── Services/          # Logica business
+│   │   ├── Views/             # Interfaccia utente
+│   │   └── media/             # Preset firma predefiniti
+│   └── Shared/                # Codice condiviso
+├── tests/
+│   └── OnlyFirmaOutlook.Tests/
+├── scripts/
+│   ├── build.ps1              # Script build e publish
+│   └── clean.ps1              # Pulizia artefatti
+└── dist/                      # Output build (generato)
+```
 
-1. Installare .NET 8 SDK.
-2. Ripristinare le dipendenze:
-   ```powershell
-   dotnet restore .\OnlyFirmaOutlook.sln
-   ```
-3. Avviare l'app in debug:
-   ```powershell
-   dotnet run --project .\src\OnlyFirmaOutlook\OnlyFirmaOutlook.csproj
-   ```
-
-## Comandi principali
+## Comandi
 
 ### Build
+
 ```powershell
 .\scripts\build.ps1
 ```
 
+Opzioni:
+- `-Configuration Debug|Release` (default: Release)
+- `-SkipTests` salta esecuzione test
+- `-SkipPublish` solo build senza publish
+- `-Runtimes @("win-x86", "win-x64")` runtime target
+
 ### Test
-```powershell
-dotnet test .\OnlyFirmaOutlook.sln
-```
 
-### Lint
-Non è presente un comando di lint nel repository.
-
-### Dev
 ```powershell
-dotnet run --project .\src\OnlyFirmaOutlook\OnlyFirmaOutlook.csproj
+dotnet test
 ```
 
 ### Pulizia
+
 ```powershell
 .\scripts\clean.ps1
 ```
 
-## Esecuzione in produzione
+## Configurazione
 
-1. Generare le build con `scripts/build.ps1` (output in `dist/`).
-2. Distribuire l'intera cartella `dist` su PC locali o share di rete.
-3. Avviare `OnlyFirmaOutlook.Launcher.exe`, che seleziona automaticamente la build corretta (`win-x86`/`win-x64`).
+| Percorso | Descrizione |
+|----------|-------------|
+| `%APPDATA%\Microsoft\Signatures` | Cartella firme Outlook |
+| `%LOCALAPPDATA%\OnlyFirmaOutlook\Logs` | Log applicazione |
+| `<app>\media\` | Preset firma (.doc/.docx) |
 
-## Troubleshooting essenziale
+## Distribuzione
 
-- Word non installato o non accessibile: la conversione non può partire. Verificare installazione di Word e riprovare.
-- Nessun preset visibile: creare la cartella `media` accanto all'eseguibile e aggiungere file `.doc/.docx`.
-- Backup non creati: vengono generati solo nella cartella firme predefinita di Outlook.
+1. Eseguire `.\scripts\build.ps1`
+2. Copiare la cartella `dist\` su share di rete o PC target
+3. Gli utenti eseguono `OnlyFirmaOutlook.Launcher.exe`
+
+Contenuto `dist/`:
+```
+dist/
+├── OnlyFirmaOutlook.Launcher.exe    # Launcher (eseguire questo)
+├── win-x86/                         # Build per Office 32-bit
+│   ├── OnlyFirmaOutlook.exe
+│   └── media/
+└── win-x64/                         # Build per Office 64-bit
+    ├── OnlyFirmaOutlook.exe
+    └── media/
+```
+
+## Preset firma
+
+Per aggiungere preset predefiniti:
+
+1. Creare documenti Word (.doc/.docx) con il layout della firma
+2. Copiare in `src/OnlyFirmaOutlook/media/`
+3. Ricompilare con `.\scripts\build.ps1`
+
+I preset appaiono nella lista "Preset" dell'applicazione.
+
+## Tecnologie
+
+- .NET 8 / WPF
+- HtmlAgilityPack (parsing HTML)
+- PreMailer.Net (CSS inlining)
+- Microsoft.Office.Interop.Word (conversione documenti)
+
+## Licenza
+
+MIT

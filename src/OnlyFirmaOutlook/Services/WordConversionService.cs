@@ -215,10 +215,18 @@ public class WordConversionService
                 var normalized = normalizer.Normalize(inlined);
 
                 var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
-                var assetResult = assetManager.ProcessImages(normalized, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false);
+                var assetResult = assetManager.ProcessImages(normalized, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false, embedImages: true);
                 installer.Install(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
 
-                result.AssetsFolderPath = assetsFolder;
+                if (Directory.Exists(assetsFolder) && Directory.GetFiles(assetsFolder).Length == 0)
+                {
+                    try { Directory.Delete(assetsFolder, true); } catch { }
+                    result.AssetsFolderPath = null;
+                }
+                else
+                {
+                    result.AssetsFolderPath = assetsFolder;
+                }
                 result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
                 result.TxtFilePath = Path.Combine(destinationFolder, signatureName + ".txt");
 
@@ -326,9 +334,6 @@ public class WordConversionService
             _logger.LogWarning($"Errore rilascio Word COM: {ex.Message}");
         }
 
-        
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
         GC.Collect();
         GC.WaitForPendingFinalizers();
 

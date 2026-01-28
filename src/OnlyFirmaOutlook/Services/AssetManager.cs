@@ -14,7 +14,7 @@ public class AssetManager
         _logger = LoggingService.Instance;
     }
 
-    public AssetProcessingResult ProcessImages(string html, string sourceHtmlPath, string assetsFolderPath, string signatureName, bool useAbsolutePaths)
+    public AssetProcessingResult ProcessImages(string html, string sourceHtmlPath, string assetsFolderPath, string signatureName, bool useAbsolutePaths, bool embedImages = false)
     {
         Directory.CreateDirectory(assetsFolderPath);
         var assetsFolderName = Path.GetFileName(assetsFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
@@ -31,7 +31,7 @@ public class AssetManager
         {
             foreach (var img in imgNodes)
             {
-                ProcessAttribute(img, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+                ProcessAttribute(img, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
             }
         }
 
@@ -39,7 +39,7 @@ public class AssetManager
         {
             foreach (var vmlImage in vmlImageNodes)
             {
-                ProcessAttribute(vmlImage, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+                ProcessAttribute(vmlImage, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
             }
         }
 
@@ -47,9 +47,9 @@ public class AssetManager
         {
             foreach (var node in vmlNodes)
             {
-                ProcessAttribute(node, "o:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
-                ProcessAttribute(node, "v:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
-                ProcessAttribute(node, "xlink:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, pathMap);
+                ProcessAttribute(node, "o:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
+                ProcessAttribute(node, "v:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
+                ProcessAttribute(node, "xlink:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
             }
         }
 
@@ -83,6 +83,7 @@ public class AssetManager
         string assetsFolderPath,
         string assetsFolderName,
         bool useAbsolutePaths,
+        bool embedImages,
         Dictionary<string, string> pathMap)
     {
         var srcValue = node.GetAttributeValue(attributeName, string.Empty);
@@ -100,7 +101,7 @@ public class AssetManager
 
         if (srcValue.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
         {
-            if (TrySaveEmbeddedImage(srcValue, assetsFolderPath, useAbsolutePaths, assetsFolderName, out var rewrittenPath))
+            if (!embedImages && TrySaveEmbeddedImage(srcValue, assetsFolderPath, useAbsolutePaths, assetsFolderName, out var rewrittenPath))
             {
                 node.SetAttributeValue(attributeName, rewrittenPath);
             }
@@ -111,6 +112,17 @@ public class AssetManager
         if (resolvedPath == null || !File.Exists(resolvedPath))
         {
             _logger.LogWarning($"Immagine non trovata: {srcValue}");
+            return;
+        }
+
+        if (embedImages)
+        {
+            var dataUri = ConvertToBase64DataUri(resolvedPath);
+            if (!string.IsNullOrEmpty(dataUri))
+            {
+                node.SetAttributeValue(attributeName, dataUri);
+                _logger.Log($"Immagine embedded: {Path.GetFileName(resolvedPath)}");
+            }
             return;
         }
 
@@ -130,6 +142,37 @@ public class AssetManager
             : $"{assetsFolderName}/{fileName}";
 
         node.SetAttributeValue(attributeName, rewritten);
+    }
+
+    private string ConvertToBase64DataUri(string imagePath)
+    {
+        try
+        {
+            var bytes = File.ReadAllBytes(imagePath);
+            var base64 = Convert.ToBase64String(bytes);
+            var mimeType = GetMimeTypeFromExtension(Path.GetExtension(imagePath));
+            return $"data:{mimeType};base64,{base64}";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Errore conversione immagine in base64: {ex.Message}");
+            return string.Empty;
+        }
+    }
+
+    private static string GetMimeTypeFromExtension(string extension)
+    {
+        return extension.ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            ".svg" => "image/svg+xml",
+            ".webp" => "image/webp",
+            ".ico" => "image/x-icon",
+            _ => "application/octet-stream"
+        };
     }
 
     private bool TrySaveEmbeddedImage(

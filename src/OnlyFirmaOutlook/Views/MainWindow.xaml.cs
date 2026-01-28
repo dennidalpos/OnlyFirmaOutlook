@@ -514,44 +514,6 @@ public partial class MainWindow : Window
         FinalNameBorder.Visibility = Visibility.Visible;
     }
 
-
-    
-    
-    
-    private void PrepareAndOpenInWord(string sourceFilePath, string proposedSignatureName)
-    {
-        try
-        {
-            _logger.Log($"Preparazione file per Word: {proposedSignatureName}");
-
-            
-            _currentEditorState = _wordEditorService.PrepareFileForEditing(sourceFilePath, proposedSignatureName);
-
-            
-            _selectedFilePath = _currentEditorState.LocalFilePath;
-
-            
-            _lastFileModifiedTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
-
-            
-            OpenWordDocument(_currentEditorState.LocalFilePath);
-
-            UpdateConvertButtonState();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Errore durante la preparazione del file", ex);
-            MessageBox.Show(
-                $"Errore durante la preparazione del file:\n\n{ex.Message}",
-                "Errore",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
-    }
-
-    
-    
-    
     private void OpenWordDocument(string filePath)
     {
         try
@@ -860,8 +822,8 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Seleziona documento Word",
-            Filter = "Documenti Word (*.docx;*.doc)|*.docx;*.doc",
+            Title = "Seleziona documento",
+            Filter = "Documenti supportati (*.docx;*.doc;*.rtf)|*.docx;*.doc;*.rtf|Documenti Word (*.docx;*.doc)|*.docx;*.doc|File RTF (*.rtf)|*.rtf",
             CheckFileExists = true
         };
 
@@ -869,10 +831,10 @@ public partial class MainWindow : Window
         {
             try
             {
-                if (!IsWordDocument(dialog.FileName))
+                if (!IsSupportedDocument(dialog.FileName))
                 {
                     MessageBox.Show(
-                        "Il file selezionato non è un documento Word valido (.doc/.docx).",
+                        "Il file selezionato non è un documento supportato (.doc/.docx/.rtf).",
                         "File non valido",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
@@ -921,11 +883,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private static bool IsWordDocument(string filePath)
+    private static bool IsSupportedDocument(string filePath)
     {
         var extension = Path.GetExtension(filePath);
         return extension.Equals(".doc", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".docx", StringComparison.OrdinalIgnoreCase);
+            || extension.Equals(".docx", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".rtf", StringComparison.OrdinalIgnoreCase);
     }
 
     private void SignatureNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -1026,7 +989,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var useFilteredHtml = FilteredHtmlRadio.IsChecked == true;
+            var useFilteredHtml = FilteredHtmlRadio.IsChecked ?? false;
 
             
             var conversionResult = await Task.Run(() =>
@@ -1053,11 +1016,8 @@ public partial class MainWindow : Window
                 _selectedFilePath = null;
                 UpdateConvertButtonState();
 
-                
-                RefreshExistingSignatures();
 
-                
-                OpenDestinationFolder(destinationFolder, conversionResult.HtmFilePath);
+                RefreshExistingSignatures();
 
                 MessageBox.Show(
                     $"Firma '{finalSignatureName}' creata con successo!\n\n" +
@@ -1095,27 +1055,6 @@ public partial class MainWindow : Window
         finally
         {
             SetBusy(false);
-        }
-    }
-
-    private void OpenDestinationFolder(string folderPath, string? htmFilePath)
-    {
-        try
-        {
-            if (!string.IsNullOrEmpty(htmFilePath) && File.Exists(htmFilePath))
-            {
-                
-                Process.Start("explorer.exe", $"/select,\"{htmFilePath}\"");
-            }
-            else if (Directory.Exists(folderPath))
-            {
-                
-                Process.Start("explorer.exe", folderPath);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning($"Impossibile aprire Esplora File: {ex.Message}");
         }
     }
 

@@ -34,10 +34,9 @@ public class PresetService
 
         try
         {
-            
-            var wordExtensions = new[] { "*.doc", "*.docx" };
+            var supportedExtensions = new[] { "*.doc", "*.docx", "*.rtf" };
 
-            foreach (var pattern in wordExtensions)
+            foreach (var pattern in supportedExtensions)
             {
                 var files = Directory.GetFiles(_mediaFolder, pattern, SearchOption.TopDirectoryOnly);
 

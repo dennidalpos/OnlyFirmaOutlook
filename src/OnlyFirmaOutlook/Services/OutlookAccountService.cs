@@ -121,7 +121,7 @@ public class OutlookAccountService
                     if (account != null)
                     {
                         try { Marshal.FinalReleaseComObject(account); }
-                        catch {  }
+                        catch (Exception ex) { _logger.LogWarning($"Errore rilascio account COM: {ex.Message}"); }
                     }
                 }
             }
@@ -183,7 +183,7 @@ public class OutlookAccountService
                         if (store != null)
                         {
                             try { Marshal.FinalReleaseComObject(store); }
-                            catch { }
+                            catch (Exception ex) { _logger.LogWarning($"Errore rilascio store COM: {ex.Message}"); }
                         }
                     }
                 }
@@ -229,58 +229,29 @@ public class OutlookAccountService
     {
         _logger.Log("Cleanup oggetti COM Outlook...");
 
-        try
+        if (accounts != null)
         {
-            if (accounts != null)
-            {
-                try { Marshal.FinalReleaseComObject(accounts); }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Errore rilascio accounts COM: {ex.Message}");
-                }
-            }
+            try { Marshal.FinalReleaseComObject(accounts); }
+            catch (Exception ex) { _logger.LogWarning($"Errore rilascio accounts COM: {ex.Message}"); }
         }
-        catch {  }
 
-        try
+        if (stores != null)
         {
-            if (stores != null)
-            {
-                try { Marshal.FinalReleaseComObject(stores); }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Errore rilascio stores COM: {ex.Message}");
-                }
-            }
+            try { Marshal.FinalReleaseComObject(stores); }
+            catch (Exception ex) { _logger.LogWarning($"Errore rilascio stores COM: {ex.Message}"); }
         }
-        catch { }
 
-        try
+        if (session != null)
         {
-            if (session != null)
-            {
-                try { Marshal.FinalReleaseComObject(session); }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Errore rilascio session COM: {ex.Message}");
-                }
-            }
+            try { Marshal.FinalReleaseComObject(session); }
+            catch (Exception ex) { _logger.LogWarning($"Errore rilascio session COM: {ex.Message}"); }
         }
-        catch {  }
 
-        try
+        if (outlookApp != null)
         {
-            if (outlookApp != null)
-            {
-                
-                try { Marshal.FinalReleaseComObject(outlookApp); }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"Errore rilascio Outlook COM: {ex.Message}");
-                }
-            }
+            try { Marshal.FinalReleaseComObject(outlookApp); }
+            catch (Exception ex) { _logger.LogWarning($"Errore rilascio Outlook COM: {ex.Message}"); }
         }
-        catch {  }
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
