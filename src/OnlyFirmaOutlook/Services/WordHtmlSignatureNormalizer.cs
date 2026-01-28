@@ -20,6 +20,7 @@ public class WordHtmlSignatureNormalizer
 
         RemoveUnsafeNodes(workingDoc);
         NormalizeNodes(workingDoc);
+        NormalizeHiddenTables(workingDoc);
 
         var container = new HtmlDocument();
         container.LoadHtml("<div></div>");
@@ -80,8 +81,30 @@ public class WordHtmlSignatureNormalizer
 
             if (node.Name is "p" or "div" or "span")
             {
-                AppendInlineStyle(node, "margin:0;");
+                AppendInlineStyleIfMissing(node, "margin:0;", "margin");
             }
+        }
+    }
+
+    private static void NormalizeHiddenTables(HtmlDocument doc)
+    {
+        var hiddenNodes = doc.DocumentNode.Descendants()
+            .Where(HasHiddenStyle)
+            .ToList();
+
+        foreach (var node in hiddenNodes)
+        {
+            var table = node.Name.Equals("table", StringComparison.OrdinalIgnoreCase)
+                ? node
+                : node.Ancestors("table").FirstOrDefault();
+
+            if (table == null)
+            {
+                continue;
+            }
+
+            EnsureDisplayNone(table);
+            RemoveTableBorders(table);
         }
     }
 
@@ -127,10 +150,76 @@ public class WordHtmlSignatureNormalizer
         return string.Join("; ", cleanedParts);
     }
 
-    private static void AppendInlineStyle(HtmlNode node, string styleFragment)
+    private static bool HasHiddenStyle(HtmlNode node)
+    {
+        var style = node.GetAttributeValue("style", string.Empty);
+        if (!string.IsNullOrWhiteSpace(style))
+        {
+            if (style.Contains("mso-hide", StringComparison.OrdinalIgnoreCase)
+                || style.Contains("display:none", StringComparison.OrdinalIgnoreCase)
+                || style.Contains("visibility:hidden", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        if (node.Attributes.Contains("hidden"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void EnsureDisplayNone(HtmlNode node)
+    {
+        var style = node.GetAttributeValue("style", string.Empty);
+        if (style.Contains("display:none", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var merged = string.IsNullOrWhiteSpace(style)
+            ? "display:none"
+            : $"{style.TrimEnd(';')}; display:none";
+
+        node.SetAttributeValue("style", merged);
+    }
+
+    private static void RemoveTableBorders(HtmlNode table)
+    {
+        table.Attributes.Remove("border");
+        table.Attributes.Remove("cellspacing");
+        table.Attributes.Remove("cellpadding");
+
+        var style = table.GetAttributeValue("style", string.Empty);
+        if (!string.IsNullOrWhiteSpace(style))
+        {
+            var cleaned = RemoveBorderStyles(style);
+            table.SetAttributeValue("style", cleaned);
+        }
+
+        AppendInlineStyleIfMissing(table, "border:none; border-collapse:collapse; border-spacing:0;", "border");
+    }
+
+    private static string RemoveBorderStyles(string styleValue)
+    {
+        var parts = styleValue.Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part.Trim());
+
+        var keptParts = parts.Where(part =>
+            !part.StartsWith("border", StringComparison.OrdinalIgnoreCase)
+            && !part.StartsWith("border-", StringComparison.OrdinalIgnoreCase)
+            && !part.StartsWith("border-collapse", StringComparison.OrdinalIgnoreCase)
+            && !part.StartsWith("border-spacing", StringComparison.OrdinalIgnoreCase));
+
+        return string.Join("; ", keptParts);
+    }
+
+    private static void AppendInlineStyleIfMissing(HtmlNode node, string styleFragment, string propertyName)
     {
         var existing = node.GetAttributeValue("style", string.Empty);
-        if (existing.Contains("margin", StringComparison.OrdinalIgnoreCase))
+        if (existing.Contains(propertyName, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
