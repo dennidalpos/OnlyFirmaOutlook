@@ -1,0 +1,70 @@
+<Window x:Class="OnlyFirmaOutlook.Views.GuideWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Guida - OnlyFirmaOutlook"
+        Height="520" Width="360"
+        MinHeight="420" MinWidth="320"
+        WindowStartupLocation="CenterOwner"
+        Background="#F3F3F3">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+        <Border Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
+                CornerRadius="4" Padding="12">
+            <StackPanel>
+                <TextBlock Text="Guida dettagliata" FontWeight="Bold" FontSize="16" Margin="0,0,0,12"/>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,12">
+                    <Run Text="Questa guida raccoglie i dettagli su formato HTML, backup e pulizia automatica."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="1) Seleziona la firma di partenza:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Scegli un preset dalla lista oppure carica un file Word (.docx/.doc). I file provenienti da rete vengono copiati in locale per evitare blocchi e rallentamenti durante l'editing."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="2) Configura nome e account:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Inserisci un nome chiaro per la firma. Se Outlook è configurato, seleziona l'account; altrimenti inserisci un identificativo (es. email o nome utente) per differenziare le firme. L'identificativo viene aggiunto al nome finale della firma."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="3) Verifica la cartella di destinazione:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Di default viene proposta la cartella firme di Outlook. Se Outlook non è installato o vuoi salvare altrove, seleziona una cartella differente. Il backup automatico viene creato solo quando la destinazione è la cartella predefinita di Outlook."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="4) Modifica il documento in Word:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Usa 'Apri in Word' per modificare il documento. Salva con Maiusc+F12 e chiudi Word: lo stato si aggiorna quando il file viene salvato e Word è chiuso. Se il file non risulta salvato, la conversione resta disabilitata."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="5) Scegli il formato HTML:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="HTML filtrato riduce stili superflui per compatibilità; HTML completo preserva più stili di Word ma può generare output più pesante."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="6) Controlla firme esistenti:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Se una firma con lo stesso nome è già presente, l'app mostra un avviso. Puoi eliminarla manualmente dalla lista o scegliere di sovrascriverla durante la conversione."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="7) Backup e ripristino:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Quando la destinazione è la cartella Outlook, l'app crea un backup ZIP prima di sovrascrivere. I backup sono elencati nella sezione dedicata e possono essere ripristinati (sovrascrive i file correnti) o eliminati."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="8) Converti e salva la firma:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Premi 'Converti e salva firma'. L'app genera HTML/RTF/TXT, ricostruisce gli asset delle immagini e apre la cartella di destinazione al termine."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                    <Run Text="9) Verifica in Outlook (classic):" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Apri Outlook, vai su File → Opzioni → Posta → Firme e imposta la nuova firma come predefinita. Verifica che la firma risulti corretta nelle email di prova."/>
+                </TextBlock>
+                <TextBlock TextWrapping="Wrap">
+                    <Run Text="10) Pulizia automatica e log:" FontWeight="SemiBold"/>
+                    <LineBreak/>
+                    <Run Text="Alla chiusura dell'app i file temporanei generati vengono rimossi. Il pulsante 'Pulisci log' elimina anche il file di log su disco e riparte con un nuovo log."/>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</Window>

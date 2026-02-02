@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>OnlyFirmaOutlook.Launcher</AssemblyName>
+    <RootNamespace>OnlyFirmaOutlook.Launcher</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>OnlyFirmaOutlook</Authors>
+    <Description>Launcher che rileva la bitness di Office e avvia la build corretta</Description>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\OfficeBitnessDetector.cs" Link="OfficeBitnessDetector.cs" />
+  </ItemGroup>
+
+</Project>
