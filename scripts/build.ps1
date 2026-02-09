@@ -4,6 +4,8 @@ param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
 
+    [string]$OutputDir = "dist",
+
     [switch]$SkipRestore,
 
     [switch]$SkipClean,
@@ -12,7 +14,11 @@ param(
 
     [switch]$SkipTests,
 
-    [switch]$SkipPublish
+    [switch]$SkipPublish,
+
+    [switch]$SkipBootstrapper,
+
+    [switch]$SkipMediaCopy
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,7 +26,7 @@ $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Split-Path -Parent $scriptDir
 $srcDir = Join-Path $rootDir "src"
-$distDir = Join-Path $rootDir "dist"
+$distDir = Join-Path $rootDir $OutputDir
 $mainProjectDir = Join-Path $srcDir "OnlyFirmaOutlook"
 $bootstrapperDir = Join-Path $srcDir "Bootstrapper"
 $mediaSourceDir = Join-Path $mainProjectDir "media"
@@ -59,6 +65,8 @@ if (-not $SkipClean) {
     New-Item -ItemType Directory -Path $distDir -Force | Out-Null
     Write-Host "   OK" -ForegroundColor Green
     Write-Host ""
+} elseif (-not (Test-Path $distDir)) {
+    New-Item -ItemType Directory -Path $distDir -Force | Out-Null
 }
 
 if (-not $SkipRestore) {
@@ -101,21 +109,23 @@ if (-not $SkipPublish) {
         Write-Host ""
     }
 
-    Write-Host "Publish Bootstrapper..." -ForegroundColor Yellow
-    $bootstrapperOutput = Join-Path $distDir "OnlyFirmaOutlook.Launcher.exe"
-    dotnet publish "$bootstrapperDir\Bootstrapper.csproj" `
-        -c $Configuration `
-        -r win-x64 `
-        --self-contained true `
-        -p:PublishSingleFile=true `
-        -o $distDir
+    if (-not $SkipBootstrapper) {
+        Write-Host "Publish Bootstrapper..." -ForegroundColor Yellow
+        $bootstrapperOutput = Join-Path $distDir "OnlyFirmaOutlook.Launcher.exe"
+        dotnet publish "$bootstrapperDir\Bootstrapper.csproj" `
+            -c $Configuration `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -o $distDir
 
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERRORE: Publish Bootstrapper fallito" -ForegroundColor Red
-        exit $LASTEXITCODE
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "ERRORE: Publish Bootstrapper fallito" -ForegroundColor Red
+            exit $LASTEXITCODE
+        }
+        Write-Host "   OK - Output: $distDir" -ForegroundColor Green
+        Write-Host ""
     }
-    Write-Host "   OK - Output: $distDir" -ForegroundColor Green
-    Write-Host ""
 
     foreach ($runtime in $publishDirs.Keys) {
         $mediaTarget = Join-Path $publishDirs[$runtime] "media"
@@ -125,18 +135,20 @@ if (-not $SkipPublish) {
         }
     }
 
-    if (Test-Path $mediaSourceDir) {
-        $presetFiles = Get-ChildItem -Path $mediaSourceDir -Filter "*.doc*" -File
-        if ($presetFiles.Count -gt 0) {
-            Write-Host "Copia file preset..." -ForegroundColor Yellow
-            foreach ($file in $presetFiles) {
-                foreach ($runtime in $publishDirs.Keys) {
-                    Copy-Item -Path $file.FullName -Destination (Join-Path $publishDirs[$runtime] "media") -Force
+    if (-not $SkipMediaCopy) {
+        if (Test-Path $mediaSourceDir) {
+            $presetFiles = Get-ChildItem -Path $mediaSourceDir -Filter "*.doc*" -File
+            if ($presetFiles.Count -gt 0) {
+                Write-Host "Copia file preset..." -ForegroundColor Yellow
+                foreach ($file in $presetFiles) {
+                    foreach ($runtime in $publishDirs.Keys) {
+                        Copy-Item -Path $file.FullName -Destination (Join-Path $publishDirs[$runtime] "media") -Force
+                    }
+                    Write-Host "   Copiato: $($file.Name)" -ForegroundColor Gray
                 }
-                Write-Host "   Copiato: $($file.Name)" -ForegroundColor Gray
+                Write-Host "   OK" -ForegroundColor Green
+                Write-Host ""
             }
-            Write-Host "   OK" -ForegroundColor Green
-            Write-Host ""
         }
     }
 }
