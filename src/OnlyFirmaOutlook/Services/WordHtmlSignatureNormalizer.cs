@@ -158,13 +158,18 @@ public class WordHtmlSignatureNormalizer
         tableNode.SetAttributeValue("border", "0");
         tableNode.SetAttributeValue("cellpadding", "0");
         tableNode.SetAttributeValue("cellspacing", "0");
+        tableNode.Attributes.Remove("bordercolor");
+        tableNode.Attributes.Remove("bordercolorlight");
+        tableNode.Attributes.Remove("bordercolordark");
 
         // Rimuove bordi esistenti dallo style e aggiunge fix
         var existingStyle = tableNode.GetAttributeValue("style", string.Empty);
         var cleanedStyle = RemoveExistingBorderStyles(existingStyle);
 
         // Stili necessari per fix Outlook 2512
-        const string borderFix = "border:none; border-collapse:collapse";
+        const string borderFix =
+            "border:none !important; border-collapse:collapse; border-spacing:0; " +
+            "mso-table-lspace:0pt; mso-table-rspace:0pt";
 
         var newStyle = string.IsNullOrWhiteSpace(cleanedStyle)
             ? borderFix
@@ -175,22 +180,24 @@ public class WordHtmlSignatureNormalizer
 
     private static void FixCellBorders(HtmlNode cellNode)
     {
+        cellNode.Attributes.Remove("border");
+        cellNode.Attributes.Remove("bordercolor");
+        cellNode.Attributes.Remove("bordercolorlight");
+        cellNode.Attributes.Remove("bordercolordark");
+
         var existingStyle = cellNode.GetAttributeValue("style", string.Empty);
         var cleanedStyle = RemoveExistingBorderStyles(existingStyle);
 
-        // Aggiunge border:none solo se non già presente
-        if (!cleanedStyle.Contains("border", StringComparison.OrdinalIgnoreCase))
-        {
-            var newStyle = string.IsNullOrWhiteSpace(cleanedStyle)
-                ? "border:none"
-                : $"{cleanedStyle.TrimEnd(';')}; border:none";
+        const string borderFix =
+            "border:none !important; mso-border-alt:none 0pt; " +
+            "mso-border-left-alt:none 0pt; mso-border-right-alt:none 0pt; " +
+            "mso-border-top-alt:none 0pt; mso-border-bottom-alt:none 0pt";
 
-            cellNode.SetAttributeValue("style", newStyle);
-        }
-        else if (!string.IsNullOrWhiteSpace(cleanedStyle))
-        {
-            cellNode.SetAttributeValue("style", cleanedStyle);
-        }
+        var newStyle = string.IsNullOrWhiteSpace(cleanedStyle)
+            ? borderFix
+            : $"{cleanedStyle.TrimEnd(';')}; {borderFix}";
+
+        cellNode.SetAttributeValue("style", newStyle);
     }
 
     /// <summary>

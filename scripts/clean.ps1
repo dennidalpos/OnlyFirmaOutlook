@@ -1,7 +1,9 @@
 
 
 param(
-    [switch]$All
+    [switch]$All,
+
+    [switch]$IncludeUserData
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,6 +23,8 @@ $foldersToDelete = @(
     "src\OnlyFirmaOutlook\obj",
     "src\Bootstrapper\bin",
     "src\Bootstrapper\obj",
+    "tests\OnlyFirmaOutlook.Tests\bin",
+    "tests\OnlyFirmaOutlook.Tests\obj",
     "dist"
 )
 
@@ -76,6 +80,33 @@ if ($All) {
             catch {
                 Write-Host "   Impossibile eliminare: $($file.FullName)" -ForegroundColor Red
             }
+        }
+    }
+}
+
+if ($IncludeUserData) {
+    $userDataRoot = Join-Path $env:LOCALAPPDATA "OnlyFirmaOutlook"
+    $userDataFolders = @(
+        (Join-Path $userDataRoot "EditorTemp"),
+        (Join-Path $userDataRoot "Logs")
+    )
+
+    Write-Host ""
+    Write-Host "Pulizia dati utente (EditorTemp/Logs)..." -ForegroundColor Yellow
+
+    foreach ($folder in $userDataFolders) {
+        if (Test-Path $folder) {
+            try {
+                Remove-Item -Path $folder -Recurse -Force
+                Write-Host "   Eliminato: $folder" -ForegroundColor Gray
+                $deletedCount++
+            }
+            catch {
+                Write-Host "   Impossibile eliminare: $folder" -ForegroundColor Red
+            }
+        }
+        else {
+            Write-Host "   Non trovato: $folder" -ForegroundColor DarkGray
         }
     }
 }

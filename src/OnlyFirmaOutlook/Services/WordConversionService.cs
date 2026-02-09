@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -54,6 +55,13 @@ public class WordConversionService
         bool useFilteredHtml = true,
         bool fixOutlook2512 = true)
     {
+        var sanitizedSignatureName = SanitizeFileName(signatureName);
+        if (!string.Equals(signatureName, sanitizedSignatureName, StringComparison.Ordinal))
+        {
+            _logger.LogWarning($"Nome firma normalizzato per export: '{signatureName}' → '{sanitizedSignatureName}'");
+            signatureName = sanitizedSignatureName;
+        }
+
         _logger.Log($"Avvio conversione documento: {sourceDocPath}");
         _logger.Log($"Cartella destinazione: {destinationFolder}");
         _logger.Log($"Nome firma: {signatureName}");

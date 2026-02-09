@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -789,33 +790,11 @@ public partial class MainWindow : Window
     {
         if (PresetListBox.SelectedItem is not PresetFile preset) return;
 
-        try
-        {
-            
-            var tempFilePath = _tempFileManager.CopyToLocalTemp(preset.FullPath);
-
-            
-            _currentEditorState = _wordEditorService.PrepareFileForEditing(tempFilePath, preset.DisplayName);
-            _selectedFilePath = _currentEditorState.LocalFilePath;
-            _lastFileModifiedTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
-
-            
-            SelectedFileText.Text = preset.FileName;
-            SignatureNameTextBox.Text = preset.DisplayName;
-
-            _logger.Log($"Preset selezionato: {preset.DisplayName}");
-
-            UpdateConvertButtonState();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Errore durante la selezione del preset", ex);
-            MessageBox.Show(
-                $"Errore durante la selezione del preset:\n{ex.Message}",
-                "Errore",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
+        LoadDocumentForEditing(
+            preset.FullPath,
+            preset.FileName,
+            preset.DisplayName,
+            "Preset");
     }
 
     private void LoadCustomButton_Click(object sender, RoutedEventArgs e)
@@ -829,58 +808,81 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() == true)
         {
-            try
-            {
-                if (!IsSupportedDocument(dialog.FileName))
-                {
-                    MessageBox.Show(
-                        "Il file selezionato non è un documento supportato (.doc/.docx/.rtf).",
-                        "File non valido",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                    return;
-                }
+            PresetListBox.SelectedItem = null;
+            var fileName = Path.GetFileName(dialog.FileName);
+            var proposedName = Path.GetFileNameWithoutExtension(fileName);
 
-                
-                PresetListBox.SelectedItem = null;
-
-                
-                string sourceFile;
-                if (TempFileManager.IsUncPath(dialog.FileName))
-                {
-                    sourceFile = _tempFileManager.CopyToLocalTemp(dialog.FileName);
-                }
-                else
-                {
-                    sourceFile = dialog.FileName;
-                }
-
-                var fileName = Path.GetFileName(dialog.FileName);
-                var proposedName = Path.GetFileNameWithoutExtension(fileName);
-
-                
-                _currentEditorState = _wordEditorService.PrepareFileForEditing(sourceFile, proposedName);
-                _selectedFilePath = _currentEditorState.LocalFilePath;
-                _lastFileModifiedTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
-
-                
-                SelectedFileText.Text = fileName;
-                SignatureNameTextBox.Text = proposedName;
-
-                _logger.Log($"File personalizzato caricato: {fileName}");
-
-                UpdateConvertButtonState();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Errore durante il caricamento del file", ex);
-                MessageBox.Show(
-                    $"Errore durante il caricamento del file:\n{ex.Message}",
-                    "Errore",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
+            LoadDocumentForEditing(
+                dialog.FileName,
+                fileName,
+                proposedName,
+                "File personalizzato");
         }
+    }
+
+    private void LoadDocumentForEditing(string sourceFilePath, string displayFileName, string proposedSignatureName, string sourceLabel)
+    {
+        try
+        {
+            if (!File.Exists(sourceFilePath))
+            {
+                MessageBox.Show(
+                    "Il file selezionato non esiste più. Riprova.",
+                    "File non trovato",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!IsSupportedDocument(sourceFilePath))
+            {
+                MessageBox.Show(
+                    "Il file selezionato non è un documento supportato (.doc/.docx/.rtf).",
+                    "File non valido",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var normalizedName = WordConversionService.SanitizeFileName(proposedSignatureName);
+            if (!string.Equals(proposedSignatureName, normalizedName, StringComparison.Ordinal))
+            {
+                _logger.LogWarning($"Nome firma normalizzato in import: '{proposedSignatureName}' → '{normalizedName}'");
+            }
+
+            var editableSource = PrepareSourceForEditing(sourceFilePath);
+
+            _currentEditorState = _wordEditorService.PrepareFileForEditing(editableSource, normalizedName);
+            _selectedFilePath = _currentEditorState.LocalFilePath;
+            _lastFileModifiedTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
+
+            SelectedFileText.Text = displayFileName;
+            SignatureNameTextBox.Text = normalizedName;
+
+            _logger.Log($"{sourceLabel} importato: {displayFileName}");
+
+            UpdateConvertButtonState();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Errore durante l'import del documento", ex);
+            MessageBox.Show(
+                $"Errore durante l'import del documento:\n{ex.Message}",
+                "Errore",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private string PrepareSourceForEditing(string sourceFilePath)
+    {
+        if (TempFileManager.IsUncPath(sourceFilePath))
+        {
+            _logger.Log("File su rete: copia in temporanea locale.");
+            return _tempFileManager.CopyToLocalTemp(sourceFilePath);
+        }
+
+        return sourceFilePath;
     }
 
     private static bool IsSupportedDocument(string filePath)
@@ -964,6 +966,16 @@ public partial class MainWindow : Window
         var finalSignatureName = _signatureWorkflowService.BuildFinalSignatureName(baseName, identifier);
         var destinationFolder = DestinationFolderTextBox.Text;
 
+        if (!_isFolderWritable)
+        {
+            MessageBox.Show(
+                "La cartella di destinazione non è scrivibile. Seleziona un'altra cartella.",
+                "Cartella non scrivibile",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
         _signatureWorkflowService.CreateBackupIfNeeded(destinationFolder);
         RefreshBackups();
 
@@ -989,8 +1001,8 @@ public partial class MainWindow : Window
 
         try
         {
-            var useFilteredHtml = FilteredHtmlRadio.IsChecked ?? false;
-            var fixOutlook2512 = FixOutlook2512CheckBox.IsChecked ?? true;
+            var useFilteredHtml = FilteredHtmlRadio.IsChecked == true;
+            var fixOutlook2512 = FixOutlook2512CheckBox.IsChecked == true;
 
             var conversionResult = await Task.Run(() =>
             {
@@ -1294,6 +1306,7 @@ public partial class MainWindow : Window
         BrowseFolderButton.IsEnabled = !isBusy;
         FilteredHtmlRadio.IsEnabled = !isBusy;
         CompleteHtmlRadio.IsEnabled = !isBusy;
+        FixOutlook2512CheckBox.IsEnabled = !isBusy;
         if (isBusy)
         {
             ConvertButton.IsEnabled = false;
