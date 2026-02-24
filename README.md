@@ -88,10 +88,14 @@ $ dotnet publish src/Bootstrapper/Bootstrapper.csproj -c Release -r win-x64 --se
 ### Script PowerShell (consigliato)
 
 Lo script `scripts/build.ps1` gestisce pulizia, restore, build, test e publish per entrambi i runtime e copia i preset nella cartella di output.
+Se non passi `-PublishMode`, lo script chiede in console se compilare in modalità **Framework-dependent** o **Self-contained**.
 
 ```powershell
-# Build+publish completo
+# Build+publish completo (con scelta modalità da console)
 ./scripts/build.ps1 -Configuration Release
+
+# Build+publish forzando Framework-dependent
+./scripts/build.ps1 -Configuration Release -PublishMode FrameworkDependent
 
 # Build senza test
 ./scripts/build.ps1 -Configuration Release -SkipTests
