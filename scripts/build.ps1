@@ -53,15 +53,27 @@ function Resolve-PublishMode {
 
     while ($true) {
         Write-Host "Seleziona modalità di publish:" -ForegroundColor Yellow
-        Write-Host "  1) Framework-dependent" -ForegroundColor Gray
-        Write-Host "  2) Self-contained" -ForegroundColor Gray
-        $choice = Read-Host "Scelta (1/2)"
+        Write-Host "  1) Framework-dependent (richiede .NET Runtime installato)" -ForegroundColor Gray
+        Write-Host "  2) Self-contained (runtime incluso nell'eseguibile)" -ForegroundColor Gray
+        $choice = Read-Host "Scelta (1/2, invio = 1)"
 
-        switch ($choice) {
+        if ([string]::IsNullOrWhiteSpace($choice)) {
+            return "FrameworkDependent"
+        }
+
+        $normalizedChoice = $choice.Trim().ToLowerInvariant()
+
+        switch ($normalizedChoice) {
             "1" { return "FrameworkDependent" }
+            "frameworkdependent" { return "FrameworkDependent" }
+            "framework-dependent" { return "FrameworkDependent" }
+            "fd" { return "FrameworkDependent" }
             "2" { return "SelfContained" }
+            "selfcontained" { return "SelfContained" }
+            "self-contained" { return "SelfContained" }
+            "sc" { return "SelfContained" }
             default {
-                Write-Host "Scelta non valida. Inserisci 1 o 2." -ForegroundColor Red
+                Write-Host "Scelta non valida. Inserisci 1/2 (oppure fd/sc)." -ForegroundColor Red
                 Write-Host ""
             }
         }
