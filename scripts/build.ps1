@@ -12,6 +12,9 @@ param(
 
     [string[]]$Runtimes = @("win-x86", "win-x64"),
 
+    [ValidateSet("SelfContained", "FrameworkDependent")]
+    [string]$PublishMode,
+
     [switch]$SkipTests,
 
     [switch]$SkipPublish,
@@ -38,6 +41,32 @@ Write-Host ""
 Write-Host "Root Directory: $rootDir"
 Write-Host "Configuration:  $Configuration"
 Write-Host ""
+
+function Resolve-PublishMode {
+    param(
+        [string]$CurrentPublishMode
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($CurrentPublishMode)) {
+        return $CurrentPublishMode
+    }
+
+    while ($true) {
+        Write-Host "Seleziona modalità di publish:" -ForegroundColor Yellow
+        Write-Host "  1) Framework-dependent" -ForegroundColor Gray
+        Write-Host "  2) Self-contained" -ForegroundColor Gray
+        $choice = Read-Host "Scelta (1/2)"
+
+        switch ($choice) {
+            "1" { return "FrameworkDependent" }
+            "2" { return "SelfContained" }
+            default {
+                Write-Host "Scelta non valida. Inserisci 1 o 2." -ForegroundColor Red
+                Write-Host ""
+            }
+        }
+    }
+}
 
 function Invoke-BuildCommand {
     param(
@@ -86,6 +115,13 @@ if (-not $SkipTests) {
 }
 
 if (-not $SkipPublish) {
+    $PublishMode = Resolve-PublishMode -CurrentPublishMode $PublishMode
+    $isSelfContained = $PublishMode -eq "SelfContained"
+    $selfContainedArg = if ($isSelfContained) { "true" } else { "false" }
+
+    Write-Host "Modalità publish: $PublishMode" -ForegroundColor Cyan
+    Write-Host ""
+
     $normalizedRuntimes = $Runtimes | ForEach-Object { $_.ToLowerInvariant() } | Select-Object -Unique
     $publishDirs = @{}
 
@@ -97,7 +133,7 @@ if (-not $SkipPublish) {
         dotnet publish "$mainProjectDir\OnlyFirmaOutlook.csproj" `
             -c $Configuration `
             -r $runtime `
-            --self-contained true `
+            --self-contained $selfContainedArg `
             -p:PublishSingleFile=false `
             -o $publishDir
 
@@ -115,7 +151,7 @@ if (-not $SkipPublish) {
         dotnet publish "$bootstrapperDir\Bootstrapper.csproj" `
             -c $Configuration `
             -r win-x64 `
-            --self-contained true `
+            --self-contained $selfContainedArg `
             -p:PublishSingleFile=true `
             -o $distDir
 
@@ -157,6 +193,10 @@ Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host " Build completata con successo!" -ForegroundColor Green
 Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host ""
+if (-not $SkipPublish) {
+    Write-Host "Modalità publish usata: $PublishMode"
+    Write-Host ""
+}
 Write-Host "Output in: $distDir"
 Write-Host ""
 Write-Host "Contenuto:" -ForegroundColor White
