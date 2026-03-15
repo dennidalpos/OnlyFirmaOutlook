@@ -139,6 +139,12 @@ tests/                # Test unitari
 scripts/              # Script di build e pulizia
 ```
 
+## Documentation
+
+- `PROJECT_SPEC.md`: specifica tecnica e vincoli del progetto.
+- `PROJECT_STATUS.json`: struttura repository, file grandi monitorati e task aperti.
+- `AGENTS.md`: regole operative per agenti automatici.
+
 ## Note operative e troubleshooting
 
 - **File Word su rete**: vengono copiati in locale per evitare blocchi durante la modifica.
