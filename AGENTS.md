@@ -195,6 +195,57 @@ L’agente deve:
 
 ---
 
+
+# Standard struttura cartelle
+
+L’agente deve mantenere una **struttura ordinata e standard del repository**, non solo per il codice ma anche per script e documentazione.
+
+Regole obbligatorie:
+
+* file e cartelle devono essere collocati nella directory di pertinenza
+* script operativi non devono rimanere sparsi nella root o in cartelle casuali
+* documentazione tecnica e operativa non deve rimanere dispersa in posizioni incoerenti
+* quando script o documentazione risultano sparsi nel repository, l’agente deve **spostarli nelle cartelle corrette** e aggiornare i riferimenti
+
+Struttura standard attesa, salvo vincoli espliciti del progetto:
+
+```
+/docs        documentazione
+/scripts     script operativi, build, publish, setup, automation
+/src         codice applicativo
+/tests       test
+/tools       tool locali di supporto, se separati dagli script
+```
+
+Se il progetto richiede una convenzione diversa già esplicitata nel repository, l’agente deve rispettarla, mantenendo comunque ordine, coerenza e prevedibilità.
+
+---
+
+# Ambiente operativo standard
+
+Salvo indicazioni diverse del progetto, l’ambiente operativo di riferimento è **Windows**.
+
+Conseguenze operative:
+
+* gli script di automazione devono essere preferibilmente in **PowerShell** (`.ps1`)
+* comandi, path ed esempi devono essere compatibili con ambiente Windows
+* eventuali script shell non Windows devono essere introdotti solo se richiesti dal contesto tecnico del progetto
+
+---
+
+# Regole build e publish
+
+Se il contesto del progetto richiede compilazione o pubblicazione, l’agente deve adottare come default la modalità **framework-dependent**.
+
+Regole obbligatorie:
+
+* gli script di build/publish devono essere in PowerShell, salvo diversa esigenza tecnica del progetto
+* publish e build devono usare di default output **framework-dependent**
+* self-contained, single-file o altre modalità non di default devono essere usate solo se richieste in modo esplicito dal progetto
+* se il repository contiene script o pipeline con default non coerenti, l’agente deve normalizzarli o tracciare il lavoro come task
+
+---
+
 # Gerarchia di verità
 
 In caso di conflitto tra fonti:
@@ -280,6 +331,7 @@ Usare quando:
 * refactor
 * documentazione
 * struttura repository
+* riallineamento cartelle/script/docs
 
 Operazioni obbligatorie:
 
@@ -395,6 +447,7 @@ Esempi:
 * documentazione non implementata
 * file non registrati
 * task obsoleti
+* script o documentazione lasciati in cartelle non standard o sparse
 
 ---
 

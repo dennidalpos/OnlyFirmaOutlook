@@ -11,6 +11,8 @@ namespace OnlyFirmaOutlook.Services;
 
 public class SignatureRepository
 {
+    private static readonly string[] SignatureExtensions = [".htm", ".rtf", ".txt"];
+    private static readonly string[] SignatureAssetSuffixes = ["_files", "_file"];
     private readonly LoggingService _logger;
 
     public SignatureRepository()
@@ -59,23 +61,26 @@ public class SignatureRepository
         try
         {
             var signatureNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var htmFiles = Directory.GetFiles(folderPath, "*.htm", SearchOption.TopDirectoryOnly);
-            var rtfFiles = Directory.GetFiles(folderPath, "*.rtf", SearchOption.TopDirectoryOnly);
-            var txtFiles = Directory.GetFiles(folderPath, "*.txt", SearchOption.TopDirectoryOnly);
-
-            foreach (var file in htmFiles)
+            foreach (var file in Directory.EnumerateFiles(folderPath, "*", SearchOption.TopDirectoryOnly))
             {
-                signatureNames.Add(Path.GetFileNameWithoutExtension(file));
+                var extension = Path.GetExtension(file);
+                if (SignatureExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+                {
+                    signatureNames.Add(Path.GetFileNameWithoutExtension(file));
+                }
             }
 
-            foreach (var file in rtfFiles)
+            foreach (var directory in Directory.EnumerateDirectories(folderPath, "*", SearchOption.TopDirectoryOnly))
             {
-                signatureNames.Add(Path.GetFileNameWithoutExtension(file));
-            }
-
-            foreach (var file in txtFiles)
-            {
-                signatureNames.Add(Path.GetFileNameWithoutExtension(file));
+                var directoryName = Path.GetFileName(directory);
+                foreach (var suffix in SignatureAssetSuffixes)
+                {
+                    if (directoryName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        signatureNames.Add(directoryName[..^suffix.Length]);
+                        break;
+                    }
+                }
             }
 
             foreach (var baseName in signatureNames)
@@ -155,13 +160,7 @@ public class SignatureRepository
     {
         _logger.Log($"Eliminazione file firma esistente: {signatureName}");
 
-        var basePath = Path.Combine(folderPath, signatureName);
-
-        TryDeleteFile(basePath + ".htm");
-        TryDeleteFile(basePath + ".rtf");
-        TryDeleteFile(basePath + ".txt");
-        TryDeleteDirectory(basePath + "_files");
-        TryDeleteDirectory(basePath + "_file");
+        DeleteSignatureArtifacts(folderPath, signatureName);
     }
 
     
@@ -169,8 +168,8 @@ public class SignatureRepository
     
     public bool SignatureExists(string folderPath, string signatureName)
     {
-        var htmPath = Path.Combine(folderPath, signatureName + ".htm");
-        return File.Exists(htmPath);
+        return GetSignatureArtifactPaths(folderPath, signatureName)
+            .Any(path => File.Exists(path) || Directory.Exists(path));
     }
 
     
@@ -340,6 +339,7 @@ public class SignatureRepository
                 Directory.CreateDirectory(destinationFolder);
             }
 
+            ResetDestinationFromBackupSnapshot(destinationFolder);
             ZipFile.ExtractToDirectory(backup.FullPath, destinationFolder, overwriteFiles: true);
             _logger.Log($"Backup ripristinato: {backup.FullPath}");
             return true;
@@ -383,6 +383,53 @@ public class SignatureRepository
         {
             _logger.LogWarning($"Impossibile eliminare cartella '{path}': {ex.Message}");
             return false;
+        }
+    }
+
+    private void DeleteSignatureArtifacts(string folderPath, string signatureName)
+    {
+        foreach (var artifactPath in GetSignatureArtifactPaths(folderPath, signatureName))
+        {
+            if (Directory.Exists(artifactPath))
+            {
+                TryDeleteDirectory(artifactPath);
+                continue;
+            }
+
+            TryDeleteFile(artifactPath);
+        }
+    }
+
+    private static IEnumerable<string> GetSignatureArtifactPaths(string folderPath, string signatureName)
+    {
+        var basePath = Path.Combine(folderPath, signatureName);
+
+        foreach (var extension in SignatureExtensions)
+        {
+            yield return basePath + extension;
+        }
+
+        foreach (var suffix in SignatureAssetSuffixes)
+        {
+            yield return basePath + suffix;
+        }
+    }
+
+    private void ResetDestinationFromBackupSnapshot(string destinationFolder)
+    {
+        foreach (var file in Directory.EnumerateFiles(destinationFolder, "*", SearchOption.TopDirectoryOnly))
+        {
+            if (Path.GetFileName(file).StartsWith("backup_firme_onlyfirmaoutlook_", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            TryDeleteFile(file);
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(destinationFolder, "*", SearchOption.TopDirectoryOnly))
+        {
+            TryDeleteDirectory(directory);
         }
     }
 }

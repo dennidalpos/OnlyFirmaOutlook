@@ -6,6 +6,10 @@
     "PROJECT_SPEC.md",
     "PROJECT_STATUS.json",
     "README.md",
+    ".github/",
+    ".github/workflows/",
+    ".github/workflows/ci.yml",
+    "dist/",
     "scripts/",
     "scripts/build.ps1",
     "scripts/clean.ps1",
@@ -46,6 +50,9 @@
     "src/OnlyFirmaOutlook/Views/",
     "src/OnlyFirmaOutlook/Views/GuideWindow.xaml",
     "src/OnlyFirmaOutlook/Views/GuideWindow.xaml.cs",
+    "src/OnlyFirmaOutlook/Views/MainWindow.Chrome.cs",
+    "src/OnlyFirmaOutlook/Views/MainWindow.Editor.cs",
+    "src/OnlyFirmaOutlook/Views/MainWindow.SignatureManagement.cs",
     "src/OnlyFirmaOutlook/Views/MainWindow.xaml",
     "src/OnlyFirmaOutlook/Views/MainWindow.xaml.cs",
     "src/Shared/",
@@ -58,8 +65,6 @@
     "tests/OnlyFirmaOutlook.Tests/TempFileManagerTests.cs",
     "tests/OnlyFirmaOutlook.Tests/WordConversionServiceTests.cs"
   ],
-  "files_big": [
-    "src/OnlyFirmaOutlook/Views/MainWindow.xaml.cs:1197"
-  ],
+  "files_big": [],
   "tasks": []
 }

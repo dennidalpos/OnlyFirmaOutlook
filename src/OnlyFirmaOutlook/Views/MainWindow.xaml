@@ -164,7 +164,8 @@
                                Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
                                Margin="0,8,0,0" Visibility="Collapsed"/>
                         <TextBox x:Name="IdentifierTextBox" Grid.Row="2" Grid.Column="1"
-                                 Margin="0,8,0,0" Visibility="Collapsed"/>
+                                 Margin="0,8,0,0" Visibility="Collapsed"
+                                 TextChanged="IdentifierTextBox_TextChanged"/>
                         <TextBlock x:Name="IdentifierHint" Grid.Row="3" Grid.Column="1"
                                    Text="(Opzionale)"
                                    Foreground="#A19F9D" FontSize="11" Visibility="Collapsed"/>
@@ -252,11 +253,6 @@
                         <RadioButton x:Name="CompleteHtmlRadio" Content="HTML Completo (consigliato)"
                                      IsChecked="True" GroupName="HtmlType"/>
 
-                        <TextBlock Text="Correzioni:" FontWeight="SemiBold" Margin="0,12,0,4"/>
-                        <CheckBox x:Name="FixOutlook2512CheckBox"
-                                  Content="Fix bordi tabelle Outlook 2512+"
-                                  IsChecked="True"
-                                  ToolTip="Corregge il bug di Outlook Classic 2512+ che aggiunge bordi indesiderati alle tabelle nelle firme"/>
                     </StackPanel>
                 </GroupBox>
 

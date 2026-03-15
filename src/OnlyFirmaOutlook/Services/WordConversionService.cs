@@ -52,8 +52,7 @@ public class WordConversionService
         string sourceDocPath,
         string destinationFolder,
         string signatureName,
-        bool useFilteredHtml = true,
-        bool fixOutlook2512 = true)
+        bool useFilteredHtml = true)
     {
         var sanitizedSignatureName = SanitizeFileName(signatureName);
         if (!string.Equals(signatureName, sanitizedSignatureName, StringComparison.Ordinal))
@@ -66,9 +65,11 @@ public class WordConversionService
         _logger.Log($"Cartella destinazione: {destinationFolder}");
         _logger.Log($"Nome firma: {signatureName}");
         _logger.Log($"Tipo HTML: {(useFilteredHtml ? "Filtrato" : "Completo")}");
-        _logger.Log($"Fix Outlook 2512: {(fixOutlook2512 ? "Attivo" : "Disattivo")}");
-
         var result = new ConversionResult();
+        var basePath = Path.Combine(destinationFolder, signatureName);
+        var htmPath = basePath + ".htm";
+        var rtfPath = basePath + ".rtf";
+        var txtPath = basePath + ".txt";
         dynamic? wordApp = null;
         dynamic? doc = null;
 
@@ -88,12 +89,6 @@ public class WordConversionService
                 Directory.CreateDirectory(destinationFolder);
                 _logger.Log("Cartella destinazione creata");
             }
-
-            
-            var basePath = Path.Combine(destinationFolder, signatureName);
-            var htmPath = basePath + ".htm";
-            var rtfPath = basePath + ".rtf";
-            var txtPath = basePath + ".txt";
 
             
             _logger.Log("Creazione istanza Word.Application...");
@@ -208,48 +203,46 @@ public class WordConversionService
 
         if (result.Success && result.HtmFilePath != null)
         {
-            try
+            if (!TryFinalizeConversion(result, destinationFolder, signatureName))
             {
-                var normalizer = new WordHtmlSignatureNormalizer();
-                var cssInliner = new CssInliner();
-                var assetManager = new AssetManager();
-                var installer = new SignatureInstaller();
-
-                var html = ReadAllTextWithRetry(result.HtmFilePath);
-                if (html == null)
-                {
-                    _logger.LogWarning("Impossibile leggere HTML firma per normalizzazione");
-                    return result;
-                }
-
-                var inlined = cssInliner.InlineCss(html);
-                var normalized = normalizer.Normalize(inlined, fixOutlook2512);
-
-                var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
-                var assetResult = assetManager.ProcessImages(normalized, result.HtmFilePath, assetsFolder, signatureName, useAbsolutePaths: false, embedImages: true);
-                installer.Install(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
-
-                if (Directory.Exists(assetsFolder) && Directory.GetFiles(assetsFolder).Length == 0)
-                {
-                    try { Directory.Delete(assetsFolder, true); } catch { }
-                    result.AssetsFolderPath = null;
-                }
-                else
-                {
-                    result.AssetsFolderPath = assetsFolder;
-                }
-                result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
-                result.TxtFilePath = Path.Combine(destinationFolder, signatureName + ".txt");
-
-                CleanupWordAssetFolders(destinationFolder, signatureName);
+                RollbackGeneratedArtifacts(destinationFolder, signatureName);
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"Errore normalizzazione HTML firma: {ex.Message}");
-            }
+        }
+        else if (!result.Success)
+        {
+            RollbackGeneratedArtifacts(destinationFolder, signatureName);
         }
 
         return result;
+    }
+
+    protected virtual string? ReadHtmlForPostProcessing(string path)
+    {
+        return ReadAllTextWithRetry(path);
+    }
+
+    protected virtual string InlineCss(string html)
+    {
+        var cssInliner = new CssInliner();
+        return cssInliner.InlineCss(html);
+    }
+
+    protected virtual string NormalizeHtml(string html)
+    {
+        var normalizer = new WordHtmlSignatureNormalizer();
+        return normalizer.Normalize(html);
+    }
+
+    protected virtual AssetProcessingResult ProcessAssets(string html, string sourceHtmlPath, string assetsFolderPath, string signatureName)
+    {
+        var assetManager = new AssetManager();
+        return assetManager.ProcessImages(html, sourceHtmlPath, assetsFolderPath, signatureName, useAbsolutePaths: false, embedImages: true);
+    }
+
+    protected virtual void InstallSignature(string destinationFolder, string signatureName, string html, string plainText)
+    {
+        var installer = new SignatureInstaller();
+        installer.Install(destinationFolder, signatureName, html, plainText);
     }
 
     private void CleanupWordAssetFolders(string destinationFolder, string signatureName)
@@ -407,5 +400,95 @@ public class WordConversionService
 
         var sanitizedIdentifier = SanitizeFileName(identifier);
         return $"{sanitizedBase} ({sanitizedIdentifier})";
+    }
+
+    private bool TryFinalizeConversion(
+        ConversionResult result,
+        string destinationFolder,
+        string signatureName)
+    {
+        try
+        {
+            var html = ReadHtmlForPostProcessing(result.HtmFilePath!);
+            if (html == null)
+            {
+                result.Success = false;
+                result.ErrorMessage = "Impossibile leggere HTML firma per normalizzazione.";
+                _logger.LogWarning(result.ErrorMessage);
+                return false;
+            }
+
+            var inlined = InlineCss(html);
+            var normalized = NormalizeHtml(inlined);
+
+            var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
+            var assetResult = ProcessAssets(normalized, result.HtmFilePath!, assetsFolder, signatureName);
+            InstallSignature(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
+
+            if (Directory.Exists(assetsFolder) && !Directory.EnumerateFileSystemEntries(assetsFolder).Any())
+            {
+                try
+                {
+                    Directory.Delete(assetsFolder, true);
+                }
+                catch
+                {
+                }
+
+                result.AssetsFolderPath = null;
+            }
+            else
+            {
+                result.AssetsFolderPath = assetsFolder;
+            }
+
+            result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
+            result.TxtFilePath = Path.Combine(destinationFolder, signatureName + ".txt");
+
+            CleanupWordAssetFolders(destinationFolder, signatureName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            result.Success = false;
+            result.ErrorMessage = $"Errore normalizzazione HTML firma: {ex.Message}";
+            _logger.LogWarning(result.ErrorMessage);
+            return false;
+        }
+    }
+
+    private void RollbackGeneratedArtifacts(string destinationFolder, string signatureName)
+    {
+        var rollbackBasePath = Path.Combine(destinationFolder, signatureName);
+        var artifactPaths = new[]
+        {
+            rollbackBasePath + ".htm",
+            rollbackBasePath + ".rtf",
+            rollbackBasePath + ".txt",
+            rollbackBasePath + "_files",
+            rollbackBasePath + "_file"
+        };
+
+        foreach (var artifactPath in artifactPaths)
+        {
+            try
+            {
+                if (Directory.Exists(artifactPath))
+                {
+                    Directory.Delete(artifactPath, recursive: true);
+                    continue;
+                }
+
+                if (File.Exists(artifactPath))
+                {
+                    File.SetAttributes(artifactPath, FileAttributes.Normal);
+                    File.Delete(artifactPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Rollback artefatto fallito '{artifactPath}': {ex.Message}");
+            }
+        }
     }
 }

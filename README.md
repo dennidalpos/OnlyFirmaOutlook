@@ -8,9 +8,8 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 - **Preset**: selezione rapida dei modelli Word presenti nella cartella `media` o caricamento di file custom.
 - **Modifica assistita in Word**: apertura del documento, verifica salvataggio e controllo stato.
 - **Opzioni HTML** (filtrato o completo) per bilanciare compatibilità e fedeltà visiva.
-- **Fix Outlook 2512+** per correggere i bordi delle tabelle nelle firme.
 - **Gestione firme esistenti** con avvisi di sovrascrittura e cancellazione rapida.
-- **Backup automatici** quando la destinazione è la cartella predefinita di Outlook, con ripristino e pulizia.
+- **Backup automatici** quando la destinazione è la cartella predefinita di Outlook, con ripristino snapshot e pulizia.
 - **Log operativo** con copia/pulizia del file di log.
 
 ## Requisiti
@@ -42,15 +41,15 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 
 - **HTML**: generato in formato filtrato o completo a seconda dell'opzione scelta.
 - **RTF/TXT**: esportati per compatibilità con Outlook Classic.
-- **Normalizzazione HTML**: rimozione di stili superflui, inline CSS, correzione bordi tabelle e ricostruzione degli asset.
+- **Normalizzazione HTML**: rimozione di stili superflui, inline CSS e ricostruzione degli asset.
 - **Asset**: le immagini vengono incorporate o ricostruite nella cartella `<firma>_files`.
 - **Backup**: se la destinazione è la cartella Outlook, viene creato un backup ZIP prima di sovrascrivere.
+- **Ripristino backup**: il restore riallinea la cartella firme allo snapshot del backup, rimuovendo artefatti residui non presenti nell'archivio.
 
 ## Opzioni e filtri
 
 - **HTML Filtrato**: riduce gli stili Microsoft/Word non necessari per migliorare la compatibilità.
 - **HTML Completo**: preserva più stili di Word (utile quando serve maggiore fedeltà visiva).
-- **Fix bordi tabelle Outlook 2512+**: aggiunge reset CSS/MSO a tabelle e celle per evitare bordi indesiderati introdotti da Outlook Classic 2512+.
 
 ## Uso rapido (utente finale)
 
@@ -58,7 +57,7 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 2. Configura nome firma e account/identificativo.
 3. Verifica la cartella di destinazione.
 4. Apri in Word, modifica e salva.
-5. Scegli formato HTML e opzioni di correzione.
+5. Scegli il formato HTML.
 6. Controlla eventuali firme esistenti, quindi converti e salva.
 7. Verifica in Outlook che la firma sia corretta.
 
@@ -73,6 +72,10 @@ $ dotnet build OnlyFirmaOutlook.sln -c Release
 # Test
 $ dotnet test OnlyFirmaOutlook.sln -c Release
 ```
+
+### Continuous Integration
+
+La pipeline GitHub Actions in `.github/workflows/ci.yml` esegue `restore`, `build` e `test` su Windows per `push` e `pull request`.
 
 ### Publish manuale
 
@@ -137,6 +140,8 @@ src/
   Shared/             # Componenti condivisi (rilevamento bitness Office)
 tests/                # Test unitari
 scripts/              # Script di build e pulizia
+.github/              # CI build/test
+dist/                 # Output publish locale
 ```
 
 ## Documentation

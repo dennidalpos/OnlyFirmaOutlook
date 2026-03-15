@@ -7,10 +7,11 @@ OnlyFirmaOutlook e un'app desktop WPF per Windows che converte documenti Word in
 - Import di documenti `.doc`, `.docx` e `.rtf` da preset locali o file scelti dall'utente.
 - Apertura e modifica del documento in Microsoft Word tramite automazione Office.
 - Esportazione della firma nei formati HTML, RTF e TXT compatibili con Outlook Classic.
-- Normalizzazione dell'HTML, ricostruzione degli asset e fix opzionale per i bordi tabella di Outlook 2512+.
+- Normalizzazione dell'HTML e ricostruzione degli asset.
 - Gestione della cartella firme di Outlook o di una cartella di output alternativa.
-- Backup ZIP delle firme esistenti e funzioni di ripristino.
+- Backup ZIP delle firme esistenti e funzioni di ripristino snapshot.
 - Script PowerShell per build, test, clean e publish.
+- Workflow CI GitHub Actions per restore, build e test su Windows.
 - Test unitari sui servizi principali.
 
 ## Non Scope
@@ -20,11 +21,12 @@ OnlyFirmaOutlook e un'app desktop WPF per Windows che converte documenti Word in
 - Sincronizzazione cloud, servizi web o componenti server-side.
 
 ## Architecture
-- `src/OnlyFirmaOutlook`: applicazione WPF principale (`net8.0-windows`) con viste, view model, modelli e servizi per conversione, installazione firme, logging e gestione file temporanei.
+- `src/OnlyFirmaOutlook`: applicazione WPF principale (`net8.0-windows`) con viste, view model, modelli e servizi per conversione, installazione firme, logging e gestione file temporanei; `MainWindow` e suddivisa in partial class per separare editor, gestione firme e chrome UI.
 - `src/Bootstrapper`: launcher che rileva la bitness di Office e avvia la build corretta.
 - `src/Shared`: codice condiviso per il rilevamento della bitness di Office.
 - `tests/OnlyFirmaOutlook.Tests`: progetto di test xUnit per repository e servizi.
 - `scripts`: script PowerShell per build/publish e pulizia del repository.
+- `.github/workflows/ci.yml`: pipeline CI Windows che verifica restore, build e test della soluzione.
 
 ## Constraints
 - Richiede Windows, .NET 8 SDK per lo sviluppo e Microsoft Word installato per il workflow di conversione/editing.
