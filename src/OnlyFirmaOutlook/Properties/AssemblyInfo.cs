@@ -7,14 +7,6 @@
  * or commercial use is prohibited without prior written permission.
  */
 
-using System.Windows;
+using System.Runtime.CompilerServices;
 
-namespace OnlyFirmaOutlook.Views;
-
-public partial class GuideWindow : Window
-{
-    public GuideWindow()
-    {
-        InitializeComponent();
-    }
-}
+[assembly: InternalsVisibleTo("OnlyFirmaOutlook.Tests")]

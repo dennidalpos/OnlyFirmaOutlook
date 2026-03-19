@@ -1,3 +1,12 @@
+/*
+ * OnlyFirmaOutlook
+ * Copyright (c) 2026 Danny Perondi. All rights reserved.
+ * Author: Danny Perondi
+ * Proprietary and confidential.
+ * Unauthorized copying, modification, distribution, sublicensing, disclosure,
+ * or commercial use is prohibited without prior written permission.
+ */
+
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -27,7 +36,7 @@ public partial class MainWindow
 
             if (_currentEditorState != null)
             {
-                _currentEditorState.IsDocumentOpened = true;
+                EditorStateTransitions.MarkDocumentOpened(_currentEditorState);
             }
 
             StartFileWatcher(filePath);
@@ -112,12 +121,11 @@ public partial class MainWindow
                 }
 
                 var currentModTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
-                if (currentModTime > _lastFileModifiedTime)
+                if (EditorStateTransitions.TryMarkDocumentSaved(
+                        _currentEditorState,
+                        currentModTime,
+                        ref _lastFileModifiedTime))
                 {
-                    _lastFileModifiedTime = currentModTime;
-                    _currentEditorState.IsDocumentSaved = true;
-                    _currentEditorState.LastModified = currentModTime;
-
                     _logger.Log("Documento salvato in Word - rilevata modifica file");
                     UpdateConvertButtonState();
                 }
@@ -218,11 +226,11 @@ public partial class MainWindow
             }
 
             var currentModTime = File.GetLastWriteTime(_currentEditorState.LocalFilePath);
-            if (currentModTime > _lastFileModifiedTime)
+            if (EditorStateTransitions.TryMarkDocumentSaved(
+                    _currentEditorState,
+                    currentModTime,
+                    ref _lastFileModifiedTime))
             {
-                _lastFileModifiedTime = currentModTime;
-                _currentEditorState.IsDocumentSaved = true;
-                _currentEditorState.LastModified = currentModTime;
                 _logger.Log("Verifica finale: documento risulta salvato");
             }
         }

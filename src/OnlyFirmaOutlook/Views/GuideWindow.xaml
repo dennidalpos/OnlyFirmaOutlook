@@ -27,7 +27,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="3) Verifica la cartella di destinazione:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Di default viene proposta la cartella firme di Outlook. Se Outlook non è installato o vuoi salvare altrove, seleziona una cartella differente. Il backup automatico viene creato solo quando la destinazione è la cartella predefinita di Outlook."/>
+                    <Run Text="Di default viene proposta la cartella firme di Outlook. Se Outlook non è installato o vuoi salvare altrove, seleziona una cartella differente. Il backup automatico viene creato solo quando la destinazione è la cartella predefinita di Outlook. Il pulsante 'Sfoglia firme' apre sempre la cartella di destinazione attualmente mostrata nell'interfaccia."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="4) Modifica il documento in Word:" FontWeight="SemiBold"/>
@@ -47,7 +47,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="7) Backup e ripristino:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Quando la destinazione è la cartella Outlook, l'app crea un backup ZIP prima di sovrascrivere. I backup sono elencati nella sezione dedicata e possono essere ripristinati (sovrascrive i file correnti) o eliminati."/>
+                    <Run Text="Quando la destinazione è la cartella Outlook, l'app crea un backup ZIP prima di sovrascrivere. I backup sono elencati nella sezione dedicata e possono essere ripristinati (sovrascrive i file correnti) o eliminati. Il pulsante 'Sfoglia backup' apre la cartella che contiene questi archivi ZIP."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="8) Converti e salva la firma:" FontWeight="SemiBold"/>

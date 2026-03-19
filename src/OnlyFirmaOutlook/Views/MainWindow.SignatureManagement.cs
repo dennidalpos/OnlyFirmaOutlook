@@ -1,3 +1,12 @@
+/*
+ * OnlyFirmaOutlook
+ * Copyright (c) 2026 Danny Perondi. All rights reserved.
+ * Author: Danny Perondi
+ * Proprietary and confidential.
+ * Unauthorized copying, modification, distribution, sublicensing, disclosure,
+ * or commercial use is prohibited without prior written permission.
+ */
+
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -299,32 +308,56 @@ public partial class MainWindow
 
     private void BrowseSignaturesButton_Click(object sender, RoutedEventArgs e)
     {
-        OpenDefaultSignaturesFolder();
+        OpenSelectedDestinationFolder();
     }
 
     private void BrowseBackupsButton_Click(object sender, RoutedEventArgs e)
     {
-        OpenDefaultSignaturesFolder();
+        OpenBackupsFolder();
     }
 
-    private void OpenDefaultSignaturesFolder()
+    private void OpenSelectedDestinationFolder()
+    {
+        var destinationFolder = DestinationFolderTextBox.Text?.Trim();
+
+        if (string.IsNullOrWhiteSpace(destinationFolder))
+        {
+            MessageBox.Show("Seleziona prima una cartella di destinazione valida.", "Cartella non disponibile",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        OpenFolderInExplorer(
+            destinationFolder,
+            "La cartella di destinazione selezionata non è disponibile.",
+            "destinazione selezionata");
+    }
+
+    private void OpenBackupsFolder()
+    {
+        OpenFolderInExplorer(
+            SignatureRepository.GetDefaultOutlookSignaturesFolder(),
+            "La cartella backup non è disponibile.",
+            "backup firme");
+    }
+
+    private void OpenFolderInExplorer(string folderPath, string missingMessage, string logContext)
     {
         try
         {
-            var defaultFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
-            if (Directory.Exists(defaultFolder))
+            if (Directory.Exists(folderPath))
             {
-                Process.Start("explorer.exe", defaultFolder);
+                Process.Start("explorer.exe", folderPath);
             }
             else
             {
-                MessageBox.Show("La cartella firme predefinita non è disponibile.", "Cartella non trovata",
+                MessageBox.Show(missingMessage, "Cartella non trovata",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning($"Impossibile aprire la cartella firme: {ex.Message}");
+            _logger.LogWarning($"Impossibile aprire la cartella {logContext}: {ex.Message}");
         }
     }
 }

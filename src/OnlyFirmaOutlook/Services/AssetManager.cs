@@ -1,3 +1,12 @@
+/*
+ * OnlyFirmaOutlook
+ * Copyright (c) 2026 Danny Perondi. All rights reserved.
+ * Author: Danny Perondi
+ * Proprietary and confidential.
+ * Unauthorized copying, modification, distribution, sublicensing, disclosure,
+ * or commercial use is prohibited without prior written permission.
+ */
+
 using System.IO;
 using System.Security.Cryptography;
 using HtmlAgilityPack;
@@ -22,8 +31,14 @@ public class AssetManager
         doc.LoadHtml(html);
 
         var imgNodes = doc.DocumentNode.SelectNodes("//img[@src]");
-        var vmlImageNodes = doc.DocumentNode.SelectNodes("//v:imagedata[@src]");
-        var vmlNodes = doc.DocumentNode.SelectNodes("//*[@o:href or @v:href or @xlink:href]");
+        var vmlImageNodes = doc.DocumentNode
+            .Descendants()
+            .Where(node => HasNodeName(node, "v:imagedata") && node.Attributes["src"] != null)
+            .ToList();
+        var vmlNodes = doc.DocumentNode
+            .Descendants()
+            .Where(node => HasAnyAttribute(node, "o:href", "v:href", "xlink:href"))
+            .ToList();
         var baseDir = Path.GetDirectoryName(sourceHtmlPath) ?? string.Empty;
         var pathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -56,6 +71,16 @@ public class AssetManager
         var processedHtml = doc.DocumentNode.InnerHtml;
         var plainText = SignatureInstaller.BuildPlainText(processedHtml);
         return new AssetProcessingResult(processedHtml, plainText);
+    }
+
+    private static bool HasAnyAttribute(HtmlNode node, params string[] attributeNames)
+    {
+        return attributeNames.Any(attributeName => node.Attributes[attributeName] != null);
+    }
+
+    private static bool HasNodeName(HtmlNode node, params string[] nodeNames)
+    {
+        return nodeNames.Any(nodeName => string.Equals(node.Name, nodeName, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string? ResolveImagePath(string srcValue, string baseDir)
@@ -253,6 +278,9 @@ public class AssetManager
             "image/gif" => ".gif",
             "image/bmp" => ".bmp",
             "image/svg+xml" => ".svg",
+            "image/webp" => ".webp",
+            "image/x-icon" => ".ico",
+            "image/vnd.microsoft.icon" => ".ico",
             _ => ".img"
         };
     }

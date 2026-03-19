@@ -1,4 +1,12 @@
-using System.Linq;
+/*
+ * OnlyFirmaOutlook
+ * Copyright (c) 2026 Danny Perondi. All rights reserved.
+ * Author: Danny Perondi
+ * Proprietary and confidential.
+ * Unauthorized copying, modification, distribution, sublicensing, disclosure,
+ * or commercial use is prohibited without prior written permission.
+ */
+
 using System.Runtime.InteropServices;
 using OnlyFirmaOutlook.Models;
 
@@ -91,6 +99,7 @@ public class OutlookAccountService
             }
 
             _logger.Log($"Trovati {accountCount} account");
+            var discoveredAccounts = new List<OutlookAccount>();
 
             
             for (int i = 1; i <= accountCount; i++)
@@ -101,14 +110,12 @@ public class OutlookAccountService
                     account = accounts.Item(i);
                     if (account != null)
                     {
-                        var outlookAccount = new OutlookAccount
-                        {
-                            DisplayName = account.DisplayName ?? "Account senza nome",
-                            SmtpAddress = account.SmtpAddress ?? string.Empty,
-                            AccountType = GetAccountTypeName(account.AccountType)
-                        };
+                        var outlookAccount = OutlookAccountProjection.CreateAccount(
+                            account.DisplayName,
+                            account.SmtpAddress,
+                            account.AccountType);
 
-                        result.Accounts.Add(outlookAccount);
+                        discoveredAccounts.Add(outlookAccount);
                         _logger.Log($"Account trovato: {outlookAccount.DisplayText} ({outlookAccount.AccountType})");
                     }
                 }
@@ -126,9 +133,7 @@ public class OutlookAccountService
                 }
             }
 
-            var accountIdentifiers = BuildAccountIdentifiers(result.Accounts);
-
-            
+            var delegatedStoreCandidates = new List<OutlookAccountProjection.DelegatedStoreCandidate>();
             stores = session.Stores;
             if (stores != null)
             {
@@ -152,27 +157,9 @@ public class OutlookAccountService
                             continue;
                         }
 
-                        if (accountIdentifiers.Contains(displayName))
-                        {
-                            continue;
-                        }
-
-                        if (!IsDelegatedStore(store))
-                        {
-                            continue;
-                        }
-
-                        var delegatedAccount = new OutlookAccount
-                        {
-                            DisplayName = displayName,
-                            SmtpAddress = string.Empty,
-                            AccountType = "Delega",
-                            IsDelegate = true
-                        };
-
-                        result.Accounts.Add(delegatedAccount);
-                        accountIdentifiers.Add(displayName);
-                        _logger.Log($"Delega trovata: {delegatedAccount.DisplayText}");
+                        delegatedStoreCandidates.Add(new OutlookAccountProjection.DelegatedStoreCandidate(
+                            displayName,
+                            IsDelegatedStore(store)));
                     }
                     catch (Exception ex)
                     {
@@ -189,10 +176,14 @@ public class OutlookAccountService
                 }
             }
 
-            result.Accounts = result.Accounts
-                .OrderBy(account => account.IsDelegate)
-                .ThenBy(account => account.DisplayText)
-                .ToList();
+            result.Accounts = OutlookAccountProjection.MergeAccountsWithDelegates(
+                discoveredAccounts,
+                delegatedStoreCandidates);
+
+            foreach (var delegatedAccount in result.Accounts.Where(account => account.IsDelegate))
+            {
+                _logger.Log($"Delega trovata: {delegatedAccount.DisplayText}");
+            }
 
             _logger.Log($"Totale account caricati: {result.Accounts.Count}");
         }
@@ -259,25 +250,6 @@ public class OutlookAccountService
         _logger.Log("Cleanup COM Outlook completato");
     }
 
-    private static HashSet<string> BuildAccountIdentifiers(IEnumerable<OutlookAccount> accounts)
-    {
-        var identifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var account in accounts)
-        {
-            if (!string.IsNullOrWhiteSpace(account.DisplayName))
-            {
-                identifiers.Add(account.DisplayName);
-            }
-
-            if (!string.IsNullOrWhiteSpace(account.SmtpAddress))
-            {
-                identifiers.Add(account.SmtpAddress);
-            }
-        }
-
-        return identifiers;
-    }
-
     private static bool IsDelegatedStore(dynamic store)
     {
         try
@@ -294,16 +266,4 @@ public class OutlookAccountService
     
     
     
-    private static string GetAccountTypeName(int accountType)
-    {
-        return accountType switch
-        {
-            1 => "Exchange",
-            2 => "IMAP",
-            3 => "POP3",
-            4 => "HTTP",
-            5 => "EAS", 
-            _ => "Altro"
-        };
-    }
 }

@@ -1,38 +1,32 @@
 {
   "treeview": [
+    ".github/workflows/ci.yml",
     ".gitignore",
     "AGENTS.md",
+    "LICENSE",
     "OnlyFirmaOutlook.sln",
     "PROJECT_SPEC.md",
     "PROJECT_STATUS.json",
     "README.md",
-    ".github/",
-    ".github/workflows/",
-    ".github/workflows/ci.yml",
-    "dist/",
-    "scripts/",
     "scripts/build.ps1",
     "scripts/clean.ps1",
-    "src/",
-    "src/Bootstrapper/",
     "src/Bootstrapper/Bootstrapper.csproj",
     "src/Bootstrapper/Program.cs",
-    "src/OnlyFirmaOutlook/",
     "src/OnlyFirmaOutlook/App.xaml",
     "src/OnlyFirmaOutlook/App.xaml.cs",
-    "src/OnlyFirmaOutlook/OnlyFirmaOutlook.csproj",
-    "src/OnlyFirmaOutlook/media/",
     "src/OnlyFirmaOutlook/media/.gitkeep",
-    "src/OnlyFirmaOutlook/Models/",
     "src/OnlyFirmaOutlook/Models/BackupInfo.cs",
     "src/OnlyFirmaOutlook/Models/EditorState.cs",
     "src/OnlyFirmaOutlook/Models/OutlookAccount.cs",
     "src/OnlyFirmaOutlook/Models/PresetFile.cs",
     "src/OnlyFirmaOutlook/Models/SignatureInfo.cs",
-    "src/OnlyFirmaOutlook/Services/",
+    "src/OnlyFirmaOutlook/OnlyFirmaOutlook.csproj",
+    "src/OnlyFirmaOutlook/Properties/AssemblyInfo.cs",
     "src/OnlyFirmaOutlook/Services/AssetManager.cs",
     "src/OnlyFirmaOutlook/Services/CssInliner.cs",
+    "src/OnlyFirmaOutlook/Services/EditorStateTransitions.cs",
     "src/OnlyFirmaOutlook/Services/LoggingService.cs",
+    "src/OnlyFirmaOutlook/Services/OutlookAccountProjection.cs",
     "src/OnlyFirmaOutlook/Services/OutlookAccountService.cs",
     "src/OnlyFirmaOutlook/Services/PresetService.cs",
     "src/OnlyFirmaOutlook/Services/SignatureInstaller.cs",
@@ -43,11 +37,7 @@
     "src/OnlyFirmaOutlook/Services/WordConversionService.cs",
     "src/OnlyFirmaOutlook/Services/WordEditorService.cs",
     "src/OnlyFirmaOutlook/Services/WordHtmlSignatureNormalizer.cs",
-    "src/OnlyFirmaOutlook/Styles/",
     "src/OnlyFirmaOutlook/Styles/AppStyles.xaml",
-    "src/OnlyFirmaOutlook/ViewModels/",
-    "src/OnlyFirmaOutlook/ViewModels/WordEditorViewModel.cs",
-    "src/OnlyFirmaOutlook/Views/",
     "src/OnlyFirmaOutlook/Views/GuideWindow.xaml",
     "src/OnlyFirmaOutlook/Views/GuideWindow.xaml.cs",
     "src/OnlyFirmaOutlook/Views/MainWindow.Chrome.cs",
@@ -55,16 +45,55 @@
     "src/OnlyFirmaOutlook/Views/MainWindow.SignatureManagement.cs",
     "src/OnlyFirmaOutlook/Views/MainWindow.xaml",
     "src/OnlyFirmaOutlook/Views/MainWindow.xaml.cs",
-    "src/Shared/",
     "src/Shared/OfficeBitnessDetector.cs",
-    "tests/",
-    "tests/OnlyFirmaOutlook.Tests/",
+    "tests/OnlyFirmaOutlook.Tests/AssetManagerTests.cs",
+    "tests/OnlyFirmaOutlook.Tests/EditorStateTransitionsTests.cs",
     "tests/OnlyFirmaOutlook.Tests/GlobalUsings.cs",
     "tests/OnlyFirmaOutlook.Tests/OnlyFirmaOutlook.Tests.csproj",
+    "tests/OnlyFirmaOutlook.Tests/OutlookAccountProjectionTests.cs",
     "tests/OnlyFirmaOutlook.Tests/SignatureRepositoryTests.cs",
+    "tests/OnlyFirmaOutlook.Tests/SignatureWorkflowServiceTests.cs",
     "tests/OnlyFirmaOutlook.Tests/TempFileManagerTests.cs",
     "tests/OnlyFirmaOutlook.Tests/WordConversionServiceTests.cs"
   ],
   "files_big": [],
-  "tasks": []
+  "tasks": [
+    {
+      "id": "bug-rtf-preset-publish",
+      "type": "bug",
+      "status": "pending",
+      "description": "Lo script scripts/build.ps1 copia in dist/*/media solo i file *.doc*, quindi i preset .rtf supportati da PresetService e dall'import UI non vengono distribuiti nelle build pubblicate.",
+      "files": [
+        "scripts/build.ps1",
+        "src/OnlyFirmaOutlook/Services/PresetService.cs",
+        "src/OnlyFirmaOutlook/Views/MainWindow.Editor.cs"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "drift-rtf-preset-docs",
+      "type": "drift",
+      "status": "pending",
+      "description": "I testi di supporto ai preset non sono allineati con il supporto .rtf: src/OnlyFirmaOutlook/media/.gitkeep, src/OnlyFirmaOutlook/Views/GuideWindow.xaml e i messaggi finali di scripts/build.ps1 parlano solo di file .doc/.docx.",
+      "files": [
+        "src/OnlyFirmaOutlook/media/.gitkeep",
+        "src/OnlyFirmaOutlook/Views/GuideWindow.xaml",
+        "scripts/build.ps1"
+      ],
+      "priority": 2
+    },
+    {
+      "id": "infra-build-output-normalization",
+      "type": "infra",
+      "status": "pending",
+      "description": "Nel workspace sono presenti output generati bin/ e obj/ sotto src/ e tests/, mentre PROJECT_STATUS.json non li rappresenta e il progetto usa anche dist/ per il publish: serve definire la struttura canonica degli output e riallineare treeview/files_big dopo la normalizzazione.",
+      "files": [
+        "PROJECT_STATUS.json",
+        "README.md",
+        "scripts/build.ps1",
+        "scripts/clean.ps1"
+      ],
+      "priority": 3
+    }
+  ]
 }

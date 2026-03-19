@@ -1,3 +1,12 @@
+/*
+ * OnlyFirmaOutlook
+ * Copyright (c) 2026 Danny Perondi. All rights reserved.
+ * Author: Danny Perondi
+ * Proprietary and confidential.
+ * Unauthorized copying, modification, distribution, sublicensing, disclosure,
+ * or commercial use is prohibited without prior written permission.
+ */
+
 using System;
 using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
@@ -35,8 +44,12 @@ public class WordHtmlSignatureNormalizer
         // Script e meta: sicurezza e non supportati
         // xml: markup Office non renderizzato
         // o:p: paragrafo vuoto Office (solo spaziatura artificiale)
-        var nodesToRemove = doc.DocumentNode.SelectNodes("//script|//meta|//xml|//o:p");
-        if (nodesToRemove != null)
+        var nodesToRemove = doc.DocumentNode
+            .Descendants()
+            .Where(node => HasNodeName(node, "script", "meta", "xml", "o:p"))
+            .ToList();
+
+        if (nodesToRemove.Count > 0)
         {
             foreach (var node in nodesToRemove)
             {
@@ -119,6 +132,11 @@ public class WordHtmlSignatureNormalizer
             });
 
         return string.Join("; ", parts);
+    }
+
+    private static bool HasNodeName(HtmlNode node, params string[] nodeNames)
+    {
+        return nodeNames.Any(nodeName => string.Equals(node.Name, nodeName, StringComparison.OrdinalIgnoreCase));
     }
 
 }

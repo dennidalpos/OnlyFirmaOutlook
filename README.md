@@ -159,4 +159,15 @@ dist/                 # Output publish locale
 
 ## License
 
-Progetto interno. Aggiungere qui la licenza se prevista.
+Software proprietario. Vedere il file `LICENSE`.
+
+## Copyright
+
+Copyright (c) 2026 Danny Perondi. All rights reserved.
+
+Questo progetto e tutto il materiale associato sono proprietari e riservati.
+La consultazione del repository e consentita esclusivamente per visione, se
+espressamente autorizzata da Danny Perondi.
+Sono vietati riuso, copia, modifica, distribuzione, sublicenza, pubblicazione
+e sfruttamento commerciale, in tutto o in parte, senza previa autorizzazione
+scritta di Danny Perondi.

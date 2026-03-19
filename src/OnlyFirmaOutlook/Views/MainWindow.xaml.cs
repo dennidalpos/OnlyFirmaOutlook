@@ -1,3 +1,12 @@
+/*
+ * OnlyFirmaOutlook
+ * Copyright (c) 2026 Danny Perondi. All rights reserved.
+ * Author: Danny Perondi
+ * Proprietary and confidential.
+ * Unauthorized copying, modification, distribution, sublicensing, disclosure,
+ * or commercial use is prohibited without prior written permission.
+ */
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -305,39 +314,50 @@ public partial class MainWindow : Window
     {
         var hasSignatureSelected = _currentEditorState != null;
         var hasSignatureName = !string.IsNullOrWhiteSpace(SignatureNameTextBox.Text);
-        var hasDestination = _isFolderWritable;
+        var hasWritableDestination = _isFolderWritable;
         var isDocumentReady = _currentEditorState?.IsReadyForConversion ?? false;
+        var hasHtmlOptionSelected = FilteredHtmlRadio.IsChecked == true || CompleteHtmlRadio.IsChecked == true;
+        var destinationFolder = DestinationFolderTextBox.Text?.Trim() ?? string.Empty;
+        var hasOverwriteWarning = hasSignatureName &&
+            !string.IsNullOrWhiteSpace(destinationFolder) &&
+            _signatureWorkflowService.SignatureExists(
+                destinationFolder,
+                _signatureWorkflowService.BuildFinalSignatureName(
+                    SignatureNameTextBox.Text.Trim(),
+                    GetCurrentSignatureIdentifier()));
 
-        if (Resources.Contains("StepGroupBoxStyle"))
-        {
-            Step3Group.Style = (Style)Resources["StepGroupBoxStyle"];
-            Step5Group.Style = (Style)Resources["StepGroupBoxStyle"];
-            Step6Group.Style = (Style)Resources["StepGroupBoxStyle"];
-            Step7Group.Style = (Style)Resources["StepGroupBoxStyle"];
-        }
+        SetStepStyle(Step1Group, StepState.Pending);
+        SetStepStyle(Step2Group, StepState.Pending);
+        SetStepStyle(Step3Group, StepState.Pending);
+        SetStepStyle(Step4Group, StepState.Pending);
+        SetStepStyle(Step5Group, StepState.Pending);
+        SetStepStyle(Step6Group, StepState.Pending);
+        SetStepStyle(Step7Group, StepState.Pending);
 
-        
         if (!hasSignatureSelected)
         {
             SetStepStyle(Step1Group, StepState.Current);
-            SetStepStyle(Step2Group, StepState.Pending);
-            SetStepStyle(Step4Group, StepState.Pending);
             return;
         }
 
         SetStepStyle(Step1Group, StepState.Completed);
 
-        
         if (!hasSignatureName)
         {
             SetStepStyle(Step2Group, StepState.Current);
-            SetStepStyle(Step4Group, StepState.Pending);
             return;
         }
 
         SetStepStyle(Step2Group, StepState.Completed);
 
-        
+        if (!hasWritableDestination)
+        {
+            SetStepStyle(Step3Group, StepState.Current);
+            return;
+        }
+
+        SetStepStyle(Step3Group, StepState.Completed);
+
         if (!isDocumentReady)
         {
             SetStepStyle(Step4Group, StepState.Current);
@@ -346,7 +366,24 @@ public partial class MainWindow : Window
 
         SetStepStyle(Step4Group, StepState.Completed);
 
-        
+        if (!hasHtmlOptionSelected)
+        {
+            SetStepStyle(Step5Group, StepState.Current);
+            return;
+        }
+
+        if (hasOverwriteWarning)
+        {
+            SetStepStyle(Step5Group, StepState.Completed);
+            SetStepStyle(Step6Group, StepState.Current);
+        }
+        else
+        {
+            SetStepStyle(Step5Group, StepState.Current);
+            SetStepStyle(Step6Group, StepState.Completed);
+        }
+
+        SetStepStyle(Step7Group, StepState.Completed);
     }
 
     private enum StepState { Pending, Current, Completed }
@@ -500,6 +537,11 @@ public partial class MainWindow : Window
                     "Conversione completata",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
+
+                OpenFolderInExplorer(
+                    destinationFolder,
+                    "La cartella di destinazione non è disponibile.",
+                    "destinazione conversione");
 
                 ResetUiForNewSignature();
             }

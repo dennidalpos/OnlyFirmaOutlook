@@ -80,7 +80,7 @@
 
             <StackPanel Grid.Column="1" HorizontalAlignment="Right">
                 <TextBlock x:Name="AppVersionText" FontSize="12" Foreground="#605E5C" TextAlignment="Right"/>
-                <TextBlock Text="Sviluppato da Reparto IT" FontSize="11" Foreground="#605E5C"
+                <TextBlock Text="Sviluppato da Danny Perondi" FontSize="11" Foreground="#605E5C"
                            TextAlignment="Right"/>
                 <TextBlock x:Name="UserHostInfoText" FontSize="10" Foreground="#A19F9D"
                            TextAlignment="Right"/>
