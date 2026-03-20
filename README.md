@@ -5,7 +5,7 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 ## Funzionalità principali
 
 - **Conversione Word → firme Outlook** con generazione di HTML/RTF/TXT e ricostruzione degli asset.
-- **Preset**: selezione rapida dei modelli Word presenti nella cartella `media` o caricamento di file custom.
+- **Preset**: selezione rapida dei modelli Word/RTF presenti nella cartella `media` o caricamento di file custom.
 - **Modifica assistita in Word**: apertura del documento, verifica salvataggio e controllo stato.
 - **Opzioni HTML** (filtrato o completo) per bilanciare compatibilità e fedeltà visiva.
 - **Gestione firme esistenti** con avvisi di sovrascrittura e cancellazione rapida.
@@ -28,7 +28,7 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 
 ### 1) Import del documento
 
-- **Preset**: i preset sono letti dalla cartella `media` dell'app (distribuiti con la build). La selezione di un preset crea una copia temporanea locale e prepara l'editor.
+- **Preset**: i preset sono letti dalla cartella `media` dell'app (distribuiti con la build). Sono supportati file `.doc`, `.docx` e `.rtf`. La selezione di un preset crea una copia temporanea locale e prepara l'editor.
 - **File personalizzato**: sono accettati file `.doc`, `.docx` e `.rtf`. I file da rete vengono copiati in locale per evitare blocchi durante l'editing.
 - **Normalizzazione nome firma**: il nome proposto viene ripulito da caratteri non validi per evitare problemi durante l'export.
 
@@ -75,7 +75,7 @@ $ dotnet test OnlyFirmaOutlook.sln -c Release
 
 ### Continuous Integration
 
-La pipeline GitHub Actions in `.github/workflows/ci.yml` esegue `restore`, `build` e `test` su Windows per `push` e `pull request`.
+La pipeline GitHub Actions in `.github/workflows/ci.yml` esegue `restore`, `build`, `test` e una verifica del flusso `scripts/build.ps1`, inclusi publish `win-x86`/`win-x64`, bootstrapper e copia preset.
 
 ### Publish manuale
 
@@ -90,7 +90,7 @@ $ dotnet publish src/Bootstrapper/Bootstrapper.csproj -c Release -r win-x64 --se
 
 ### Script PowerShell (consigliato)
 
-Lo script `scripts/build.ps1` gestisce pulizia, restore, build, test e publish per entrambi i runtime e copia i preset nella cartella di output.
+Lo script `scripts/build.ps1` gestisce pulizia, restore, build, test e publish per entrambi i runtime e copia i preset `.doc`, `.docx` e `.rtf` nella cartella di output.
 Se non passi `-PublishMode`, lo script chiede in console se compilare in modalità **Framework-dependent** o **Self-contained**.
 
 ```powershell
@@ -116,7 +116,7 @@ Se non passi `-PublishMode`, lo script chiede in console se compilare in modalit
 ### Script di pulizia
 
 ```powershell
-# Pulizia standard (bin/obj + dist)
+# Pulizia standard (bin/obj + dist + TestResults)
 ./scripts/clean.ps1
 
 # Pulizia completa
@@ -144,6 +144,8 @@ scripts/              # Script di build e pulizia
 dist/                 # Output publish locale
 ```
 
+`dist/` e gli altri output di build/test sono generati localmente e ignorati da git.
+
 ## Documentation
 
 - `PROJECT_SPEC.md`: specifica tecnica e vincoli del progetto.
@@ -163,11 +165,4 @@ Software proprietario. Vedere il file `LICENSE`.
 
 ## Copyright
 
-Copyright (c) 2026 Danny Perondi. All rights reserved.
-
-Questo progetto e tutto il materiale associato sono proprietari e riservati.
-La consultazione del repository e consentita esclusivamente per visione, se
-espressamente autorizzata da Danny Perondi.
-Sono vietati riuso, copia, modifica, distribuzione, sublicenza, pubblicazione
-e sfruttamento commerciale, in tutto o in parte, senza previa autorizzazione
-scritta di Danny Perondi.
+Copyright (c) 2026 Danny Perondi.

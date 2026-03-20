@@ -29,3 +29,29 @@ jobs:
 
       - name: Test
         run: dotnet test OnlyFirmaOutlook.sln -c Release --no-build
+
+      - name: Verify Publish Script
+        shell: pwsh
+        run: |
+          $presetPath = Join-Path $PWD "src/OnlyFirmaOutlook/media/ci-preset.rtf"
+          try {
+            Set-Content -Path $presetPath -Value "{\rtf1\ansi CI preset}"
+            ./scripts/build.ps1 -Configuration Release -PublishMode FrameworkDependent -SkipTests
+
+            $requiredPaths = @(
+              "dist/OnlyFirmaOutlook.Launcher.exe",
+              "dist/win-x86/OnlyFirmaOutlook.exe",
+              "dist/win-x64/OnlyFirmaOutlook.exe",
+              "dist/win-x86/media/ci-preset.rtf",
+              "dist/win-x64/media/ci-preset.rtf"
+            )
+
+            foreach ($path in $requiredPaths) {
+              if (-not (Test-Path $path)) {
+                throw "Output mancante: $path"
+              }
+            }
+          }
+          finally {
+            Remove-Item $presetPath -Force -ErrorAction SilentlyContinue
+          }

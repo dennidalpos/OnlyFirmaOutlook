@@ -25,14 +25,14 @@ $foldersToDelete = @(
     "src\Bootstrapper\obj",
     "tests\OnlyFirmaOutlook.Tests\bin",
     "tests\OnlyFirmaOutlook.Tests\obj",
-    "dist"
+    "dist",
+    "TestResults"
 )
 
 if ($All) {
     $foldersToDelete += @(
         ".vs",
-        "packages",
-        "TestResults"
+        "packages"
     )
 }
 

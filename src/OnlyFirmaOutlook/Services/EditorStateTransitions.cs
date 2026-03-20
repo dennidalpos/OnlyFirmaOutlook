@@ -16,6 +16,12 @@ internal static class EditorStateTransitions
     internal static void MarkDocumentOpened(EditorState editorState)
     {
         editorState.IsDocumentOpened = true;
+        editorState.HasUnsavedChanges = true;
+    }
+
+    internal static void MarkDocumentClosed(EditorState editorState)
+    {
+        editorState.IsDocumentOpened = false;
     }
 
     internal static bool TryMarkDocumentSaved(
@@ -30,6 +36,7 @@ internal static class EditorStateTransitions
 
         lastKnownModifiedTime = observedModifiedTime;
         editorState.IsDocumentSaved = true;
+        editorState.HasUnsavedChanges = false;
         editorState.LastModified = observedModifiedTime;
         return true;
     }

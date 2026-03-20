@@ -16,6 +16,11 @@ bld/
 
 # Distribution folder
 dist/
+build/
+out/
+publish/
+tmp/
+TestResults/
 
 # Visual Studio
 .vs/
@@ -83,3 +88,4 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 ~$*
+*.log

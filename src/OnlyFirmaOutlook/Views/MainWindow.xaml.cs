@@ -47,6 +47,7 @@ public partial class MainWindow : Window
     private EditorState? _currentEditorState;
     private bool _isOutlookAvailable;
     private bool _isFolderWritable;
+    private string? _outlookAccountErrorMessage;
 
     
     private FileSystemWatcher? _fileWatcher;
@@ -158,6 +159,9 @@ public partial class MainWindow : Window
 
             _isOutlookAvailable = accountResult.OutlookAvailable;
             _accounts = accountResult.Accounts;
+            _outlookAccountErrorMessage = string.IsNullOrWhiteSpace(accountResult.ErrorMessage)
+                ? null
+                : accountResult.ErrorMessage;
 
             
             ConfigureOutlookUI();
@@ -223,8 +227,10 @@ public partial class MainWindow : Window
         {
             
             OutlookWarningBorder.Visibility = Visibility.Visible;
-            OutlookWarningText.Text = "Outlook è installato ma non sono configurati account. " +
-                "Puoi comunque creare la firma e copiarla manualmente.";
+            OutlookWarningText.Text = _outlookAccountErrorMessage == null
+                ? "Outlook è installato ma non sono configurati account. Puoi comunque creare la firma e copiarla manualmente."
+                : "Outlook è installato ma non è stato possibile leggere gli account configurati. " +
+                  $"{_outlookAccountErrorMessage}. Puoi comunque creare la firma e copiarla manualmente.";
 
             AccountLabel.Visibility = Visibility.Collapsed;
             AccountComboBox.Visibility = Visibility.Collapsed;
@@ -237,8 +243,10 @@ public partial class MainWindow : Window
         {
             
             OutlookWarningBorder.Visibility = Visibility.Visible;
-            OutlookWarningText.Text = "Outlook non è installato. La firma verrà salvata in una cartella locale. " +
-                "Potrai poi copiarla manualmente in %APPDATA%\\Microsoft\\Signatures.";
+            OutlookWarningText.Text = _outlookAccountErrorMessage == null
+                ? "Outlook non è installato. La firma verrà salvata in una cartella locale. Potrai poi copiarla manualmente in %APPDATA%\\Microsoft\\Signatures."
+                : "Outlook non è disponibile o non è stato possibile inizializzarlo correttamente. " +
+                  $"{_outlookAccountErrorMessage}. La firma verrà salvata in una cartella locale.";
 
             AccountLabel.Visibility = Visibility.Collapsed;
             AccountComboBox.Visibility = Visibility.Collapsed;
@@ -293,7 +301,7 @@ public partial class MainWindow : Window
         var isDocumentReady = _currentEditorState?.IsReadyForConversion ?? false;
 
         
-        ConvertButton.IsEnabled = hasFile && hasSignatureName && hasDestination && _isFolderWritable && isDocumentReady;
+        ConvertButton.IsEnabled = hasFile && hasSignatureName && hasDestination && _isFolderWritable && isDocumentReady && !_isWordOpen;
 
         
         UpdateEditStatusDisplay();
@@ -450,6 +458,16 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (_isWordOpen)
+        {
+            MessageBox.Show(
+                "Chiudi prima Word dopo aver salvato il documento. La conversione parte solo quando l'editing è terminato.",
+                "Word ancora aperto",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
         var baseName = SignatureNameTextBox.Text.Trim();
         if (string.IsNullOrEmpty(baseName))
         {
@@ -460,6 +478,7 @@ public partial class MainWindow : Window
         
         var finalSignatureName = _signatureWorkflowService.BuildFinalSignatureName(baseName, GetCurrentSignatureIdentifier());
         var destinationFolder = DestinationFolderTextBox.Text;
+        var signatureExists = _signatureWorkflowService.SignatureExists(destinationFolder, finalSignatureName);
 
         if (!_isFolderWritable)
         {
@@ -471,11 +490,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _signatureWorkflowService.CreateBackupIfNeeded(destinationFolder);
-        RefreshBackups();
-
-        
-        if (_signatureWorkflowService.SignatureExists(destinationFolder, finalSignatureName))
+        if (signatureExists)
         {
             var result = MessageBox.Show(
                 $"Esiste già una firma con il nome '{finalSignatureName}'.\n\nVuoi sovrascriverla?",
@@ -487,6 +502,9 @@ public partial class MainWindow : Window
             {
                 return;
             }
+
+            _signatureWorkflowService.CreateBackupIfNeeded(destinationFolder, signatureExists: true);
+            RefreshBackups();
 
             
             _signatureWorkflowService.DeleteExistingSignatureFiles(destinationFolder, finalSignatureName);

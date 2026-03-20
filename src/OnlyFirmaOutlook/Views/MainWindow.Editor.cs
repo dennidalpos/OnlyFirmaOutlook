@@ -44,6 +44,7 @@ public partial class MainWindow
 
             _isWordOpen = true;
             UpdateWordOpenIndicator();
+            UpdateConvertButtonState();
 
             _logger.Log("Word avviato - in attesa di modifiche e chiusura");
         }
@@ -177,6 +178,7 @@ public partial class MainWindow
             StopFileWatcher();
 
             CheckFinalFileState();
+            EditorStateTransitions.MarkDocumentClosed(_currentEditorState);
 
             UpdateWordOpenIndicator();
             UpdateConvertButtonState();

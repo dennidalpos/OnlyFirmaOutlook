@@ -59,7 +59,7 @@ public class EditorState
     
     
     
-    public bool IsReadyForConversion => IsDocumentOpened && IsDocumentSaved;
+    public bool IsReadyForConversion => !IsDocumentOpened && IsDocumentSaved && !HasUnsavedChanges;
 
     public EditorState()
     {
@@ -72,15 +72,18 @@ public class EditorState
     
     public string GetStatusText()
     {
-        if (!IsDocumentOpened)
-            return "Da modificare";
+        if (IsDocumentOpened)
+        {
+            if (HasUnsavedChanges)
+                return IsDocumentSaved ? "Modificato (non salvato)" : "Aperto ma non salvato";
 
-        if (!IsDocumentSaved)
-            return "Aperto ma non salvato";
+            if (IsDocumentSaved)
+                return "Salvato: chiudi Word";
+        }
 
-        if (HasUnsavedChanges)
-            return "Modificato (non salvato)";
+        if (IsDocumentSaved && !HasUnsavedChanges)
+            return "Modificata e pronta";
 
-        return "Modificata e pronta";
+        return "Da modificare";
     }
 }

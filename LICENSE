@@ -1,22 +1,14 @@
-Copyright (c) 2026 Danny Perondi. All rights reserved.
+Copyright (c) 2026 Danny Perondi
 
-OnlyFirmaOutlook is proprietary and confidential software owned exclusively by
-Danny Perondi.
+Project: OnlyFirmaOutlook
 
-You may view this repository only when expressly authorized by Danny Perondi.
-No right to copy, reproduce, modify, adapt, distribute, publish, sublicense,
-sell, lease, share, disclose, reverse engineer, or use this software or its
-related materials for commercial purposes is granted without prior written
-permission from Danny Perondi.
+All rights reserved.
 
-This restriction applies to the source code, binaries, documentation, assets,
-and any related materials contained in or derived from this project.
+This project and its source code are proprietary.
+Unauthorized copying, modification, distribution, sublicensing,
+or commercial use is prohibited without prior written permission.
 
-THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
-
-IN NO EVENT SHALL DANNY PERONDI BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
-LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OF OR OTHER DEALINGS IN THE
-SOFTWARE.
+This software is provided "AS IS", without warranty of any kind,
+express or implied. In no event shall the author be liable for any claim,
+damages or other liability arising from, out of, or in connection with the software
+or the use or other dealings in the software.

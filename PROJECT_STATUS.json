@@ -57,43 +57,5 @@
     "tests/OnlyFirmaOutlook.Tests/WordConversionServiceTests.cs"
   ],
   "files_big": [],
-  "tasks": [
-    {
-      "id": "bug-rtf-preset-publish",
-      "type": "bug",
-      "status": "pending",
-      "description": "Lo script scripts/build.ps1 copia in dist/*/media solo i file *.doc*, quindi i preset .rtf supportati da PresetService e dall'import UI non vengono distribuiti nelle build pubblicate.",
-      "files": [
-        "scripts/build.ps1",
-        "src/OnlyFirmaOutlook/Services/PresetService.cs",
-        "src/OnlyFirmaOutlook/Views/MainWindow.Editor.cs"
-      ],
-      "priority": 1
-    },
-    {
-      "id": "drift-rtf-preset-docs",
-      "type": "drift",
-      "status": "pending",
-      "description": "I testi di supporto ai preset non sono allineati con il supporto .rtf: src/OnlyFirmaOutlook/media/.gitkeep, src/OnlyFirmaOutlook/Views/GuideWindow.xaml e i messaggi finali di scripts/build.ps1 parlano solo di file .doc/.docx.",
-      "files": [
-        "src/OnlyFirmaOutlook/media/.gitkeep",
-        "src/OnlyFirmaOutlook/Views/GuideWindow.xaml",
-        "scripts/build.ps1"
-      ],
-      "priority": 2
-    },
-    {
-      "id": "infra-build-output-normalization",
-      "type": "infra",
-      "status": "pending",
-      "description": "Nel workspace sono presenti output generati bin/ e obj/ sotto src/ e tests/, mentre PROJECT_STATUS.json non li rappresenta e il progetto usa anche dist/ per il publish: serve definire la struttura canonica degli output e riallineare treeview/files_big dopo la normalizzazione.",
-      "files": [
-        "PROJECT_STATUS.json",
-        "README.md",
-        "scripts/build.ps1",
-        "scripts/clean.ps1"
-      ],
-      "priority": 3
-    }
-  ]
+  "tasks": []
 }

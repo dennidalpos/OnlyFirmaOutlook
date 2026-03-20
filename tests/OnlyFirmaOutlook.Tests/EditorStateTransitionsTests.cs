@@ -11,13 +11,31 @@ public class EditorStateTransitionsTests
         var editorState = new EditorState
         {
             IsDocumentOpened = false,
-            IsDocumentSaved = false
+            IsDocumentSaved = false,
+            HasUnsavedChanges = false
         };
 
         EditorStateTransitions.MarkDocumentOpened(editorState);
 
         Assert.True(editorState.IsDocumentOpened);
+        Assert.True(editorState.HasUnsavedChanges);
         Assert.False(editorState.IsReadyForConversion);
+    }
+
+    [Fact]
+    public void MarkDocumentClosed_ClearsOpenedFlag()
+    {
+        var editorState = new EditorState
+        {
+            IsDocumentOpened = true,
+            IsDocumentSaved = true,
+            HasUnsavedChanges = false
+        };
+
+        EditorStateTransitions.MarkDocumentClosed(editorState);
+
+        Assert.False(editorState.IsDocumentOpened);
+        Assert.True(editorState.IsReadyForConversion);
     }
 
     [Fact]
@@ -30,6 +48,7 @@ public class EditorStateTransitionsTests
         {
             IsDocumentOpened = true,
             IsDocumentSaved = false,
+            HasUnsavedChanges = true,
             LastModified = initialTimestamp
         };
 
@@ -40,7 +59,8 @@ public class EditorStateTransitionsTests
 
         Assert.True(changed);
         Assert.True(editorState.IsDocumentSaved);
-        Assert.True(editorState.IsReadyForConversion);
+        Assert.False(editorState.HasUnsavedChanges);
+        Assert.False(editorState.IsReadyForConversion);
         Assert.Equal(observedTimestamp, editorState.LastModified);
         Assert.Equal(observedTimestamp, lastKnownModifiedTime);
     }
@@ -70,9 +90,10 @@ public class EditorStateTransitionsTests
 
     [Theory]
     [InlineData(false, false, false, "Da modificare")]
-    [InlineData(true, false, false, "Aperto ma non salvato")]
+    [InlineData(true, false, true, "Aperto ma non salvato")]
     [InlineData(true, true, true, "Modificato (non salvato)")]
-    [InlineData(true, true, false, "Modificata e pronta")]
+    [InlineData(true, true, false, "Salvato: chiudi Word")]
+    [InlineData(false, true, false, "Modificata e pronta")]
     public void GetStatusText_ReturnsExpectedValue(
         bool isDocumentOpened,
         bool isDocumentSaved,

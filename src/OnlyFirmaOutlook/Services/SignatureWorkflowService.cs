@@ -45,11 +45,16 @@ public class SignatureWorkflowService
             StringComparison.OrdinalIgnoreCase);
     }
 
-    public bool CreateBackupIfNeeded(string destinationFolder)
+    public bool ShouldCreateBackupBeforeOverwrite(string destinationFolder, bool signatureExists)
     {
-        if (!ShouldCreateBackup(destinationFolder))
+        return signatureExists && ShouldCreateBackup(destinationFolder);
+    }
+
+    public bool CreateBackupIfNeeded(string destinationFolder, bool signatureExists)
+    {
+        if (!ShouldCreateBackupBeforeOverwrite(destinationFolder, signatureExists))
         {
-            _logger.Log("Backup firme non necessario: cartella destinazione non predefinita.");
+            _logger.Log("Backup firme non necessario: nessuna sovrascrittura nella cartella predefinita.");
             return false;
         }
 

@@ -17,7 +17,7 @@
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="1) Seleziona la firma di partenza:" FontWeight="SemiBold"/>
                     <LineBreak/>
-                    <Run Text="Scegli un preset dalla lista oppure carica un file Word (.docx/.doc). I file provenienti da rete vengono copiati in locale per evitare blocchi e rallentamenti durante l'editing."/>
+                    <Run Text="Scegli un preset dalla lista oppure carica un file Word/RTF (.docx/.doc/.rtf). I file provenienti da rete vengono copiati in locale per evitare blocchi e rallentamenti durante l'editing."/>
                 </TextBlock>
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
                     <Run Text="2) Configura nome e account:" FontWeight="SemiBold"/>

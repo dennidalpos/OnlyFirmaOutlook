@@ -49,11 +49,41 @@ public class SignatureWorkflowServiceTests
     }
 
     [Fact]
+    public void ShouldCreateBackupBeforeOverwrite_ReturnsFalseWhenSignatureDoesNotExist()
+    {
+        var destinationFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+
+        var shouldCreateBackup = _workflowService.ShouldCreateBackupBeforeOverwrite(destinationFolder, signatureExists: false);
+
+        Assert.False(shouldCreateBackup);
+    }
+
+    [Fact]
+    public void ShouldCreateBackupBeforeOverwrite_ReturnsTrueWhenOverwritingInDefaultFolder()
+    {
+        var destinationFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+
+        var shouldCreateBackup = _workflowService.ShouldCreateBackupBeforeOverwrite(destinationFolder, signatureExists: true);
+
+        Assert.True(shouldCreateBackup);
+    }
+
+    [Fact]
     public void CreateBackupIfNeeded_ReturnsFalseWhenDestinationIsNotDefaultFolder()
     {
         var destinationFolder = SignatureRepository.GetAlternativeOutputFolder();
 
-        var created = _workflowService.CreateBackupIfNeeded(destinationFolder);
+        var created = _workflowService.CreateBackupIfNeeded(destinationFolder, signatureExists: true);
+
+        Assert.False(created);
+    }
+
+    [Fact]
+    public void CreateBackupIfNeeded_ReturnsFalseWhenSignatureDoesNotExist()
+    {
+        var destinationFolder = SignatureRepository.GetDefaultOutlookSignaturesFolder();
+
+        var created = _workflowService.CreateBackupIfNeeded(destinationFolder, signatureExists: false);
 
         Assert.False(created);
     }

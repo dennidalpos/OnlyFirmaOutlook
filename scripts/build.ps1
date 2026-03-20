@@ -185,7 +185,9 @@ if (-not $SkipPublish) {
 
     if (-not $SkipMediaCopy) {
         if (Test-Path $mediaSourceDir) {
-            $presetFiles = Get-ChildItem -Path $mediaSourceDir -Filter "*.doc*" -File
+            $presetFiles = Get-ChildItem -Path $mediaSourceDir -File | Where-Object {
+                $_.Extension -in @(".doc", ".docx", ".rtf")
+            }
             if ($presetFiles.Count -gt 0) {
                 Write-Host "Copia file preset..." -ForegroundColor Yellow
                 foreach ($file in $presetFiles) {
@@ -222,7 +224,7 @@ Write-Host "=======================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Per aggiungere preset (documenti Word predefiniti):" -ForegroundColor White
 Write-Host ""
-Write-Host "  1. Copia i file .doc/.docx nelle cartelle 'media' delle build pubblicate" -ForegroundColor Gray
+Write-Host "  1. Copia i file .doc/.docx/.rtf nelle cartelle 'media' delle build pubblicate" -ForegroundColor Gray
 Write-Host "     (es. dist\\win-x86\\media e dist\\win-x64\\media)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Oppure:" -ForegroundColor White
