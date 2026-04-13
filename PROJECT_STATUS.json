@@ -1,61 +1,116 @@
 {
-  "treeview": [
-    ".github/workflows/ci.yml",
-    ".gitignore",
-    "AGENTS.md",
-    "LICENSE",
-    "OnlyFirmaOutlook.sln",
-    "PROJECT_SPEC.md",
-    "PROJECT_STATUS.json",
-    "README.md",
-    "scripts/build.ps1",
-    "scripts/clean.ps1",
-    "src/Bootstrapper/Bootstrapper.csproj",
-    "src/Bootstrapper/Program.cs",
-    "src/OnlyFirmaOutlook/App.xaml",
-    "src/OnlyFirmaOutlook/App.xaml.cs",
-    "src/OnlyFirmaOutlook/media/.gitkeep",
-    "src/OnlyFirmaOutlook/Models/BackupInfo.cs",
-    "src/OnlyFirmaOutlook/Models/EditorState.cs",
-    "src/OnlyFirmaOutlook/Models/OutlookAccount.cs",
-    "src/OnlyFirmaOutlook/Models/PresetFile.cs",
-    "src/OnlyFirmaOutlook/Models/SignatureInfo.cs",
-    "src/OnlyFirmaOutlook/OnlyFirmaOutlook.csproj",
-    "src/OnlyFirmaOutlook/Properties/AssemblyInfo.cs",
-    "src/OnlyFirmaOutlook/Services/AssetManager.cs",
-    "src/OnlyFirmaOutlook/Services/CssInliner.cs",
-    "src/OnlyFirmaOutlook/Services/EditorStateTransitions.cs",
-    "src/OnlyFirmaOutlook/Services/LoggingService.cs",
-    "src/OnlyFirmaOutlook/Services/OutlookAccountProjection.cs",
-    "src/OnlyFirmaOutlook/Services/OutlookAccountService.cs",
-    "src/OnlyFirmaOutlook/Services/PresetService.cs",
-    "src/OnlyFirmaOutlook/Services/SignatureInstaller.cs",
-    "src/OnlyFirmaOutlook/Services/SignatureRepository.cs",
-    "src/OnlyFirmaOutlook/Services/SignatureWorkflowService.cs",
-    "src/OnlyFirmaOutlook/Services/TempCleanupHelper.cs",
-    "src/OnlyFirmaOutlook/Services/TempFileManager.cs",
-    "src/OnlyFirmaOutlook/Services/WordConversionService.cs",
-    "src/OnlyFirmaOutlook/Services/WordEditorService.cs",
-    "src/OnlyFirmaOutlook/Services/WordHtmlSignatureNormalizer.cs",
-    "src/OnlyFirmaOutlook/Styles/AppStyles.xaml",
-    "src/OnlyFirmaOutlook/Views/GuideWindow.xaml",
-    "src/OnlyFirmaOutlook/Views/GuideWindow.xaml.cs",
-    "src/OnlyFirmaOutlook/Views/MainWindow.Chrome.cs",
-    "src/OnlyFirmaOutlook/Views/MainWindow.Editor.cs",
-    "src/OnlyFirmaOutlook/Views/MainWindow.SignatureManagement.cs",
-    "src/OnlyFirmaOutlook/Views/MainWindow.xaml",
-    "src/OnlyFirmaOutlook/Views/MainWindow.xaml.cs",
-    "src/Shared/OfficeBitnessDetector.cs",
-    "tests/OnlyFirmaOutlook.Tests/AssetManagerTests.cs",
-    "tests/OnlyFirmaOutlook.Tests/EditorStateTransitionsTests.cs",
-    "tests/OnlyFirmaOutlook.Tests/GlobalUsings.cs",
-    "tests/OnlyFirmaOutlook.Tests/OnlyFirmaOutlook.Tests.csproj",
-    "tests/OnlyFirmaOutlook.Tests/OutlookAccountProjectionTests.cs",
-    "tests/OnlyFirmaOutlook.Tests/SignatureRepositoryTests.cs",
-    "tests/OnlyFirmaOutlook.Tests/SignatureWorkflowServiceTests.cs",
-    "tests/OnlyFirmaOutlook.Tests/TempFileManagerTests.cs",
-    "tests/OnlyFirmaOutlook.Tests/WordConversionServiceTests.cs"
-  ],
-  "files_big": [],
-  "tasks": []
+  "tasks": [
+    {
+      "id": "repo-standardize-structure",
+      "title": "Standardizzare la gerarchia delle cartelle per responsabilità",
+      "status": "planned",
+      "scope": "supporting",
+      "risk": "MEDIUM",
+      "area": "repository-structure",
+      "summary": "Riallineare la struttura del repository alle direttive AGENTS globali e locali.",
+      "acceptance_criteria": [
+        "Le cartelle principali seguono la gerarchia standard per responsabilità",
+        "Le cartelle generiche non motivate sono rimosse o sostituite",
+        "La documentazione tecnica riflette la struttura reale"
+      ]
+    },
+    {
+      "id": "repo-standardize-file-naming",
+      "title": "Standardizzare il naming dei file",
+      "status": "planned",
+      "scope": "supporting",
+      "risk": "LOW",
+      "area": "naming",
+      "summary": "Rendere coerente il naming dei file sorgente, test, script e documentazione.",
+      "acceptance_criteria": [
+        "I file usano naming coerente con stack e responsabilità",
+        "Non restano file temporanei, duplicati o con suffissi ambigui",
+        "I riferimenti ai file rinominati sono aggiornati"
+      ]
+    },
+    {
+      "id": "repo-migrate-scripts-to-powershell",
+      "title": "Migrare o uniformare gli script del repository a PowerShell",
+      "status": "planned",
+      "scope": "core",
+      "risk": "MEDIUM",
+      "area": "scripts",
+      "summary": "Portare gli script del repository su PowerShell con naming Verb-Noun.ps1.",
+      "acceptance_criteria": [
+        "Gli script repository sono in PowerShell",
+        "Il naming degli script segue lo standard Verb-Noun.ps1",
+        "I comandi canonici documentati puntano agli script PowerShell corretti"
+      ]
+    },
+    {
+      "id": "repo-add-installer-toolchain-bootstrap",
+      "title": "Introdurre lo script di bootstrap della toolchain installer",
+      "status": "planned",
+      "scope": "core",
+      "risk": "HIGH",
+      "area": "packaging-bootstrap",
+      "summary": "Aggiungere scripts/Install-InstallerToolchain.ps1 per installare e verificare i tool necessari.",
+      "acceptance_criteria": [
+        "Lo script verifica PowerShell 7, winget e prerequisiti richiesti",
+        "Lo script installa o verifica Inno Setup e WiX",
+        "Lo script documenta chiaramente versioni, esito e prerequisiti mancanti"
+      ]
+    },
+    {
+      "id": "repo-standardize-innosetup-packaging",
+      "title": "Standardizzare il packaging EXE con Inno Setup",
+      "status": "planned",
+      "scope": "core",
+      "risk": "HIGH",
+      "area": "packaging-exe",
+      "summary": "Portare la generazione degli installer EXE sullo standard Inno Setup.",
+      "acceptance_criteria": [
+        "Il repository usa packaging/innosetup come percorso standard",
+        "Package-App.ps1 compila il setup EXE canonico",
+        "La documentazione di packaging è aggiornata"
+      ]
+    },
+    {
+      "id": "repo-standardize-wix-msi-packaging",
+      "title": "Standardizzare il packaging MSI con WiX",
+      "status": "planned",
+      "scope": "core",
+      "risk": "HIGH",
+      "area": "packaging-msi",
+      "summary": "Allineare i pacchetti MSI allo standard WiX.",
+      "acceptance_criteria": [
+        "I file MSI risiedono in packaging/msi",
+        "Il progetto usa WiX come standard MSI",
+        "Il processo di build/package documenta chiaramente prerequisiti e output"
+      ]
+    },
+    {
+      "id": "repo-align-documentation",
+      "title": "Allineare la documentazione tecnica del repository",
+      "status": "planned",
+      "scope": "supporting",
+      "risk": "LOW",
+      "area": "documentation",
+      "summary": "Aggiornare README e docs per riflettere struttura, script e packaging reali.",
+      "acceptance_criteria": [
+        "README contiene quick start e comandi canonici",
+        "docs copre sviluppo locale, test e packaging",
+        "La documentazione non contraddice il comportamento reale del repository"
+      ]
+    },
+    {
+      "id": "repo-check-gitignore",
+      "title": "Verificare e aggiornare .gitignore",
+      "status": "planned",
+      "scope": "supporting",
+      "risk": "LOW",
+      "area": "gitignore",
+      "summary": "Escludere output di build, packaging, log, cache e file macchina-specifici.",
+      "acceptance_criteria": [
+        "Gli output di build e packaging sono ignorati",
+        "Cache, log e file temporanei sono ignorati",
+        "Non vengono committati artefatti locali non intenzionali"
+      ]
+    }
+  ]
 }
