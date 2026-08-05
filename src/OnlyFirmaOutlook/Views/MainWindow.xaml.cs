@@ -503,11 +503,18 @@ public partial class MainWindow : Window
                 return;
             }
 
-            _signatureWorkflowService.CreateBackupIfNeeded(destinationFolder, signatureExists: true);
-            RefreshBackups();
+            if (_signatureWorkflowService.ShouldCreateBackupBeforeOverwrite(destinationFolder, signatureExists: true) &&
+                !_signatureWorkflowService.CreateBackupIfNeeded(destinationFolder, signatureExists: true))
+            {
+                MessageBox.Show(
+                    "Non è stato possibile creare il backup obbligatorio della cartella firme. La firma esistente non è stata modificata.",
+                    "Backup non riuscito",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
 
-            
-            _signatureWorkflowService.DeleteExistingSignatureFiles(destinationFolder, finalSignatureName);
+            RefreshBackups();
         }
 
         SetBusy(true, "Conversione in corso...");

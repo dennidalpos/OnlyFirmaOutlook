@@ -75,10 +75,7 @@ public class WordConversionService
         _logger.Log($"Nome firma: {signatureName}");
         _logger.Log($"Tipo HTML: {(useFilteredHtml ? "Filtrato" : "Completo")}");
         var result = new ConversionResult();
-        var basePath = Path.Combine(destinationFolder, signatureName);
-        var htmPath = basePath + ".htm";
-        var rtfPath = basePath + ".rtf";
-        var txtPath = basePath + ".txt";
+        string? stagingFolder = null;
         dynamic? wordApp = null;
         dynamic? doc = null;
 
@@ -99,22 +96,24 @@ public class WordConversionService
                 _logger.Log("Cartella destinazione creata");
             }
 
+            stagingFolder = CreateStagingFolder();
+            var basePath = Path.Combine(stagingFolder, signatureName);
+            var htmPath = basePath + ".htm";
+            var rtfPath = basePath + ".rtf";
+            var txtPath = basePath + ".txt";
+
             
             _logger.Log("Creazione istanza Word.Application...");
             var wordType = Type.GetTypeFromProgID("Word.Application");
             if (wordType == null)
             {
-                result.ErrorMessage = "Microsoft Word non è installato o non accessibile";
-                _logger.LogError(result.ErrorMessage);
-                return result;
+                throw new InvalidOperationException("Microsoft Word non è installato o non accessibile");
             }
 
             wordApp = Activator.CreateInstance(wordType);
             if (wordApp == null)
             {
-                result.ErrorMessage = "Impossibile creare istanza di Word";
-                _logger.LogError(result.ErrorMessage);
-                return result;
+                throw new InvalidOperationException("Impossibile creare istanza di Word");
             }
 
             wordApp.Visible = false;
@@ -130,9 +129,7 @@ public class WordConversionService
 
             if (doc == null)
             {
-                result.ErrorMessage = "Impossibile aprire il documento Word";
-                _logger.LogError(result.ErrorMessage);
-                return result;
+                throw new InvalidOperationException("Impossibile aprire il documento Word");
             }
 
             _logger.Log("Documento aperto con successo");
@@ -210,16 +207,18 @@ public class WordConversionService
             CleanupComObjects(doc, wordApp);
         }
 
-        if (result.Success && result.HtmFilePath != null)
+        if (result.Success && result.HtmFilePath != null && stagingFolder != null)
         {
-            if (!TryFinalizeConversion(result, destinationFolder, signatureName))
+            if (!TryFinalizeConversion(result, stagingFolder, signatureName) ||
+                !TryCommitConversion(result, stagingFolder, destinationFolder, signatureName))
             {
-                RollbackGeneratedArtifacts(destinationFolder, signatureName);
+                result.Success = false;
             }
         }
-        else if (!result.Success)
+
+        if (stagingFolder != null)
         {
-            RollbackGeneratedArtifacts(destinationFolder, signatureName);
+            CleanupDirectory(stagingFolder, "cartella di staging conversione");
         }
 
         return result;
@@ -242,10 +241,10 @@ public class WordConversionService
         return normalizer.Normalize(html);
     }
 
-    protected virtual AssetProcessingResult ProcessAssets(string html, string sourceHtmlPath, string assetsFolderPath, string signatureName)
+    protected virtual AssetProcessingResult ProcessAssets(string html, string sourceHtmlPath, string assetsFolderPath)
     {
         var assetManager = new AssetManager();
-        return assetManager.ProcessImages(html, sourceHtmlPath, assetsFolderPath, signatureName, useAbsolutePaths: false, embedImages: true);
+        return assetManager.ProcessImages(html, sourceHtmlPath, assetsFolderPath);
     }
 
     protected virtual void InstallSignature(string destinationFolder, string signatureName, string html, string plainText)
@@ -431,7 +430,7 @@ public class WordConversionService
             var normalized = NormalizeHtml(inlined);
 
             var assetsFolder = Path.Combine(destinationFolder, $"{signatureName}_files");
-            var assetResult = ProcessAssets(normalized, result.HtmFilePath!, assetsFolder, signatureName);
+            var assetResult = ProcessAssets(normalized, result.HtmFilePath!, assetsFolder);
             InstallSignature(destinationFolder, signatureName, assetResult.Html, assetResult.PlainText);
 
             if (Directory.Exists(assetsFolder) && !Directory.EnumerateFileSystemEntries(assetsFolder).Any())
@@ -466,38 +465,143 @@ public class WordConversionService
         }
     }
 
-    private void RollbackGeneratedArtifacts(string destinationFolder, string signatureName)
+    private string CreateStagingFolder()
     {
-        var rollbackBasePath = Path.Combine(destinationFolder, signatureName);
-        var artifactPaths = new[]
-        {
-            rollbackBasePath + ".htm",
-            rollbackBasePath + ".rtf",
-            rollbackBasePath + ".txt",
-            rollbackBasePath + "_files",
-            rollbackBasePath + "_file"
-        };
+        var stagingFolder = Path.Combine(
+            Path.GetTempPath(),
+            "OnlyFirmaOutlook",
+            "Conversion",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(stagingFolder);
+        _logger.Log($"Cartella di staging creata: {stagingFolder}");
+        return stagingFolder;
+    }
 
-        foreach (var artifactPath in artifactPaths)
+    private bool TryCommitConversion(
+        ConversionResult result,
+        string stagingFolder,
+        string destinationFolder,
+        string signatureName)
+    {
+        var artifactNames = GetArtifactNames(signatureName);
+        var rollbackFolder = Path.Combine(
+            Path.GetTempPath(),
+            "OnlyFirmaOutlook",
+            "ConversionRollback",
+            Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            Directory.CreateDirectory(rollbackFolder);
+
+            foreach (var artifactName in artifactNames)
+            {
+                MoveArtifactIfPresent(
+                    Path.Combine(destinationFolder, artifactName),
+                    Path.Combine(rollbackFolder, artifactName));
+            }
+
+            foreach (var artifactName in artifactNames)
+            {
+                MoveArtifactIfPresent(
+                    Path.Combine(stagingFolder, artifactName),
+                    Path.Combine(destinationFolder, artifactName));
+            }
+
+            result.HtmFilePath = Path.Combine(destinationFolder, signatureName + ".htm");
+            result.RtfFilePath = Path.Combine(destinationFolder, signatureName + ".rtf");
+            result.TxtFilePath = Path.Combine(destinationFolder, signatureName + ".txt");
+            result.AssetsFolderPath = Directory.Exists(Path.Combine(destinationFolder, signatureName + "_files"))
+                ? Path.Combine(destinationFolder, signatureName + "_files")
+                : null;
+
+            CleanupDirectory(rollbackFolder, "backup rollback conversione");
+            _logger.Log("Conversione pubblicata nella cartella destinazione");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Pubblicazione conversione fallita: ripristino della firma precedente", ex);
+
+            RestorePreviousArtifacts(artifactNames, rollbackFolder, destinationFolder);
+
+            result.ErrorMessage = $"Impossibile pubblicare la firma: {ex.Message}";
+            return false;
+        }
+        finally
+        {
+            CleanupDirectory(rollbackFolder, "backup rollback conversione");
+        }
+    }
+
+    private void RestorePreviousArtifacts(
+        IEnumerable<string> artifactNames,
+        string rollbackFolder,
+        string destinationFolder)
+    {
+        foreach (var artifactName in artifactNames)
         {
             try
             {
-                if (Directory.Exists(artifactPath))
-                {
-                    Directory.Delete(artifactPath, recursive: true);
-                    continue;
-                }
-
-                if (File.Exists(artifactPath))
-                {
-                    File.SetAttributes(artifactPath, FileAttributes.Normal);
-                    File.Delete(artifactPath);
-                }
+                DeleteArtifactIfPresent(Path.Combine(destinationFolder, artifactName));
+                MoveArtifactIfPresent(
+                    Path.Combine(rollbackFolder, artifactName),
+                    Path.Combine(destinationFolder, artifactName));
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Rollback artefatto fallito '{artifactPath}': {ex.Message}");
+                _logger.LogError($"Rollback artefatto fallito: {artifactName}", ex);
             }
         }
     }
+
+    private static string[] GetArtifactNames(string signatureName) =>
+    [
+        signatureName + ".htm",
+        signatureName + ".rtf",
+        signatureName + ".txt",
+        signatureName + "_files",
+        signatureName + "_file"
+    ];
+
+    private static void MoveArtifactIfPresent(string sourcePath, string destinationPath)
+    {
+        if (Directory.Exists(sourcePath))
+        {
+            Directory.Move(sourcePath, destinationPath);
+        }
+        else if (File.Exists(sourcePath))
+        {
+            File.Move(sourcePath, destinationPath);
+        }
+    }
+
+    private static void DeleteArtifactIfPresent(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, recursive: true);
+        }
+        else if (File.Exists(path))
+        {
+            File.SetAttributes(path, FileAttributes.Normal);
+            File.Delete(path);
+        }
+    }
+
+    private void CleanupDirectory(string path, string description)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Impossibile eliminare {description}: {ex.Message}");
+        }
+    }
+
 }

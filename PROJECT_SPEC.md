@@ -7,7 +7,7 @@ OnlyFirmaOutlook e un'app desktop WPF per Windows che converte documenti Word in
 - Import di documenti `.doc`, `.docx` e `.rtf` da preset locali o file scelti dall'utente.
 - Apertura e modifica del documento in Microsoft Word tramite automazione Office.
 - Esportazione della firma nei formati HTML, RTF e TXT compatibili con Outlook Classic.
-- Normalizzazione dell'HTML e ricostruzione degli asset.
+- Normalizzazione dell'HTML e gestione di immagini locali nel formato nativo delle firme Outlook (`<firma>_files`).
 - Gestione della cartella firme di Outlook o di una cartella di output alternativa.
 - Backup ZIP delle firme esistenti e funzioni di ripristino snapshot.
 - Script PowerShell per build, test, clean e publish.
@@ -21,7 +21,7 @@ OnlyFirmaOutlook e un'app desktop WPF per Windows che converte documenti Word in
 - Sincronizzazione cloud, servizi web o componenti server-side.
 
 ## Architecture
-- `src/OnlyFirmaOutlook`: applicazione WPF principale (`net8.0-windows`) con viste, view model, modelli e servizi per conversione, installazione firme, logging e gestione file temporanei; `MainWindow` e suddivisa in partial class per separare editor, gestione firme e chrome UI.
+- `src/OnlyFirmaOutlook`: applicazione WPF principale (`net8.0-windows`) con viste, modelli e servizi per conversione, installazione firme, immagini inline Outlook, logging e gestione file temporanei; `MainWindow` è suddivisa in partial class per separare editor, gestione firme e chrome UI.
 - `src/Bootstrapper`: launcher che rileva la bitness di Office e avvia la build corretta.
 - `src/Shared`: codice condiviso per il rilevamento della bitness di Office.
 - `tests/OnlyFirmaOutlook.Tests`: progetto di test xUnit per repository e servizi.
@@ -33,3 +33,4 @@ OnlyFirmaOutlook e un'app desktop WPF per Windows che converte documenti Word in
 - Il target applicativo e `net8.0-windows`; i runtime supportati in publish sono `win-x86` e `win-x64`.
 - La soluzione usa `Microsoft.Office.Interop.Word`, quindi dipende da Office installato e disponibile localmente.
 - I preset distribuiti sono letti dalla cartella `src/OnlyFirmaOutlook/media`.
+- Le immagini delle firme usano riferimenti relativi alla cartella `<firma>_files`; l'app imposta per l'utente corrente l'opzione Outlook `Send Pictures With Document` per farle inviare come contenuti inline. Outlook va riavviato dopo l'applicazione dell'impostazione.

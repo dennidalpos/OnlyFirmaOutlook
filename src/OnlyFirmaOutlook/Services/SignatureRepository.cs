@@ -165,16 +165,6 @@ public class SignatureRepository
     
     
     
-    public void DeleteExistingSignatureFiles(string folderPath, string signatureName)
-    {
-        _logger.Log($"Eliminazione file firma esistente: {signatureName}");
-
-        DeleteSignatureArtifacts(folderPath, signatureName);
-    }
-
-    
-    
-    
     public bool SignatureExists(string folderPath, string signatureName)
     {
         return GetSignatureArtifactPaths(folderPath, signatureName)
@@ -392,20 +382,6 @@ public class SignatureRepository
         {
             _logger.LogWarning($"Impossibile eliminare cartella '{path}': {ex.Message}");
             return false;
-        }
-    }
-
-    private void DeleteSignatureArtifacts(string folderPath, string signatureName)
-    {
-        foreach (var artifactPath in GetSignatureArtifactPaths(folderPath, signatureName))
-        {
-            if (Directory.Exists(artifactPath))
-            {
-                TryDeleteDirectory(artifactPath);
-                continue;
-            }
-
-            TryDeleteFile(artifactPath);
         }
     }
 

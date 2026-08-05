@@ -30,10 +30,7 @@ public class AssetManagerTests
             var result = assetManager.ProcessImages(
                 html,
                 sourceHtmlPath,
-                assetsPath,
-                "Firma",
-                useAbsolutePaths: false,
-                embedImages: false);
+                assetsPath);
 
             var savedFile = Directory.GetFiles(assetsPath, "*" + expectedExtension, SearchOption.TopDirectoryOnly);
 

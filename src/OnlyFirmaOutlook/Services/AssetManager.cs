@@ -23,7 +23,7 @@ public class AssetManager
         _logger = LoggingService.Instance;
     }
 
-    public AssetProcessingResult ProcessImages(string html, string sourceHtmlPath, string assetsFolderPath, string signatureName, bool useAbsolutePaths, bool embedImages = false)
+    public AssetProcessingResult ProcessImages(string html, string sourceHtmlPath, string assetsFolderPath)
     {
         Directory.CreateDirectory(assetsFolderPath);
         var assetsFolderName = Path.GetFileName(assetsFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
@@ -46,7 +46,7 @@ public class AssetManager
         {
             foreach (var img in imgNodes)
             {
-                ProcessAttribute(img, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
+                ProcessAttribute(img, "src", baseDir, assetsFolderPath, assetsFolderName, pathMap);
             }
         }
 
@@ -54,7 +54,7 @@ public class AssetManager
         {
             foreach (var vmlImage in vmlImageNodes)
             {
-                ProcessAttribute(vmlImage, "src", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
+                ProcessAttribute(vmlImage, "src", baseDir, assetsFolderPath, assetsFolderName, pathMap);
             }
         }
 
@@ -62,9 +62,9 @@ public class AssetManager
         {
             foreach (var node in vmlNodes)
             {
-                ProcessAttribute(node, "o:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
-                ProcessAttribute(node, "v:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
-                ProcessAttribute(node, "xlink:href", baseDir, assetsFolderPath, assetsFolderName, useAbsolutePaths, embedImages, pathMap);
+                ProcessAttribute(node, "o:href", baseDir, assetsFolderPath, assetsFolderName, pathMap);
+                ProcessAttribute(node, "v:href", baseDir, assetsFolderPath, assetsFolderName, pathMap);
+                ProcessAttribute(node, "xlink:href", baseDir, assetsFolderPath, assetsFolderName, pathMap);
             }
         }
 
@@ -107,8 +107,6 @@ public class AssetManager
         string baseDir,
         string assetsFolderPath,
         string assetsFolderName,
-        bool useAbsolutePaths,
-        bool embedImages,
         Dictionary<string, string> pathMap)
     {
         var srcValue = node.GetAttributeValue(attributeName, string.Empty);
@@ -126,7 +124,7 @@ public class AssetManager
 
         if (srcValue.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
         {
-            if (!embedImages && TrySaveEmbeddedImage(srcValue, assetsFolderPath, useAbsolutePaths, assetsFolderName, out var rewrittenPath))
+            if (TrySaveEmbeddedImage(srcValue, assetsFolderPath, assetsFolderName, out var rewrittenPath))
             {
                 node.SetAttributeValue(attributeName, rewrittenPath);
             }
@@ -140,70 +138,40 @@ public class AssetManager
             return;
         }
 
-        if (embedImages)
-        {
-            var dataUri = ConvertToBase64DataUri(resolvedPath);
-            if (!string.IsNullOrEmpty(dataUri))
-            {
-                node.SetAttributeValue(attributeName, dataUri);
-                _logger.Log($"Immagine embedded: {Path.GetFileName(resolvedPath)}");
-            }
-            return;
-        }
-
         if (!pathMap.TryGetValue(resolvedPath!, out var fileName))
         {
-            fileName = CreateStableFileName(resolvedPath);
-            var destinationPath = Path.Combine(assetsFolderPath, fileName);
-            if (!File.Exists(destinationPath))
+            if (IsFileInAssetsFolder(resolvedPath, assetsFolderPath))
             {
-                File.Copy(resolvedPath, destinationPath, overwrite: false);
+                fileName = Path.GetFileName(resolvedPath);
             }
+            else
+            {
+                fileName = CreateStableFileName(resolvedPath);
+                var destinationPath = Path.Combine(assetsFolderPath, fileName);
+                if (!File.Exists(destinationPath))
+                {
+                    File.Copy(resolvedPath, destinationPath, overwrite: false);
+                }
+            }
+
             pathMap[resolvedPath] = fileName;
         }
 
-        var rewritten = useAbsolutePaths
-            ? Path.Combine(assetsFolderPath, fileName)
-            : $"{assetsFolderName}/{fileName}";
-
-        node.SetAttributeValue(attributeName, rewritten);
+        node.SetAttributeValue(attributeName, $"{assetsFolderName}/{fileName}");
     }
 
-    private string ConvertToBase64DataUri(string imagePath)
+    private static bool IsFileInAssetsFolder(string filePath, string assetsFolderPath)
     {
-        try
-        {
-            var bytes = File.ReadAllBytes(imagePath);
-            var base64 = Convert.ToBase64String(bytes);
-            var mimeType = GetMimeTypeFromExtension(Path.GetExtension(imagePath));
-            return $"data:{mimeType};base64,{base64}";
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning($"Errore conversione immagine in base64: {ex.Message}");
-            return string.Empty;
-        }
-    }
+        var normalizedFilePath = Path.GetFullPath(filePath);
+        var normalizedAssetsFolder = Path.GetFullPath(assetsFolderPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
-    private static string GetMimeTypeFromExtension(string extension)
-    {
-        return extension.ToLowerInvariant() switch
-        {
-            ".png" => "image/png",
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".gif" => "image/gif",
-            ".bmp" => "image/bmp",
-            ".svg" => "image/svg+xml",
-            ".webp" => "image/webp",
-            ".ico" => "image/x-icon",
-            _ => "application/octet-stream"
-        };
+        return normalizedFilePath.StartsWith(normalizedAssetsFolder, StringComparison.OrdinalIgnoreCase);
     }
 
     private bool TrySaveEmbeddedImage(
         string srcValue,
         string assetsFolderPath,
-        bool useAbsolutePaths,
         string assetsFolderName,
         out string rewrittenPath)
     {
@@ -232,9 +200,7 @@ public class AssetManager
                 File.WriteAllBytes(destinationPath, bytes);
             }
 
-            rewrittenPath = useAbsolutePaths
-                ? destinationPath
-                : $"{assetsFolderName}/{fileName}";
+            rewrittenPath = $"{assetsFolderName}/{fileName}";
             return true;
         }
         catch (Exception ex)

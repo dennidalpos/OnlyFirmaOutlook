@@ -4,12 +4,12 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 
 ## Funzionalità principali
 
-- **Conversione Word → firme Outlook** con generazione di HTML/RTF/TXT e ricostruzione degli asset.
+- **Conversione Word → firme Outlook** con generazione di HTML/RTF/TXT, asset compatibili e pubblicazione transazionale.
 - **Preset**: selezione rapida dei modelli Word/RTF presenti nella cartella `media` o caricamento di file custom.
 - **Modifica assistita in Word**: apertura del documento, verifica salvataggio e controllo stato.
 - **Opzioni HTML** (filtrato o completo) per bilanciare compatibilità e fedeltà visiva.
 - **Gestione firme esistenti** con avvisi di sovrascrittura e cancellazione rapida.
-- **Backup automatici** quando la destinazione è la cartella predefinita di Outlook, con ripristino snapshot e pulizia.
+- **Backup obbligatori prima della sovrascrittura** nella cartella predefinita di Outlook, con ripristino snapshot e pulizia.
 - **Log operativo** con copia/pulizia del file di log.
 
 ## Requisiti
@@ -41,9 +41,10 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 
 - **HTML**: generato in formato filtrato o completo a seconda dell'opzione scelta.
 - **RTF/TXT**: esportati per compatibilità con Outlook Classic.
-- **Normalizzazione HTML**: rimozione di stili superflui, inline CSS e ricostruzione degli asset.
-- **Asset**: le immagini vengono incorporate o ricostruite nella cartella `<firma>_files`.
-- **Backup**: se la destinazione è la cartella Outlook, viene creato un backup ZIP prima di sovrascrivere.
+- **Normalizzazione HTML**: rimozione di stili superflui e CSS inline, preservando il formato nativo delle immagini Word.
+- **Immagini**: ogni immagine resta nella cartella `<firma>_files` con il nome generato da Word e un riferimento relativo nell'HTML. All'avvio l'app abilita l'impostazione Outlook che invia queste immagini come allegati inline (`cid:`).
+- **Pubblicazione sicura**: conversione e normalizzazione avvengono in staging; gli artefatti esistenti sono sostituiti solo a conversione completata e vengono ripristinati se la pubblicazione fallisce.
+- **Backup**: nella cartella Outlook, una sovrascrittura prosegue solo dopo la creazione riuscita del backup ZIP.
 - **Ripristino backup**: il restore riallinea la cartella firme allo snapshot del backup, rimuovendo artefatti residui non presenti nell'archivio.
 
 ## Opzioni e filtri
@@ -59,7 +60,7 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 4. Apri in Word, modifica e salva.
 5. Scegli il formato HTML.
 6. Controlla eventuali firme esistenti, quindi converti e salva.
-7. Verifica in Outlook che la firma sia corretta.
+7. Chiudi e riapri Outlook Classic dopo il primo avvio dell'app, quindi verifica la firma e invia un messaggio di prova.
 
 ## Build e publish
 
@@ -150,12 +151,12 @@ dist/                 # Output publish locale
 
 - `PROJECT_SPEC.md`: specifica tecnica e vincoli del progetto.
 - `PROJECT_STATUS.json`: struttura repository, file grandi monitorati e task aperti.
-- `AGENTS.md`: regole operative per agenti automatici.
 
 ## Note operative e troubleshooting
 
 - **File Word su rete**: vengono copiati in locale per evitare blocchi durante la modifica.
-- **Backup automatico**: creato solo se la destinazione è la cartella Outlook.
+- **Backup prima della sovrascrittura**: richiesto solo quando si sovrascrive nella cartella Outlook.
+- **Immagini assenti al destinatario**: chiudi Outlook, avvia OnlyFirmaOutlook per applicare l'impostazione di invio inline, rigenera la firma e riapri Outlook. Verifica inoltre di usare una build Office aggiornata.
 - **Outlook non installato**: scegliere una cartella alternativa e usare l'output manualmente.
 - **Log e pulizia**: usa i pulsanti di log per copia e reset; i file temporanei vengono rimossi all'uscita.
 

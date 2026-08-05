@@ -40,6 +40,7 @@ public partial class App : Application
         _loggingService.Log("Applicazione avviata");
         _loggingService.Log($"Directory base: {AppContext.BaseDirectory}");
         _loggingService.Log($"Cartella temporanea sessione: {_tempFileManager.SessionTempFolder}");
+        OutlookInlineImageSettings.Enable(_loggingService);
     }
 
     protected override void OnExit(ExitEventArgs e)

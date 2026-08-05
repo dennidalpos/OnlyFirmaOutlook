@@ -45,7 +45,7 @@ public class WordConversionServiceTests
     }
 
     [Fact]
-    public void ProcessImages_HandlesPrefixedVmlNodesWithoutXPathErrors()
+    public void ProcessImages_StoresPrefixedVmlImagesAsOutlookCompatibleAssets()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"OnlyFirmaOutlookTests_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -69,9 +69,39 @@ public class WordConversionServiceTests
                 </html>
                 """;
 
-            var result = assetManager.ProcessImages(html, sourceHtmlPath, assetsPath, "Firma", useAbsolutePaths: false, embedImages: true);
+            var result = assetManager.ProcessImages(html, sourceHtmlPath, assetsPath);
 
-            Assert.Contains("data:image/png;base64", result.Html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("Firma_files/", result.Html, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("data:image/png;base64", result.Html, StringComparison.OrdinalIgnoreCase);
+            Assert.Single(Directory.GetFiles(assetsPath, "*.png", SearchOption.TopDirectoryOnly));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ProcessImages_PreservesWordAssetNamesAndRelativeReferences()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"OnlyFirmaOutlookTests_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var sourceHtmlPath = Path.Combine(tempDir, "Firma.htm");
+            var assetsPath = Path.Combine(tempDir, "Firma_files");
+            Directory.CreateDirectory(assetsPath);
+            File.WriteAllText(sourceHtmlPath, "<html></html>");
+            File.WriteAllBytes(Path.Combine(assetsPath, "image001.png"), Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aBWQAAAAASUVORK5CYII="));
+
+            var result = new AssetManager().ProcessImages(
+                "<img src=\"Firma_files/image001.png\" />",
+                sourceHtmlPath,
+                assetsPath);
+
+            Assert.Contains("Firma_files/image001.png", result.Html, StringComparison.OrdinalIgnoreCase);
+            Assert.Single(Directory.GetFiles(assetsPath, "*.png", SearchOption.TopDirectoryOnly));
         }
         finally
         {

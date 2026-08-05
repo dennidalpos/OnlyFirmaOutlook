@@ -66,11 +66,6 @@ public class SignatureWorkflowService
         return _signatureRepository.SignatureExists(destinationFolder, signatureName);
     }
 
-    public void DeleteExistingSignatureFiles(string destinationFolder, string signatureName)
-    {
-        _signatureRepository.DeleteExistingSignatureFiles(destinationFolder, signatureName);
-    }
-
     public WordConversionService.ConversionResult ConvertDocument(
         string sourceDocPath,
         string destinationFolder,
