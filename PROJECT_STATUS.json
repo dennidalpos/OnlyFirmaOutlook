@@ -111,6 +111,119 @@
         "Cache, log e file temporanei sono ignorati",
         "Non vengono committati artefatti locali non intenzionali"
       ]
+    },
+    {
+      "id": "audit-phase1-upgrade-dotnet",
+      "title": "Upgrade .NET 8 → .NET 10 LTS e aggiornamento NuGet",
+      "status": "done",
+      "scope": "core",
+      "risk": "MEDIUM",
+      "area": "dependencies",
+      "summary": "Aggiornato TFM a net10.0-windows su tutti i .csproj, CI, e documentazione. HtmlAgilityPack 1.11.59→1.13.0, PreMailer.Net 2.3.0→2.7.4.",
+      "acceptance_criteria": [
+        "Tutti i .csproj puntano a net10.0-windows",
+        "CI usa dotnet-version 10.0.x",
+        "NuGet aggiornati alle ultime versioni stabili",
+        "Documentazione (PROJECT_SPEC.md, README.md) allineata"
+      ]
+    },
+    {
+      "id": "audit-phase1-security-fixes",
+      "title": "Fix sicurezza e qualità codice (audit Fase 1)",
+      "status": "done",
+      "scope": "core",
+      "risk": "MEDIUM",
+      "area": "security-quality",
+      "summary": "Fix path traversal in AssetManager, logging in CssInliner, async in TempCleanupHelper. Aggiunti 18 nuovi test.",
+      "acceptance_criteria": [
+        "ResolveImagePath valida che il path resti dentro baseDir",
+        "CssInliner logga le eccezioni di parsing CSS",
+        "TempCleanupHelper usa Task.Delay invece di Thread.Sleep",
+        "Test per WordHtmlSignatureNormalizer e CssInliner presenti e verdi"
+      ]
+    },
+    {
+      "id": "audit-phase2-remove-com-interop",
+      "title": "Conversione .docx senza COM Interop",
+      "status": "planned",
+      "scope": "core",
+      "risk": "HIGH",
+      "area": "conversion-engine",
+      "summary": "Introdurre Mammoth.NET o Open XML SDK per convertire .docx→HTML senza Word installato. Mantenere COM come fallback per .doc/.rtf.",
+      "acceptance_criteria": [
+        "La conversione .docx→HTML funziona senza Word installato",
+        "COM Interop resta disponibile come fallback per .doc/.rtf",
+        "I test di conversione coprono entrambi i percorsi"
+      ]
+    },
+    {
+      "id": "audit-phase2-hosted-images",
+      "title": "Supporto immagini hosted via HTTPS",
+      "status": "planned",
+      "scope": "core",
+      "risk": "MEDIUM",
+      "area": "image-handling",
+      "summary": "Opzione per caricare immagini su HTTPS (Azure Blob, CDN, GitHub Pages) e usare URL nell'HTML firma, eliminando problemi CID/base64.",
+      "acceptance_criteria": [
+        "L'utente può scegliere tra immagini locali e hosted",
+        "Le immagini hosted usano URL HTTPS nell'HTML",
+        "Il flusso funziona sia con Classic che New Outlook"
+      ]
+    },
+    {
+      "id": "audit-phase3-mvvm-refactor",
+      "title": "Refactoring architettura MVVM",
+      "status": "planned",
+      "scope": "core",
+      "risk": "HIGH",
+      "area": "architecture",
+      "summary": "Estrarre ViewModel da MainWindow per rendere testabile il workflow UI, separare logica di business da code-behind.",
+      "acceptance_criteria": [
+        "MainWindow usa data binding XAML invece di manipolazione diretta",
+        "La logica di workflow è testabile con test unitari",
+        "I servizi COM implementano IDisposable"
+      ]
+    },
+    {
+      "id": "audit-phase3-accessibility",
+      "title": "Migliorare accessibilità UI",
+      "status": "planned",
+      "scope": "supporting",
+      "risk": "LOW",
+      "area": "accessibility",
+      "summary": "Aggiungere AutomationProperties.Name/LabeledBy ai controlli XAML per compatibilità screen reader.",
+      "acceptance_criteria": [
+        "Tutti i controlli interattivi hanno AutomationProperties.Name",
+        "Le liste dinamiche hanno nomi accessibili",
+        "Lo screen reader può navigare il workflow completo"
+      ]
+    },
+    {
+      "id": "audit-phase4-new-outlook-compat",
+      "title": "Compatibilità New Outlook (Monarch)",
+      "status": "planned",
+      "scope": "core",
+      "risk": "HIGH",
+      "area": "outlook-compat",
+      "summary": "Dual-mode output: cartella locale (Classic) + HTML export/clipboard (New Outlook). Immagini hosted come default. Monitorare Graph API per endpoint firma.",
+      "acceptance_criteria": [
+        "L'output funziona sia su Classic Outlook che su New Outlook",
+        "Le immagini hosted sono il default per New Outlook",
+        "La documentazione guida l'utente nel flusso New Outlook"
+      ]
+    },
+    {
+      "id": "audit-nullable-warning-cs8602",
+      "title": "Fix warning CS8602 in WordHtmlSignatureNormalizer",
+      "status": "planned",
+      "scope": "supporting",
+      "risk": "LOW",
+      "area": "code-quality",
+      "summary": "Warning pre-esistente CS8602 (null dereference) alla riga 102 di WordHtmlSignatureNormalizer.cs. Aggiungere null-check o operatore null-conditional.",
+      "acceptance_criteria": [
+        "Build con zero warning",
+        "Test esistenti restano verdi"
+      ]
     }
   ]
 }

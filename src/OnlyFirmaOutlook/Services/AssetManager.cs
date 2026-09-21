@@ -85,20 +85,34 @@ public class AssetManager
 
     private static string? ResolveImagePath(string srcValue, string baseDir)
     {
+        string? candidatePath;
+
         if (srcValue.StartsWith("file:", StringComparison.OrdinalIgnoreCase) &&
             Uri.TryCreate(srcValue, UriKind.Absolute, out var uri) &&
             uri.IsFile)
         {
-            return uri.LocalPath;
+            candidatePath = uri.LocalPath;
         }
-
-        if (Path.IsPathRooted(srcValue))
+        else if (Path.IsPathRooted(srcValue))
         {
-            return srcValue;
+            candidatePath = srcValue;
+        }
+        else
+        {
+            candidatePath = Path.Combine(baseDir, srcValue);
         }
 
-        var combined = Path.Combine(baseDir, srcValue);
-        return combined;
+        // Prevent path traversal: resolved path must stay within baseDir
+        var normalizedCandidate = Path.GetFullPath(candidatePath);
+        var normalizedBase = Path.GetFullPath(baseDir)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        if (!normalizedCandidate.StartsWith(normalizedBase, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return normalizedCandidate;
     }
 
     private void ProcessAttribute(

@@ -24,8 +24,9 @@ public class CssInliner
             var result = PreMailer.Net.PreMailer.MoveCssInline(wrapped, removeStyleElements: true);
             return ExtractBodyHtml(result.Html);
         }
-        catch
+        catch (Exception ex)
         {
+            LoggingService.Instance.LogWarning($"CSS inline fallito, uso fallback manuale: {ex.Message}");
             return FallbackInline(html);
         }
     }

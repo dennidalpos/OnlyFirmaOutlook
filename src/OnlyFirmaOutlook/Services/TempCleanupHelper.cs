@@ -9,13 +9,12 @@
 
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 namespace OnlyFirmaOutlook.Services;
 
 public static class TempCleanupHelper
 {
-    public static void CleanupDirectoryWithRetries(
+    public static async Task CleanupDirectoryWithRetriesAsync(
         string folderPath,
         LoggingService logger,
         string contextLabel,
@@ -45,13 +44,28 @@ public static class TempCleanupHelper
 
                 if (attempt < maxRetries)
                 {
-                    Thread.Sleep(retryDelayMs * attempt);
+                    await Task.Delay(retryDelayMs * attempt);
                 }
             }
         }
 
         logger.LogWarning($"Cleanup {contextLabel} non completato dopo {maxRetries} tentativi. " +
                           $"La cartella '{folderPath}' potrebbe richiedere pulizia manuale.");
+    }
+
+    /// <summary>
+    /// Synchronous wrapper for callers that cannot be made async.
+    /// Prefer <see cref="CleanupDirectoryWithRetriesAsync"/> when possible.
+    /// </summary>
+    public static void CleanupDirectoryWithRetries(
+        string folderPath,
+        LoggingService logger,
+        string contextLabel,
+        int maxRetries = 3,
+        int retryDelayMs = 100)
+    {
+        CleanupDirectoryWithRetriesAsync(folderPath, logger, contextLabel, maxRetries, retryDelayMs)
+            .GetAwaiter().GetResult();
     }
 
     private static void DeleteContents(string folderPath, LoggingService logger)

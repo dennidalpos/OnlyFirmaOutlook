@@ -17,7 +17,7 @@ OnlyFirmaOutlook è un'applicazione WPF per Windows che trasforma documenti Word
 - **Windows** (app WPF).
 - **Microsoft Word** installato per l'editing e la conversione.
 - **Microsoft Outlook Classic** per l'utilizzo delle firme generate.
-- Per lo **sviluppo**: .NET SDK 8.0 e PowerShell.
+- Per lo **sviluppo**: .NET SDK 10.0 e PowerShell.
 
 ## Percorsi predefiniti
 
