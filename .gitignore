@@ -72,6 +72,13 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+*.wixobj
+*.wixpdb
+packaging/output/
+packaging/**/Output/
+packaging/**/obj/
+packaging/**/bin/
+tools/
 
 # Windows shortcuts
 *.lnk

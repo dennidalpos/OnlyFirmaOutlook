@@ -1,0 +1,44 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?ifndef AppVersion?>
+  <?define AppVersion = "1.0.0.0"?>
+  <?endif?>
+
+  <Package Name="OnlyFirmaOutlook"
+           Manufacturer="Danny Perondi"
+           Version="$(var.AppVersion)"
+           UpgradeCode="5B3FA518-971E-4752-9A4B-91EAA24009F1"
+           Scope="perUser">
+    <MajorUpgrade DowngradeErrorMessage="Una versione più recente di OnlyFirmaOutlook è già installata." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="OnlyFirmaOutlook">
+        <Directory Id="DIR_WINX86" Name="win-x86" />
+        <Directory Id="DIR_WINX64" Name="win-x64" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="OnlyFirmaOutlook" />
+    </StandardDirectory>
+
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="LauncherExeComponent" Guid="D2A6B3CE-F9A5-429C-8E17-E0A4E1B31711">
+        <File Id="LauncherExe" Source="dist\OnlyFirmaOutlook.Launcher.exe" KeyPath="yes" />
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Directory="ApplicationProgramsFolder"
+                  Name="OnlyFirmaOutlook"
+                  Target="[#LauncherExe]"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="CleanUpAppFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\OnlyFirmaOutlook" Name="installed" Type="integer" Value="1" />
+      </Component>
+      <Files Include="..\..\dist\win-x86\**" Directory="DIR_WINX86" />
+      <Files Include="..\..\dist\win-x64\**" Directory="DIR_WINX64" />
+    </ComponentGroup>
+
+    <Feature Id="MainFeature" Title="OnlyFirmaOutlook" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+  </Package>
+</Wix>

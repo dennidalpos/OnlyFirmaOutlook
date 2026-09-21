@@ -76,7 +76,7 @@ $ dotnet test OnlyFirmaOutlook.sln -c Release
 
 ### Continuous Integration
 
-La pipeline GitHub Actions in `.github/workflows/ci.yml` esegue `restore`, `build`, `test` e una verifica del flusso `scripts/build.ps1`, inclusi publish `win-x86`/`win-x64`, bootstrapper e copia preset.
+La pipeline GitHub Actions in `.github/workflows/ci.yml` esegue `restore`, `build`, `test` e una verifica del flusso `scripts/Build-App.ps1`, inclusi publish `win-x86`/`win-x64`, bootstrapper e copia preset.
 
 ### Publish manuale
 
@@ -91,66 +91,84 @@ $ dotnet publish src/Bootstrapper/Bootstrapper.csproj -c Release -r win-x64 --se
 
 ### Script PowerShell (consigliato)
 
-Lo script `scripts/build.ps1` gestisce pulizia, restore, build, test e publish per entrambi i runtime e copia i preset `.doc`, `.docx` e `.rtf` nella cartella di output.
-Se non passi `-PublishMode`, lo script chiede in console se compilare in modalità **Framework-dependent** o **Self-contained**.
+Gli script del repository seguono la convenzione `Verb-Noun.ps1` (con wrapper di retrocompatibilità `build.ps1` e `clean.ps1`):
 
+#### 1) Bootstrap toolchain di packaging
+Verifica e installa i prerequisiti (PowerShell 7, winget, .NET 10 SDK, Inno Setup 6, WiX Toolset):
 ```powershell
-# Build+publish completo (con scelta modalità da console)
-./scripts/build.ps1 -Configuration Release
+# Verifica stato dei prerequisiti
+./scripts/Install-InstallerToolchain.ps1
 
-# Build+publish forzando Framework-dependent
-./scripts/build.ps1 -Configuration Release -PublishMode FrameworkDependent
-
-# Build senza test
-./scripts/build.ps1 -Configuration Release -SkipTests
-
-# Solo build (senza publish)
-./scripts/build.ps1 -Configuration Release -SkipPublish
-
-# Output personalizzato e senza bootstrapper
-./scripts/build.ps1 -Configuration Release -OutputDir dist -SkipBootstrapper
-
-# Skip copia preset
-./scripts/build.ps1 -Configuration Release -SkipMediaCopy
+# Installazione automatica prerequisiti mancanti via winget/dotnet tool
+./scripts/Install-InstallerToolchain.ps1 -Install
 ```
 
-### Script di pulizia
-
+#### 2) Build e publish applicazione
+Lo script `scripts/Build-App.ps1` gestisce pulizia, restore, build, test e publish per entrambi i runtime (`win-x86` e `win-x64`) e copia i preset `.doc`, `.docx` e `.rtf` nella cartella di output:
 ```powershell
-# Pulizia standard (bin/obj + dist + TestResults)
-./scripts/clean.ps1
+# Build+publish completo (con scelta modalità Framework-dependent / Self-contained)
+./scripts/Build-App.ps1 -Configuration Release
 
-# Pulizia completa
-./scripts/clean.ps1 -All
+# Build+publish forzando Framework-dependent
+./scripts/Build-App.ps1 -Configuration Release -PublishMode FrameworkDependent
 
-# Pulizia con rimozione dati utente (EditorTemp/Logs)
-./scripts/clean.ps1 -IncludeUserData
+# Build senza rieseguire i test
+./scripts/Build-App.ps1 -Configuration Release -SkipTests
+
+# Solo compilazione (senza publish in dist/)
+./scripts/Build-App.ps1 -Configuration Release -SkipPublish
+```
+
+#### 3) Packaging installer (Inno Setup EXE e WiX MSI)
+Lo script `scripts/Package-App.ps1` compila i pacchetti di installazione pronti per la distribuzione:
+```powershell
+# Compila sia l'installer EXE (Inno Setup) che l'installer MSI (WiX)
+./scripts/Package-App.ps1
+
+# Solo installer Inno Setup EXE
+./scripts/Package-App.ps1 -Format InnoSetup -Version "1.0.0"
+
+# Solo installer WiX MSI (riutilizzando artefatti esistenti in dist/)
+./scripts/Package-App.ps1 -Format WiX -SkipBuild
+```
+Gli installer vengono generati nella cartella `packaging/output/`.
+
+#### 4) Pulizia artefatti
+```powershell
+# Pulizia standard (bin/obj + dist + packaging/output + TestResults)
+./scripts/Clean-App.ps1
+
+# Pulizia completa (inclusi .vs e packages)
+./scripts/Clean-App.ps1 -All
+
+# Pulizia con rimozione dati utente locali (EditorTemp/Logs)
+./scripts/Clean-App.ps1 -IncludeUserData
 ```
 
 ## Distribuzione
 
-- Pubblicare la cartella di output su share di rete.
-- Gli utenti avviano **OnlyFirmaOutlook.Launcher.exe**, che rileva la bitness di Office e lancia la build corretta.
+1. **Installer stand-alone**: distribuire `OnlyFirmaOutlook-Setup-<versione>.exe` o `OnlyFirmaOutlook-<versione>.msi` (generati in `packaging/output/`).
+2. **Share di rete**: copiare l'intera cartella `dist/` sulla share di rete; gli utenti avviano `OnlyFirmaOutlook.Launcher.exe`, che rileva la bitness di Office e lancia l'eseguibile corretto (`win-x86` o `win-x64`).
 
 ## Struttura del repository
 
 ```
-src/
-  Bootstrapper/       # Launcher che seleziona x86/x64 in base a Office
-  OnlyFirmaOutlook/   # App WPF principale
-  Shared/             # Componenti condivisi (rilevamento bitness Office)
-tests/                # Test unitari
-scripts/              # Script di build e pulizia
-.github/              # CI build/test
-dist/                 # Output publish locale
+src/                  # Sorgenti C# .NET 10 (App WPF, Bootstrapper, Shared)
+tests/                # Test unitari xUnit
+packaging/            # Configurazioni e sorgenti installer
+  innosetup/          # Script Inno Setup per installer EXE (setup.iss)
+  msi/                # Sorgenti WiX per installer MSI (OnlyFirmaOutlook.wxs)
+  output/             # Pacchetti generati (ignorati da git)
+scripts/              # Script PowerShell di automazione (Verb-Noun)
+.github/              # Workflow CI GitHub Actions
+dist/                 # Output publish locale (ignorato da git)
 ```
 
-`dist/` e gli altri output di build/test sono generati localmente e ignorati da git.
+## Documentazione
 
-## Documentation
-
-- `PROJECT_SPEC.md`: specifica tecnica e vincoli del progetto.
-- `PROJECT_STATUS.json`: struttura repository, file grandi monitorati e task aperti.
+- `PROJECT_SPEC.md`: specifica tecnica, architettura e vincoli del progetto.
+- `PROJECT_STATUS.json`: tracker dei task, stato di avanzamento e verifiche.
+- `AGENTS.md`: fatti non derivabili, quirk di progetto e comandi verificati.
 
 ## Note operative e troubleshooting
 

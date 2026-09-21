@@ -1,145 +1,16 @@
 {
   "tasks": [
     {
-      "id": "repo-standardize-structure",
-      "title": "Standardizzare la gerarchia delle cartelle per responsabilità",
-      "status": "planned",
-      "scope": "supporting",
-      "risk": "MEDIUM",
-      "area": "repository-structure",
-      "summary": "Riallineare la struttura del repository alle direttive AGENTS globali e locali.",
-      "acceptance_criteria": [
-        "Le cartelle principali seguono la gerarchia standard per responsabilità",
-        "Le cartelle generiche non motivate sono rimosse o sostituite",
-        "La documentazione tecnica riflette la struttura reale"
-      ]
-    },
-    {
-      "id": "repo-standardize-file-naming",
-      "title": "Standardizzare il naming dei file",
+      "id": "ci-add-packaging-verification",
+      "title": "Verificare packaging (Package-App.ps1) nella pipeline CI GitHub Actions",
       "status": "planned",
       "scope": "supporting",
       "risk": "LOW",
-      "area": "naming",
-      "summary": "Rendere coerente il naming dei file sorgente, test, script e documentazione.",
+      "area": "ci-packaging",
+      "summary": "Configurare l'ambiente CI (.github/workflows/ci.yml) con Inno Setup e WiX per validare in automatico la generazione degli installer EXE ed MSI.",
       "acceptance_criteria": [
-        "I file usano naming coerente con stack e responsabilità",
-        "Non restano file temporanei, duplicati o con suffissi ambigui",
-        "I riferimenti ai file rinominati sono aggiornati"
-      ]
-    },
-    {
-      "id": "repo-migrate-scripts-to-powershell",
-      "title": "Migrare o uniformare gli script del repository a PowerShell",
-      "status": "planned",
-      "scope": "core",
-      "risk": "MEDIUM",
-      "area": "scripts",
-      "summary": "Portare gli script del repository su PowerShell con naming Verb-Noun.ps1.",
-      "acceptance_criteria": [
-        "Gli script repository sono in PowerShell",
-        "Il naming degli script segue lo standard Verb-Noun.ps1",
-        "I comandi canonici documentati puntano agli script PowerShell corretti"
-      ]
-    },
-    {
-      "id": "repo-add-installer-toolchain-bootstrap",
-      "title": "Introdurre lo script di bootstrap della toolchain installer",
-      "status": "planned",
-      "scope": "core",
-      "risk": "HIGH",
-      "area": "packaging-bootstrap",
-      "summary": "Aggiungere scripts/Install-InstallerToolchain.ps1 per installare e verificare i tool necessari.",
-      "acceptance_criteria": [
-        "Lo script verifica PowerShell 7, winget e prerequisiti richiesti",
-        "Lo script installa o verifica Inno Setup e WiX",
-        "Lo script documenta chiaramente versioni, esito e prerequisiti mancanti"
-      ]
-    },
-    {
-      "id": "repo-standardize-innosetup-packaging",
-      "title": "Standardizzare il packaging EXE con Inno Setup",
-      "status": "planned",
-      "scope": "core",
-      "risk": "HIGH",
-      "area": "packaging-exe",
-      "summary": "Portare la generazione degli installer EXE sullo standard Inno Setup.",
-      "acceptance_criteria": [
-        "Il repository usa packaging/innosetup come percorso standard",
-        "Package-App.ps1 compila il setup EXE canonico",
-        "La documentazione di packaging è aggiornata"
-      ]
-    },
-    {
-      "id": "repo-standardize-wix-msi-packaging",
-      "title": "Standardizzare il packaging MSI con WiX",
-      "status": "planned",
-      "scope": "core",
-      "risk": "HIGH",
-      "area": "packaging-msi",
-      "summary": "Allineare i pacchetti MSI allo standard WiX.",
-      "acceptance_criteria": [
-        "I file MSI risiedono in packaging/msi",
-        "Il progetto usa WiX come standard MSI",
-        "Il processo di build/package documenta chiaramente prerequisiti e output"
-      ]
-    },
-    {
-      "id": "repo-align-documentation",
-      "title": "Allineare la documentazione tecnica del repository",
-      "status": "planned",
-      "scope": "supporting",
-      "risk": "LOW",
-      "area": "documentation",
-      "summary": "Aggiornare README e docs per riflettere struttura, script e packaging reali.",
-      "acceptance_criteria": [
-        "README contiene quick start e comandi canonici",
-        "docs copre sviluppo locale, test e packaging",
-        "La documentazione non contraddice il comportamento reale del repository"
-      ]
-    },
-    {
-      "id": "repo-check-gitignore",
-      "title": "Verificare e aggiornare .gitignore",
-      "status": "planned",
-      "scope": "supporting",
-      "risk": "LOW",
-      "area": "gitignore",
-      "summary": "Escludere output di build, packaging, log, cache e file macchina-specifici.",
-      "acceptance_criteria": [
-        "Gli output di build e packaging sono ignorati",
-        "Cache, log e file temporanei sono ignorati",
-        "Non vengono committati artefatti locali non intenzionali"
-      ]
-    },
-    {
-      "id": "audit-phase1-upgrade-dotnet",
-      "title": "Upgrade .NET 8 → .NET 10 LTS e aggiornamento NuGet",
-      "status": "done",
-      "scope": "core",
-      "risk": "MEDIUM",
-      "area": "dependencies",
-      "summary": "Aggiornato TFM a net10.0-windows su tutti i .csproj, CI, e documentazione. HtmlAgilityPack 1.11.59→1.13.0, PreMailer.Net 2.3.0→2.7.4.",
-      "acceptance_criteria": [
-        "Tutti i .csproj puntano a net10.0-windows",
-        "CI usa dotnet-version 10.0.x",
-        "NuGet aggiornati alle ultime versioni stabili",
-        "Documentazione (PROJECT_SPEC.md, README.md) allineata"
-      ]
-    },
-    {
-      "id": "audit-phase1-security-fixes",
-      "title": "Fix sicurezza e qualità codice (audit Fase 1)",
-      "status": "done",
-      "scope": "core",
-      "risk": "MEDIUM",
-      "area": "security-quality",
-      "summary": "Fix path traversal in AssetManager, logging in CssInliner, async in TempCleanupHelper. Aggiunti 18 nuovi test.",
-      "acceptance_criteria": [
-        "ResolveImagePath valida che il path resti dentro baseDir",
-        "CssInliner logga le eccezioni di parsing CSS",
-        "TempCleanupHelper usa Task.Delay invece di Thread.Sleep",
-        "Test per WordHtmlSignatureNormalizer e CssInliner presenti e verdi"
+        "La pipeline CI esegue la compilazione di Package-App.ps1",
+        "Gli artefatti installer (EXE e MSI) vengono verificati o archiviati come artifact CI"
       ]
     },
     {
@@ -210,19 +81,6 @@
         "L'output funziona sia su Classic Outlook che su New Outlook",
         "Le immagini hosted sono il default per New Outlook",
         "La documentazione guida l'utente nel flusso New Outlook"
-      ]
-    },
-    {
-      "id": "audit-nullable-warning-cs8602",
-      "title": "Fix warning CS8602 in WordHtmlSignatureNormalizer",
-      "status": "planned",
-      "scope": "supporting",
-      "risk": "LOW",
-      "area": "code-quality",
-      "summary": "Warning pre-esistente CS8602 (null dereference) alla riga 102 di WordHtmlSignatureNormalizer.cs. Aggiungere null-check o operatore null-conditional.",
-      "acceptance_criteria": [
-        "Build con zero warning",
-        "Test esistenti restano verdi"
       ]
     }
   ]

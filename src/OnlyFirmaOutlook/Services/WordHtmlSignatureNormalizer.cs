@@ -99,7 +99,7 @@ public class WordHtmlSignatureNormalizer
             }
             else
             {
-                node.Attributes["style"].Value = cleaned;
+                node.SetAttributeValue("style", cleaned);
             }
         }
     }

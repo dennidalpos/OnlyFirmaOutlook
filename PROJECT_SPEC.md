@@ -10,7 +10,8 @@ OnlyFirmaOutlook e un'app desktop WPF per Windows che converte documenti Word in
 - Normalizzazione dell'HTML e gestione di immagini locali nel formato nativo delle firme Outlook (`<firma>_files`).
 - Gestione della cartella firme di Outlook o di una cartella di output alternativa.
 - Backup ZIP delle firme esistenti e funzioni di ripristino snapshot.
-- Script PowerShell per build, test, clean e publish.
+- Script PowerShell standardizzati (`Build-App.ps1`, `Clean-App.ps1`, `Install-InstallerToolchain.ps1`, `Package-App.ps1`).
+- Packaging canonico con Inno Setup (EXE) e WiX (MSI).
 - Workflow CI GitHub Actions per restore, build e test su Windows.
 - Test unitari sui servizi principali.
 
@@ -25,7 +26,8 @@ OnlyFirmaOutlook e un'app desktop WPF per Windows che converte documenti Word in
 - `src/Bootstrapper`: launcher che rileva la bitness di Office e avvia la build corretta.
 - `src/Shared`: codice condiviso per il rilevamento della bitness di Office.
 - `tests/OnlyFirmaOutlook.Tests`: progetto di test xUnit per repository e servizi.
-- `scripts`: script PowerShell per build/publish e pulizia del repository.
+- `packaging`: configurazioni di installer per Inno Setup (`packaging/innosetup/setup.iss`) e WiX (`packaging/msi/OnlyFirmaOutlook.wxs`).
+- `scripts`: script PowerShell per build/publish (`Build-App.ps1`), pulizia (`Clean-App.ps1`), bootstrap toolchain (`Install-InstallerToolchain.ps1`) e packaging installer (`Package-App.ps1`).
 - `.github/workflows/ci.yml`: pipeline CI Windows che verifica restore, build e test della soluzione.
 
 ## Constraints

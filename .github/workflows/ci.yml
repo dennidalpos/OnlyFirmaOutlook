@@ -36,7 +36,7 @@ jobs:
           $presetPath = Join-Path $PWD "src/OnlyFirmaOutlook/media/ci-preset.rtf"
           try {
             Set-Content -Path $presetPath -Value "{\rtf1\ansi CI preset}"
-            ./scripts/build.ps1 -Configuration Release -PublishMode FrameworkDependent -SkipTests
+            ./scripts/Build-App.ps1 -Configuration Release -PublishMode FrameworkDependent -SkipTests
 
             $requiredPaths = @(
               "dist/OnlyFirmaOutlook.Launcher.exe",

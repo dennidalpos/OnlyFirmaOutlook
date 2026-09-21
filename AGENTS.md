@@ -1,32 +1,33 @@
 # AGENTS.md
 
-`v1.2 · 2026-08-30` — Non-derivable repository facts only. Cap ~2500 characters.
+`v1.2 · 2026-09-21` — Non-derivable repository facts only. Cap ~2500 characters.
 
 ## 1. Identity & Scope
-- **Purpose**: [Brief 1-line description of project goal and domain]
-- **Runtime / Toolchain**: [e.g. Python 3.12 (uv) | Node 22 (pnpm) | Rust 1.80 (cargo) | Go 1.23 | Terraform / Docker]
-- **Out of Scope**: [What this repo explicitly does NOT do]
-- **Hard Constraints**: [Non-negotiable domain, performance, or technical invariants]
+- **Purpose**: App desktop WPF (.NET 10) per Windows che converte documenti Word (.doc/.docx/.rtf) in firme Outlook Classic con normalizzazione HTML, asset locali, backup ZIP e packaging per installazione.
+- **Runtime / Toolchain**: .NET 10.0 SDK (`net10.0-windows`), PowerShell 5.1/7+, Inno Setup 6 (`ISCC.exe`), WiX Toolset v7 (`wix.exe`).
+- **Out of Scope**: OS non-Windows, client email non-Outlook Classic, sync cloud/backend.
+- **Hard Constraints**: Richiede Windows. Le immagini delle firme usano path relativi `<firma>_files`. Bitness selezionata all'avvio dal Launcher in base a Office.
 
 ## 2. Verified Commands
-Every command must be executed and verified before adding. Update date on verification.
+Update date on verification.
 
 | Workflow | Command | Shell / Cwd | Verified on | Notes / Examples |
 | :--- | :--- | :--- | :--- | :--- |
-| **Fast Verification** | | | | Unit tests, quick check, or dry-run |
-| **Full Verification** | | | | Full test suite, e2e, plan, or release build |
-| **Single Target** | | | | e.g. `<runner> <path> -- <filter>` |
-| **Format / Lint** | | | | Linter, formatter, or static analysis |
-| **Type / Schema Check**| | | | Typechecker, schema validator, or compiler check |
-| **Build / Run / Plan** | | | | Build artifact, run entry point, or infra plan |
+| **Fast Verification** | `dotnet test OnlyFirmaOutlook.sln` | pwsh / root | 2026-09-21 | 65 unit test xUnit, zero warning |
+| **Full Build** | `dotnet build OnlyFirmaOutlook.sln -c Release` | pwsh / root | 2026-09-21 | Compilazione Release |
+| **Build + Publish** | `./scripts/Build-App.ps1 -Configuration Release -PublishMode FrameworkDependent` | pwsh / root | 2026-09-21 | Genera dist/ con win-x86 e win-x64 |
+| **Package All** | `./scripts/Package-App.ps1` | pwsh / root | 2026-09-21 | Genera EXE (Inno Setup) e MSI (WiX) in packaging/output/ |
+| **Toolchain Check**| `./scripts/Install-InstallerToolchain.ps1` | pwsh / root | 2026-09-21 | Verifica .NET 10, winget, Inno Setup, WiX |
+| **Clean** | `./scripts/Clean-App.ps1` | pwsh / root | 2026-09-21 | Pulisce bin, obj, dist, packaging/output |
 
 ## 3. Architecture & Boundaries
-- **Structure**: [Key entry points, data flows, and module boundaries not obvious from directory tree]
-- **Generated / Vendored**: [Paths to regenerate or external copies — never hand-edit]
-- **Protected Paths**: [Legacy, frozen, or sensitive paths to avoid modifying]
-- **Conventions**: [Repo-specific patterns: error handling, logging, naming, state/DI]
+- `src/OnlyFirmaOutlook`: App WPF (`MainWindow` divisa in partial class: Editor, SignatureManagement, Chrome).
+- `src/Bootstrapper`: Launcher x64/x86 basato su `OfficeBitnessDetector`.
+- `packaging/innosetup/setup.iss`: Configurazione Inno Setup per setup EXE canonico.
+- `packaging/msi/OnlyFirmaOutlook.wxs`: Sorgente WiX per pacchetto MSI canonico.
+- `scripts/`: Script PowerShell con convenzione `Verb-Noun.ps1` (compatibilità con `build.ps1` e `clean.ps1`).
 
 ## 4. Sensitive Areas & Gotchas
-- **Sensitive Areas**: [Destructive operations, external paid APIs, production resources, live state]
-- **Required Env / Config**: [Variable or secret names only (e.g. API_KEY, DB_URI) — no values]
-- **Gotchas & Quirks**: [Non-obvious pitfalls, platform-specific quirks, edge cases]
+- **WiX v7 OSMF**: La compilazione richiede il flag `--acceptEula wix7`.
+- **Word COM Interop**: `WordConversionService` dipende da Microsoft Word locale.
+- **Outlook Inline Images**: L'app imposta `Send Pictures With Document` nel registro dell'utente corrente; Outlook va riavviato al primo avvio.
