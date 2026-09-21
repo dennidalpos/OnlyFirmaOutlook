@@ -1,21 +1,9 @@
-/*
- * OnlyFirmaOutlook
- * Copyright (c) 2026 Danny Perondi. All rights reserved.
- * Author: Danny Perondi
- * Proprietary and confidential.
- * Unauthorized copying, modification, distribution, sublicensing, disclosure,
- * or commercial use is prohibited without prior written permission.
- */
+// (c) 2026 Danny Perondi. All rights reserved. Proprietary and confidential.
 
 using System.IO;
 using OnlyFirmaOutlook.Models;
 
 namespace OnlyFirmaOutlook.Services;
-
-
-
-
-
 
 public class WordEditorService
 {
@@ -43,12 +31,6 @@ public class WordEditorService
         }
     }
 
-    
-    
-    
-    
-    
-    
     public EditorState PrepareFileForEditing(string sourceFilePath, string proposedSignatureName)
     {
         if (!File.Exists(sourceFilePath))
@@ -64,7 +46,6 @@ public class WordEditorService
             ProposedSignatureName = proposedSignatureName
         };
 
-        
         editorState.EditorTempFolder = Path.Combine(_editorBaseTempFolder, editorState.EditorSessionId.ToString());
 
         try
@@ -78,15 +59,12 @@ public class WordEditorService
             throw;
         }
 
-        
         var fileName = Path.GetFileName(sourceFilePath);
         editorState.LocalFilePath = Path.Combine(editorState.EditorTempFolder, fileName);
 
         try
         {
             File.Copy(sourceFilePath, editorState.LocalFilePath, overwrite: true);
-
-            
             File.SetAttributes(editorState.LocalFilePath, FileAttributes.Normal);
 
             _logger.Log($"File copiato in: {editorState.LocalFilePath}");
@@ -95,8 +73,6 @@ public class WordEditorService
         catch (Exception ex)
         {
             _logger.LogError("Errore durante la copia del file per editing", ex);
-
-            
             CleanupEditorTempFolder(editorState.EditorSessionId);
             throw;
         }
@@ -104,10 +80,6 @@ public class WordEditorService
         return editorState;
     }
 
-    
-    
-    
-    
     public void CleanupEditorTempFolder(Guid editorSessionId)
     {
         var folderPath = Path.Combine(_editorBaseTempFolder, editorSessionId.ToString());
@@ -125,10 +97,6 @@ public class WordEditorService
             retryDelayMs: 200);
     }
 
-    
-    
-    
-    
     public void CleanupOrphanedEditorFolders()
     {
         if (!Directory.Exists(_editorBaseTempFolder))
@@ -144,7 +112,6 @@ public class WordEditorService
             {
                 var dirInfo = new DirectoryInfo(dir);
 
-                
                 if (dirInfo.LastWriteTime < DateTime.Now.AddDays(-1))
                 {
                     try
@@ -182,9 +149,6 @@ public class WordEditorService
         }
     }
 
-    
-    
-    
     public bool ValidateEditorState(EditorState editorState)
     {
         if (editorState == null)
@@ -195,9 +159,6 @@ public class WordEditorService
         return File.Exists(editorState.LocalFilePath);
     }
 
-    
-    
-    
     public void UpdateLastModified(EditorState editorState)
     {
         editorState.LastModified = DateTime.Now;

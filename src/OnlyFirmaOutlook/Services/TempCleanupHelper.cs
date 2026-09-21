@@ -1,11 +1,4 @@
-/*
- * OnlyFirmaOutlook
- * Copyright (c) 2026 Danny Perondi. All rights reserved.
- * Author: Danny Perondi
- * Proprietary and confidential.
- * Unauthorized copying, modification, distribution, sublicensing, disclosure,
- * or commercial use is prohibited without prior written permission.
- */
+// (c) 2026 Danny Perondi. All rights reserved. Proprietary and confidential.
 
 using System.IO;
 using System.Linq;
@@ -53,10 +46,7 @@ public static class TempCleanupHelper
                           $"La cartella '{folderPath}' potrebbe richiedere pulizia manuale.");
     }
 
-    /// <summary>
-    /// Synchronous wrapper for callers that cannot be made async.
-    /// Prefer <see cref="CleanupDirectoryWithRetriesAsync"/> when possible.
-    /// </summary>
+    /// <summary>Wrapper sincrono; preferire <see cref="CleanupDirectoryWithRetriesAsync"/>.</summary>
     public static void CleanupDirectoryWithRetries(
         string folderPath,
         LoggingService logger,

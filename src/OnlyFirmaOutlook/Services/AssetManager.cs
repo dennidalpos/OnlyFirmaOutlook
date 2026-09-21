@@ -1,11 +1,4 @@
-/*
- * OnlyFirmaOutlook
- * Copyright (c) 2026 Danny Perondi. All rights reserved.
- * Author: Danny Perondi
- * Proprietary and confidential.
- * Unauthorized copying, modification, distribution, sublicensing, disclosure,
- * or commercial use is prohibited without prior written permission.
- */
+// (c) 2026 Danny Perondi. All rights reserved. Proprietary and confidential.
 
 using System.IO;
 using System.Security.Cryptography;
@@ -102,7 +95,7 @@ public class AssetManager
             candidatePath = Path.Combine(baseDir, srcValue);
         }
 
-        // Prevent path traversal: resolved path must stay within baseDir
+        // Anti path-traversal: must stay in baseDir
         var normalizedCandidate = Path.GetFullPath(candidatePath);
         var normalizedBase = Path.GetFullPath(baseDir)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;

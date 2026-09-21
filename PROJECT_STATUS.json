@@ -1,6 +1,21 @@
 {
   "tasks": [
     {
+      "id": "docs-modularization-and-comment-synthesis",
+      "title": "Modularizzazione documentazione in docs/ e sintesi commenti sorgente",
+      "status": "completed",
+      "scope": "supporting",
+      "risk": "LOW",
+      "area": "documentation-and-code-hygiene",
+      "summary": "Riorganizzazione documentazione per ambito (user-guide, architecture, development, troubleshooting), README essenziale, sintesi commenti ed header C# al minimo per ottimizzazione contesto.",
+      "acceptance_criteria": [
+        "Documentazione suddivisa per ambito nella cartella docs/",
+        "README.md snellito e allineato con collegamenti pratici",
+        "Header e commenti C# compressi su singola riga senza perdita di contenuto",
+        "Build Release e 65 test xUnit superati con successo"
+      ]
+    },
+    {
       "id": "ci-add-packaging-verification",
       "title": "Verificare packaging (Package-App.ps1) nella pipeline CI GitHub Actions",
       "status": "planned",

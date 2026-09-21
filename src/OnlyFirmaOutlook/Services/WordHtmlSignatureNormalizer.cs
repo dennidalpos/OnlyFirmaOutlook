@@ -1,11 +1,4 @@
-/*
- * OnlyFirmaOutlook
- * Copyright (c) 2026 Danny Perondi. All rights reserved.
- * Author: Danny Perondi
- * Proprietary and confidential.
- * Unauthorized copying, modification, distribution, sublicensing, disclosure,
- * or commercial use is prohibited without prior written permission.
- */
+// (c) 2026 Danny Perondi. All rights reserved. Proprietary and confidential.
 
 using System;
 using HtmlAgilityPack;
@@ -13,10 +6,7 @@ using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Normalizza HTML generato da Word per firme Outlook.
-/// Preserva formattazioni volute: font, dimensioni, spaziature, elenchi puntati.
-/// </summary>
+/// <summary>Normalizza HTML Word per firme Outlook preservando formattazioni visive.</summary>
 public class WordHtmlSignatureNormalizer
 {
     public string Normalize(string html)
@@ -36,14 +26,9 @@ public class WordHtmlSignatureNormalizer
         return workingDoc.DocumentNode.InnerHtml;
     }
 
-    /// <summary>
-    /// Rimuove elementi che non hanno impatto visivo e non sono supportati dai client email.
-    /// </summary>
+    /// <summary>Rimuove elementi non visibili/non supportati (script, meta, xml, o:p, commenti, w:*).</summary>
     private static void RemoveNonRenderingElements(HtmlDocument doc)
     {
-        // Script e meta: sicurezza e non supportati
-        // xml: markup Office non renderizzato
-        // o:p: paragrafo vuoto Office (solo spaziatura artificiale)
         var nodesToRemove = doc.DocumentNode
             .Descendants()
             .Where(node => HasNodeName(node, "script", "meta", "xml", "o:p"))
@@ -57,7 +42,6 @@ public class WordHtmlSignatureNormalizer
             }
         }
 
-        // Commenti HTML: non visibili, appesantiscono
         var commentNodes = doc.DocumentNode.SelectNodes("//comment()");
         if (commentNodes != null)
         {
@@ -67,7 +51,6 @@ public class WordHtmlSignatureNormalizer
             }
         }
 
-        // Tag Word namespace (w:*): non supportati da client email
         var wordNamespaceNodes = doc.DocumentNode.Descendants()
             .Where(node => node.Name.StartsWith("w:", StringComparison.OrdinalIgnoreCase))
             .ToList();
@@ -78,10 +61,7 @@ public class WordHtmlSignatureNormalizer
         }
     }
 
-    /// <summary>
-    /// Rimuove solo stili Microsoft Office che non sono supportati universalmente
-    /// e non hanno impatto visivo. Preserva tutto il resto.
-    /// </summary>
+    /// <summary>Rimuove stili Office non supportati mantenendo quelli visivi standard.</summary>
     private static void CleanupStyles(HtmlDocument doc)
     {
         foreach (var node in doc.DocumentNode.Descendants())
@@ -104,30 +84,25 @@ public class WordHtmlSignatureNormalizer
         }
     }
 
-    /// <summary>
-    /// Rimuove stili mso-* che non sono supportati da client email standard.
-    /// Preserva: font-family, font-size, color, margin, padding, line-height, text-align, etc.
-    /// </summary>
+    /// <summary>Filtra proprietà mso-* (eccetto mso-line-height-rule) e tab-stops.</summary>
     private static string RemoveUnsupportedStyles(string styleValue)
     {
         var parts = styleValue.Split(';', StringSplitOptions.RemoveEmptyEntries)
             .Select(part => part.Trim())
             .Where(part =>
             {
-                // Rimuove solo proprietà mso-* (Microsoft Office specific)
-                // ECCEZIONE: mso-line-height-rule è utile per Outlook
+                // Filtra mso-* tranne mso-line-height-rule
                 if (part.StartsWith("mso-", StringComparison.OrdinalIgnoreCase))
                 {
                     return part.StartsWith("mso-line-height-rule", StringComparison.OrdinalIgnoreCase);
                 }
 
-                // Rimuove tab-stops (Word specific, non supportato)
+                // Filtra tab-stops
                 if (part.Contains("tab-stops", StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }
 
-                // Preserva tutto il resto
                 return true;
             });
 
@@ -138,5 +113,4 @@ public class WordHtmlSignatureNormalizer
     {
         return nodeNames.Any(nodeName => string.Equals(node.Name, nodeName, StringComparison.OrdinalIgnoreCase));
     }
-
 }

@@ -1,11 +1,10 @@
+// (c) 2026 Danny Perondi. All rights reserved. Proprietary and confidential.
+
 using Microsoft.Win32;
 
 namespace OnlyFirmaOutlook.Services;
 
-/// <summary>
-/// Configura Outlook Classic affinché trasformi le immagini locali delle firme
-/// in allegati inline quando il messaggio viene inviato.
-/// </summary>
+/// <summary>Configura Outlook Classic per invio immagini inline delle firme (Send Pictures With Document).</summary>
 public static class OutlookInlineImageSettings
 {
     private static readonly string[] OfficeVersions = ["16.0", "15.0", "14.0"];

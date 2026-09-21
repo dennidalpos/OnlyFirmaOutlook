@@ -26,6 +26,7 @@ Update date on verification.
 - `packaging/innosetup/setup.iss`: Configurazione Inno Setup per setup EXE canonico.
 - `packaging/msi/OnlyFirmaOutlook.wxs`: Sorgente WiX per pacchetto MSI canonico.
 - `scripts/`: Script PowerShell con convenzione `Verb-Noun.ps1` (compatibilità con `build.ps1` e `clean.ps1`).
+- `docs/`: Documentazione per ambito (`user-guide.md`, `architecture.md`, `development.md`, `troubleshooting.md`).
 
 ## 4. Sensitive Areas & Gotchas
 - **WiX v7 OSMF**: La compilazione richiede il flag `--acceptEula wix7`.
