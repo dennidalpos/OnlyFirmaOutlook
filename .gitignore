@@ -84,7 +84,6 @@ tools/
 *.lnk
 
 # JetBrains Rider
-*.sln.iml
 
 # macOS
 .DS_Store
