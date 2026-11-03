@@ -1,70 +1,61 @@
 # OnlyFirmaOutlook
 
-OnlyFirmaOutlook è un'applicazione desktop WPF (.NET 10) per Windows che converte documenti Microsoft Word (.docx, .doc, .rtf) in firme Outlook Classic pronte all'uso, con normalizzazione HTML, gestione degli asset grafici locali, backup automatici e packaging di installazione.
+WPF desktop app (.NET 10) for Windows that converts Microsoft Word documents (`.docx`, `.doc`, `.rtf`) into ready-to-use Outlook Classic signatures, with HTML normalization, local image asset handling, automatic backups and installer packaging.
 
----
+## Features
 
-## Caratteristiche Principali
+- **Transactional conversion**: generates `.htm`, `.rtf`, `.txt` and the `<signature>_files` asset folder together.
+- **Assisted editing in Word**: opens the document in an isolated Word instance and detects save and close automatically.
+- **HTML and CSS normalization**: strips superfluous Office markup and inlines CSS rules for better email client compatibility.
+- **Safe asset handling**: relative image paths with path-traversal protection, and automatic configuration of inline image sending in Outlook.
+- **ZIP backup protection**: a snapshot is taken before any overwrite in the Outlook signatures folder, with snapshot restore.
+- **x86 and x64 Office support**: a unified launcher detects the bitness of the installed Office.
 
-- **Conversione transazionale**: genera simultaneamente `.htm`, `.rtf`, `.txt` e la cartella asset `<firma>_files`.
-- **Modifica assistita in Word**: apertura isolata del documento con rilevamento automatico di salvataggio e chiusura.
-- **Normalizzazione HTML & CSS**: pulizia del markup Office superfluo e inlining delle regole CSS per massima compatibilità con i client email.
-- **Gestione asset sicura**: percorso immagini relativo con protezione anti path-traversal e configurazione automatica di invio inline su Outlook.
-- **Protezione con backup ZIP**: snapshot preventivo prima di qualsiasi sovrascrittura nella cartella firme di Outlook, con ripristino snapshot a uno stato pulito.
-- **Supporto multi-architettura**: launcher unificato con rilevamento automatico della bitness di Office (x86/x64).
+## Requirements
 
----
+- Windows 10 or 11.
+- Microsoft Word (needed for editing and conversion) and Microsoft Outlook Classic (to use the signatures).
+- To build: .NET 10.0 SDK and PowerShell.
 
-## Requisiti
+## Usage
 
-- **OS**: Windows 10 / 11.
-- **Software**: Microsoft Word (necessario per editing e conversione) e Microsoft Outlook Classic (per l'uso diretto delle firme).
-- **Sviluppo**: .NET 10.0 SDK e PowerShell.
+1. Start the app (installer or `OnlyFirmaOutlook.Launcher.exe`).
+2. Pick a preset from `media/` or load your own Word file.
+3. Name the signature and select the target Outlook account.
+4. Click **Modifica firma**, edit in Word, save and close Word.
+5. Choose the HTML format (filtered or full) and click **Converti e salva firma**.
+6. On first use, restart Outlook Classic so the inline image setting takes effect.
 
----
+The user interface is in Italian.
 
-## Quick Start
+## Build
 
-### Utente Finale
-1. Avvia l'applicazione (tramite installer o launcher `OnlyFirmaOutlook.Launcher.exe`).
-2. Scegli un modello predefinito (`media/`) o carica un file Word personale.
-3. Assegna un nome alla firma e seleziona l'account Outlook di destinazione.
-4. Clicca su **Modifica firma**, apporta le modifiche in Word, salva e chiudi Word.
-5. Scegli il formato HTML (Filtrato o Completo) e premi **Converti e salva firma**.
-6. *Al primo utilizzo*: riavvia Outlook Classic affinché le impostazioni di invio immagini inline abbiano effetto.
-
-### Sviluppatore
 ```powershell
-# Compilazione soluzione
 dotnet build OnlyFirmaOutlook.sln -c Release
-
-# Esecuzione test unitari (65 test xUnit)
 dotnet test OnlyFirmaOutlook.sln -c Release --no-build
 
-# Build e publish per entrambi i runtime (win-x86 e win-x64)
+# Build and publish win-x86 and win-x64
 ./scripts/Build-App.ps1 -Configuration Release -PublishMode FrameworkDependent
 
-# Packaging installer EXE (Inno Setup) e MSI (WiX)
+# Installer packaging: EXE (Inno Setup) and MSI (WiX)
 ./scripts/Package-App.ps1
 ```
 
----
+## Documentation
 
-## Indice della Documentazione
+Documentation is written in Italian, in [`docs/`](docs/):
 
-La documentazione dettagliata è suddivisa per ambito nella cartella [`docs/`](docs/):
-
-| Documento | Ambito e Contenuto |
+| Document | Content |
 | :--- | :--- |
-| **[Guida Utente](docs/user-guide.md)** | Workflow dettagliato, preset, formati HTML, gestione firme esistenti, backup e ripristino. |
-| **[Architettura Tecnica](docs/architecture.md)** | Mappa componenti, rilevamento bitness Office, pipeline transazionale di conversione e vincoli. |
-| **[Sviluppo & Packaging](docs/development.md)** | Prerequisiti toolchain, script PowerShell di automazione, CI GitHub Actions e packaging installer. |
-| **[Troubleshooting](docs/troubleshooting.md)** | Risoluzione problemi (immagini inline, Word lock, percorsi UNC, gestione dei log). |
+| [User guide](docs/user-guide.md) | Workflow, presets, HTML formats, existing signatures, backup and restore |
+| [Architecture](docs/architecture.md) | Components, Office bitness detection, transactional conversion pipeline |
+| [Development and packaging](docs/development.md) | Toolchain, automation scripts, CI and installer packaging |
+| [Troubleshooting](docs/troubleshooting.md) | Inline images, Word locks, UNC paths, logs |
 
----
+## Security
 
-## Licenza
+The app works on local files and the current user's Outlook signatures folder; it has no network component. See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
-Software proprietario. Vedere il file [LICENSE](LICENSE).
+## License
 
-Copyright (c) 2026 Danny Perondi. Tutti i diritti riservati.
+Proprietary, all rights reserved. See [LICENSE](LICENSE). Copyright (c) 2026 Danny Perondi.
