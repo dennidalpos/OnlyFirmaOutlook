@@ -20,7 +20,7 @@ WPF desktop app (.NET 10) for Windows that converts Microsoft Word documents (`.
 ## Usage
 
 1. Start the app (installer or `OnlyFirmaOutlook.Launcher.exe`).
-2. Pick a preset from `media/` or load your own Word file.
+2. Load your own Word file, or choose a preset if one was supplied with your distribution. The source checkout contains a media placeholder, not ready-made signature documents.
 3. Name the signature and select the target Outlook account.
 4. Click **Modifica firma**, edit in Word, save and close Word.
 5. Choose the HTML format (filtered or full) and click **Converti e salva firma**.
@@ -43,7 +43,7 @@ dotnet test OnlyFirmaOutlook.sln -c Release --no-build
 
 ## Documentation
 
-Documentation is written in Italian, in [`docs/`](docs/):
+The maintained guides in [`docs/`](docs/) are in English, with preserved Italian references:
 
 | Document | Content |
 | :--- | :--- |
@@ -54,7 +54,7 @@ Documentation is written in Italian, in [`docs/`](docs/):
 
 ## Security
 
-The app works on local files and the current user's Outlook signatures folder; it has no network component. See [SECURITY.md](SECURITY.md) to report a vulnerability.
+The app works on local files and the current user's Outlook signatures folder; it has no cloud conversion service; explicitly selected UNC sources or destinations can use the network. See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ## License
 

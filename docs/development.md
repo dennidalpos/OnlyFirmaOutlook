@@ -1,107 +1,58 @@
-# Sviluppo, Automazione e Packaging
+# Development and packaging
 
-Guida per sviluppatori, DevOps e manutentori del repository OnlyFirmaOutlook (.NET 10).
+[Italian reference](development.it.md)
 
----
+Use Windows with the .NET 10 SDK and PowerShell. Functional document conversion also requires installed Word. Installer generation requires Inno Setup 6 for EXE and WiX v4+ for MSI; inspect the scripts before provisioning either tool.
 
-## Prerequisiti di Sviluppo
+## Build and test
 
-- **.NET 10.0 SDK** (target `net10.0-windows`).
-- **PowerShell 7+** (o Windows PowerShell 5.1).
-- **Microsoft Word** locale (per test funzionali di conversione).
-- **Toolchain di packaging** (opzionale, solo per creare installer):
-  - **Inno Setup 6** (`ISCC.exe`) per installer EXE.
-  - **WiX Toolset v4+** (`wix.exe`) per pacchetti MSI.
+From the repository root:
 
----
-
-## Bootstrap Toolchain Packaging
-
-Lo script `Install-InstallerToolchain.ps1` controlla e installa automaticamente i prerequisiti mancanti via `winget` e `dotnet tool`:
-
-```powershell
-# Verifica stato dei componenti
-./scripts/Install-InstallerToolchain.ps1
-
-# Installazione automatica prerequisiti mancanti
-./scripts/Install-InstallerToolchain.ps1 -Install
-```
-
----
-
-## Compilazione e Test Manuali
-
-```powershell
-# Compilazione soluzione in Release
+~~~powershell
 dotnet build OnlyFirmaOutlook.sln -c Release
-
-# Esecuzione completa dei test xUnit (65 test)
 dotnet test OnlyFirmaOutlook.sln -c Release --no-build
-```
+~~~
 
----
+Use the test output from the current revision; historical test counts are not a fixed contract. Automated unit tests do not qualify Word COM, Outlook configuration, installer effects or a clean Windows host.
 
-## Script di Automazione PowerShell
+Managed verification output belongs in an initialized SecondBrain runtime workspace. The public scripts use their repository-local output layout; an environment variable alone does not redirect every output. Run in an isolated source copy or verify explicit SDK artifact/intermediate paths before using them.
 
-Gli script seguono la convenzione standard `Verb-Noun.ps1` (sono disponibili anche i wrapper `build.ps1` e `clean.ps1`).
+## Publish
 
-### 1. Build e Publish (`Build-App.ps1`)
-Compila e pubblica l'app per entrambi i runtime (`win-x86` e `win-x64`), include il bootstrapper e copia i preset `media/` nella cartella `dist/`:
+Build-App publishes win-x86 and win-x64, includes the launcher and copies media presets into dist:
 
-```powershell
-# Build e publish Release (richiede interattivamente la modalità di publish)
-./scripts/Build-App.ps1 -Configuration Release
-
-# Publish forzando Framework-dependent (.NET runtime condiviso)
+~~~powershell
 ./scripts/Build-App.ps1 -Configuration Release -PublishMode FrameworkDependent
-
-# Publish forzando Self-contained (runtime incluso)
 ./scripts/Build-App.ps1 -Configuration Release -PublishMode SelfContained
+~~~
 
-# Compilazione rapida saltando i test
-./scripts/Build-App.ps1 -Configuration Release -SkipTests
-```
+Build-App performs its default clean unless SkipClean is specified; preserve referenced outputs before intentionally running that path. The media source currently contains only a placeholder; add reviewed distributable templates if they are part of the intended package.
 
-### 2. Packaging Installer (`Package-App.ps1`)
-Esegue la build (se non già presente) e genera gli installer in `packaging/output/`:
+Without PublishMode, the script requests the publication mode interactively. SkipTests deliberately skips tests and therefore cannot serve as test evidence. Framework-dependent output requires an appropriate installed runtime; self-contained output includes runtime files.
 
-```powershell
-# Genera sia EXE (Inno Setup) che MSI (WiX)
+## Installer toolchain and packages
+
+Install-InstallerToolchain without Install inspects toolchain availability. Its Install switch provisions software and is a separate, intentional machine-changing operation.
+
+~~~powershell
+./scripts/Install-InstallerToolchain.ps1
 ./scripts/Package-App.ps1
-
-# Solo installer Inno Setup EXE con versione custom
-./scripts/Package-App.ps1 -Format InnoSetup -Version "1.0.0"
-
-# Solo installer WiX MSI riutilizzando i binari dist/ esistenti
+./scripts/Package-App.ps1 -Format InnoSetup
 ./scripts/Package-App.ps1 -Format WiX -SkipBuild
-```
+~~~
 
-### 3. Pulizia Artefatti (`Clean-App.ps1`)
-```powershell
-# Pulizia standard (bin, obj, dist, packaging/output, TestResults)
-./scripts/Clean-App.ps1
+Package-App builds when necessary and writes installer output under packaging/output. SkipBuild reuses existing dist files, so verify their revision and architecture before packaging. Do not infer a new product version from a documentation change.
 
-# Pulizia completa (include .vs e directory temporanee utente)
-./scripts/Clean-App.ps1 -All -IncludeUserData
-```
+The installers are per-user distributions under LocalAppData. An alternative deployment copies the unified dist folder to a managed share and starts OnlyFirmaOutlook.Launcher.exe. A generated installer or compiled executable is not evidence of a signed, installed or published release.
 
----
+## CI and qualification
 
-## Pipeline di Continuous Integration (GitHub Actions)
+The versioned workflow describes .NET 10 restore/build/tests and publication-artifact checks. Repository Actions availability is an independent remote setting; the maintainer's recorded workflow uses local verification. Inspect the current workflow and GitHub setting rather than claiming a new CI run.
 
-Il workflow in `.github/workflows/ci.yml` gira su runner `windows-latest` ed esegue:
-1. Setup di .NET 10.
-2. `dotnet restore` e `dotnet build -c Release`.
-3. `dotnet test -c Release --no-build`.
-4. Verifica funzionale di `Build-App.ps1` con generazione e validazione di artefatti `dist/` (Launcher, binari `win-x86`/`win-x64` e preset di test).
+Before release, distinguish unit-test results, functional Word/Outlook tests, bitness selection, clean-host installation, signing and publication. Never use real customer signatures in public fixtures.
 
----
+## Cleanup
 
-## Modalità di Distribuzione
+Clean-App and its All/IncludeUserData options delete generated or user data. They are not a prerequisite for ordinary documentation work. Inspect the concrete scope and preserve referenced output, backups and fixtures; do not run cleanup without the required explicit request.
 
-1. **Installer Standalone (Scelta consigliata)**:
-   - Distribuire `OnlyFirmaOutlook-Setup-<versione>.exe` (Inno Setup) oppure `OnlyFirmaOutlook-<versione>.msi` (WiX) prodotti da `Package-App.ps1`.
-   - Installano l'app per singolo utente in `%LOCALAPPDATA%\OnlyFirmaOutlook`.
-2. **Share di Rete Centralizzata**:
-   - Copiare il contenuto della cartella `dist/` su una cartella condivisa di rete.
-   - Gli utenti avviano `OnlyFirmaOutlook.Launcher.exe`, che rileva l'architettura di Office ed esegue la versione corretta (`win-x86` o `win-x64`).
+See [architecture](architecture.md), [user guide](user-guide.md), [troubleshooting](troubleshooting.md).

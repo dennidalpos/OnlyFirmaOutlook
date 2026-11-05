@@ -1,79 +1,37 @@
-# Guida Utente
+# User guide
 
-OnlyFirmaOutlook trasforma documenti Word (.docx, .doc, .rtf) in firme per Microsoft Outlook Classic con supporto a preset, modifica assistita, asset locali e backup automatici.
+[Italian reference](user-guide.it.md)
 
----
+OnlyFirmaOutlook converts Word documents into Outlook Classic signatures. The interface is Italian; the labels below match the controls on screen.
 
-## Requisiti
+## Requirements and locations
 
-- **Sistema operativo**: Windows 10 / 11.
-- **Microsoft Word**: installato localmente per l'editing e la conversione.
-- **Microsoft Outlook Classic**: per l'uso automatico delle firme (se assente, è possibile esportare in una cartella locale).
+Use Windows 10/11 with Microsoft Word installed locally for editing and conversion. Outlook Classic is required to use the signatures automatically. Without it, export to a local folder and copy the files later.
 
----
+The default signature folder is `%APPDATA%\Microsoft\Signatures`. The alternative output is `%USERPROFILE%\Documents\OnlyFirmaOutlook\Output`. Review the selected destination and its writable indicator before conversion.
 
-## Percorsi Predefiniti
+## Create a signature
 
-- **Cartella firme Outlook Classic**: `%APPDATA%\Microsoft\Signatures`
-- **Destinazione alternativa**: `%USERPROFILE%\Documents\OnlyFirmaOutlook\Output`
+1. Start the installed application or `OnlyFirmaOutlook.Launcher.exe`. Choose an existing `.docx`, `.doc` or `.rtf`, or a preset if your distribution supplies one. The source checkout contains only a media placeholder; it does not ship ready-made signature documents.
+2. Enter the signature name and select the Outlook account. Invalid filename characters are sanitized. If no account is available, enter an identifier; the final name uses the signature name and identifier.
+3. Confirm the output folder. A different folder produces export files without installing them in Outlook.
+4. Select **Modifica firma**. The document opens in Word from an isolated local editing copy, including when the source is on a UNC share.
+5. Edit, save and close Word. The application observes the saved copy and the Word lock before enabling conversion.
+6. Choose filtered HTML for a reduced Office markup result or full HTML for more of Word's original formatting. Neither option guarantees identical rendering in every recipient's mail client.
+7. Select **Converti e salva firma** and review the result. The output consists of `<name>.htm`, `.rtf`, `.txt` and `<name>_files/` with relative image references. The destination opens in Explorer.
 
----
+The conversion engine uses installed Word through COM. It is not a server-side or Office-independent converter.
 
-## Flusso Operativo Passo-Passo
+## Existing signatures and backups
 
-### 1. Selezione del Documento
-- **Preset**: modelli pronti all'uso distribuiti con l'app (cartella `media`).
-- **File personalizzato**: supporta `.docx`, `.doc` e `.rtf`. I file provenienti da percorsi di rete (UNC) vengono copiati automaticamente in locale per evitare lock o rallentamenti durante la modifica.
+The signature list can remove the selected signature's three formats and associated asset folder. Review the selection before deletion.
 
-### 2. Nome Firma e Account
-- **Nome firma**: viene ripulito automaticamente da caratteri non validi per il file system.
-- **Account**: se Outlook è configurato, seleziona l'account a cui associare la firma. In assenza di account, inserisci un identificativo (es. email o nome utente): verrà aggiunto al nome finale (`<Nome> - <Identificativo>`).
+Overwriting in the standard Outlook folder first creates a timestamped ZIP snapshot; conversion is refused when the required backup cannot be created. Select a snapshot and **Ripristina backup** to restore it. Restore aligns the signature folder to the snapshot and can remove orphan files; it is a data-changing action. Keep a separate copy before intentionally replacing an existing folder state. Removing obsolete backup ZIPs is also an explicit user action.
 
-### 3. Cartella di Destinazione
-- La cartella predefinita è quella di Outlook (`%APPDATA%\Microsoft\Signatures`).
-- L'indicatore verifica in tempo reale se la cartella è scrivibile.
-- Se Outlook non è disponibile o si sceglie un'altra cartella, le firme possono essere archiviate o copiate manualmente in seguito.
+## Inline images and Outlook
 
-### 4. Modifica in Word
-1. Clicca su **Modifica firma**: il documento viene aperto in Word da una cartella di lavoro temporanea isolata.
-2. Effettua le modifiche desiderate, salva (`Ctrl+S` o `Maiusc+F12`) e chiudi Word.
-3. L'app monitora lo stato del file: la conversione si abilita solo quando il documento risulta salvato e Word è chiuso.
+At startup the application sets the current user's `Send Pictures With Document` option for the supported Office registry branches (16.0, 15.0, 14.0). Restart Outlook Classic after first use, then select the signature in **File → Opzioni → Posta → Firme** for new messages and replies as needed.
 
-### 5. Formato HTML
-- **HTML Filtrato**: rimuove gli stili Microsoft superflui, riduce il peso e massimizza la compatibilità con i client email riceventi.
-- **HTML Completo**: conserva una maggiore fedeltà visiva rispetto al layout Word originale.
+A local conversion does not prove that a recipient sees the expected layout. Check the resulting signature in your supported Outlook environment using synthetic content. New Outlook, webmail and third-party clients are outside the implemented Outlook integration.
 
-### 6. Conversione e Pubblicazione
-1. Clicca su **Converti e salva firma**.
-2. L'app genera i tre formati richiesti da Outlook Classic:
-   - `<Nome>.htm` (con riferimenti relativi alle immagini)
-   - `<Nome>.rtf` (per messaggi RTF)
-   - `<Nome>.txt` (per messaggi in testo semplice)
-   - `<Nome>_files/` (cartella contenente gli asset grafici)
-3. Al termine, la cartella di destinazione viene aperta automaticamente in Esplora Risorse.
-
----
-
-## Gestione Firme e Sovrascrittura
-
-- **Firme esistenti**: la lista mostra le firme presenti nella cartella di destinazione, con possibilità di eliminazione completa (file `.htm`, `.rtf`, `.txt` e cartella asset associata).
-- **Sovrascrittura con backup obbligatorio**: se si sovrascrive una firma nella cartella predefinita di Outlook, l'app genera preventivamente un archivio ZIP (`backup_<timestamp>.zip`). La sovrascrittura procede solo se il backup è andato a buon fine.
-
----
-
-## Backup e Ripristino
-
-- **Elenco backup**: accessibile nella sezione dedicata; mostra data e ora degli snapshot ZIP disponibili.
-- **Ripristino**: seleziona uno snapshot e clicca su **Ripristina backup**. La cartella firme viene riallineata allo stato del backup, eliminando eventuali artefatti orfani.
-- **Eliminazione**: consente di rimuovere gli archivi ZIP obsoleti.
-
----
-
-## Configurazione Outlook e Immagini Inline
-
-Al primo avvio, OnlyFirmaOutlook configura nel registro utente l'opzione `Send Pictures With Document` per le versioni supportate di Outlook (16.0, 15.0, 14.0).
-
-> [!IMPORTANT]
-> **Riavvio di Outlook**: chiudi e riavvia Outlook Classic dopo aver eseguito OnlyFirmaOutlook affinché l'opzione di invio immagini inline diventi attiva.
->
-> In Outlook, vai in **File → Opzioni → Posta → Firme** e imposta la nuova firma per i messaggi desiderati (nuovi messaggi / risposte).
+See [troubleshooting](troubleshooting.md), [architecture](architecture.md) and [development](development.md).

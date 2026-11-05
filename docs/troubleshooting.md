@@ -1,68 +1,37 @@
-# Risoluzione Problemi e Note Operative
+# Troubleshooting
 
-Diagnostica e soluzioni rapide per anomalie comuni durante l'uso di OnlyFirmaOutlook.
+[Italian reference](troubleshooting.it.md)
 
----
+Use synthetic documents when reproducing a problem. Preserve relevant logs, signature files and backups before any operation that replaces or deletes them.
 
-## 1. Immagini Assenti o Non Visibili nelle Email Inviate
+## Missing inline images
 
-- **Causa comune**: Outlook Classic non ha ancora caricato la chiave di registro che impone l'invio delle immagini come allegati inline (`Send Pictures With Document`).
-- **Soluzione**:
-  1. Chiudi completamente Microsoft Outlook.
-  2. Avvia OnlyFirmaOutlook (che riscrive la configurazione corretta nel registro utente).
-  3. Riapri Outlook Classic e invia un'email di prova.
-  4. Assicurati che l'HTML della firma contenga il riferimento relativo `<NomeFirma>_files/immagine.ext` e che la cartella sia presente in `%APPDATA%\Microsoft\Signatures`.
+Close Outlook Classic, start OnlyFirmaOutlook to apply its current-user inline-image setting, then reopen Outlook and send a synthetic test message. Check that HTML references `<signature>_files/image.ext` relatively and that the asset folder is present beside the .htm file.
 
----
+The registry setting does not guarantee rendering by every recipient's email client.
 
-## 2. Il Pulsante "Converti e Salva Firma" Rimane Disabilitato
+## Conversion stays disabled
 
-Il pulsante si abilita solo quando sono soddisfatte tutte le seguenti condizioni:
-- È stato selezionato un documento sorgente valido.
-- Il nome della firma non è vuoto.
-- La cartella di destinazione è valida e scrivibile.
-- Il documento è stato modificato e salvato in Word.
-- **Word è stato chiuso**: se `WINWORD.EXE` mantiene il file bloccato, l'indicatore "Word in esecuzione" resta visibile e la conversione è bloccata per prevenire conflitti.
+Check the source document, nonempty signature name and writable destination. Use **Modifica firma**, save the isolated Word document and close its Word instance. A remaining file lock or **Word in esecuzione** state prevents conversion. Do not force-stop unrelated Word processes or discard unsaved work to clear the indicator.
 
----
+## Word unavailable
 
-## 3. Microsoft Word Non Rilevato
+Installed Microsoft Word is required by the implemented `Word.Application` COM converter. Verify the current user's Office installation and registration. The app is not an Office-independent OpenXML converter.
 
-- **Errore**: all'avvio compare un avviso di "Word non trovato".
-- **Causa**: l'app richiede Microsoft Word locale per avviare il motore COM interop di conversione (`Word.Application`).
-- **Soluzione**: verificare che Office/Word sia regolarmente installato e associato all'utente Windows corrente.
+## Outlook unavailable
 
----
+Without Outlook Classic/accounts the app offers a local output folder and an identifier field. Generated HTML/RTF/text/assets can be copied later. New Outlook does not provide the Classic signature integration used here.
 
-## 4. Outlook Non Installato o Senza Account
+## UNC input
 
-- Se Outlook Classic non è installato o non possiede account configurati:
-  1. L'app propone una cartella alternativa in `%USERPROFILE%\Documents\OnlyFirmaOutlook\Output`.
-  2. Compare un campo per specificare manualmente un identificativo per la firma.
-  3. I file generati (`.htm`, `.rtf`, `.txt` e cartella asset) possono essere copiati manualmente in seguito.
+A document selected on a share is copied to a local editing workspace. Verify access to the original and the local copy, especially after interrupted network access; successful staging does not qualify all network-share configurations.
 
----
+## Logs
 
-## 5. File di Rete (Percorsi UNC)
+The UI shows operational messages. **Copia log** copies the buffer; **Apri file log** opens the disk log at `%LOCALAPPDATA%\OnlyFirmaOutlook\Logs\app.log`. **Pulisci log** clears the view and deletes the disk log. Capture a sanitized diagnostic copy before intentionally using it; do not publish raw personal paths or document content.
 
-- Se si apre un file sorgente situato su una share di rete (es. `\\server\share\firma.docx`), OnlyFirmaOutlook ne crea automaticamente una copia temporanea locale prima di avviare l'editing in Word, prevenendo lock di rete e latenze di salvataggio.
+## Temporary folders
 
----
+The application cleans its own editing/conversion sessions and removes eligible orphan folders older than 24 hours on a later start. Their roots are LocalAppData/OnlyFirmaOutlook/Temp and EditorTemp. Preserve an interrupted reproduction before restarting when those files are needed as evidence. Do not manually delete other sessions' folders.
 
-## 6. Consultazione e Pulizia Log
-
-- **Pannello UI**: mostra i messaggi operativi in tempo reale.
-- **Pulsante "Copia log"**: copia l'intero buffer negli appunti.
-- **Pulsante "Apri file log"**: apre il file su disco con Blocco Note.
-- **Percorso log su disco**: `%LOCALAPPDATA%\OnlyFirmaOutlook\Logs\app.log`
-- **Pulsante "Pulisci log"**: svuota la schermata e cancella il file `app.log` su disco.
-
----
-
-## 7. Pulizia File Temporanei
-
-- OnlyFirmaOutlook ripulisce automaticamente le proprie cartelle di sessione ed editing alla chiusura.
-- In caso di chiusura forzata o anomala del sistema, le cartelle orfane con più di 24 ore vengono epurate al successivo avvio.
-- Percorsi temporanei di lavoro:
-  - `%LOCALAPPDATA%\OnlyFirmaOutlook\Temp\`
-  - `%LOCALAPPDATA%\OnlyFirmaOutlook\EditorTemp\`
+See [user guide](user-guide.md) and [security reporting](../SECURITY.md).
